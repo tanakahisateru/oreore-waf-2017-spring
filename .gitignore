@@ -1,0 +1,16 @@
+/.idea/*
+
+### DotEnv
+.env
+
+### Composer
+composer.phar
+/vendor/
+
+/composer.lock
+
+### Codeception
+/tests/_support/_generated/*
+
+/log/*
+!/log/.gitkeep
