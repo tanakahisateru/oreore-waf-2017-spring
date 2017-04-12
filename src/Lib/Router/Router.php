@@ -19,20 +19,11 @@ class Router
     /**
      * Router constructor.
      * @param RouterContainer $routes
-     * @param callable $controllersBuilder
+     * @param Dispatcher $dispatcher
      */
-    public function __construct(RouterContainer $routes, callable $controllersBuilder) {
+    public function __construct(RouterContainer $routes, Dispatcher $dispatcher) {
         $this->routes = $routes;
-        $this->dispatcher = new Dispatcher([], 'controller', 'method');
-        $controllersBuilder($this->dispatcher);
-    }
-
-    /**
-     * @return RouterContainer
-     */
-    public function getRoutes()
-    {
-        return $this->routes;
+        $this->dispatcher = $dispatcher;
     }
 
     /**
@@ -90,7 +81,7 @@ class Router
 
         return [
             'controller' => $controller,
-            'method' => 'action' . ucfirst($action),
+            'action' => 'action' . ucfirst($action),
         ];
     }
 
@@ -101,6 +92,7 @@ class Router
      */
     private function routingError(ResponseInterface $response, $status)
     {
+        /** @var ResponseInterface $response */
         $response = $response
             ->withStatus($status)
             ->withHeader('Content-Type', 'text/html');

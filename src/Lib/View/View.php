@@ -62,8 +62,7 @@ class View
     public function getEngine()
     {
         if (!$this->engine) {
-            $factory = $this->engineFactory;
-            $this->engine = $factory($this);
+            $this->engine = call_user_func($this->engineFactory);
         }
 
         return $this->engine;
@@ -75,8 +74,7 @@ class View
     public function getRouter()
     {
         if (!$this->router) {
-            $factory = $this->routerFactory;
-            $this->router = $factory();
+            $this->router = call_user_func($this->routerFactory);
         }
 
         return $this->router;
@@ -145,7 +143,10 @@ class View
      */
     public function fetchTemplate($name, array $data)
     {
-        $template = $this->getEngine()->make($name);
-        return $template->render($data);
+        $engine = $this->getEngine();
+        $engine->registerFunction('view', function () {
+            return $this;
+        });
+        return $engine->render($name, $data);
     }
 }

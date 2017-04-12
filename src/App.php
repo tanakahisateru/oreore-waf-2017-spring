@@ -43,17 +43,47 @@ class App
     }
 
     /**
+     * @param string $_filename_
+     * @param array $vars
+     * @return mixed
+     */
+    public function runScript($_filename_, array $vars = [])
+    {
+        foreach ($vars as $k => $v) {
+            // if ($v instanceof LazyInterface) {
+            //     $vars[$k] = $v->__invoke();
+            // }
+            $$k = $v;
+        }
+        unset($k, $v);
+
+        /** @noinspection PhpIncludeInspection */
+        return require $_filename_;
+    }
+
+    /**
      * @param string|array $dirs
      * @param string|array $files
-     * @param array $vars
+     * @param array $params
+     * @return App
      */
-    public static function includePhp($dirs, $files, array $vars = [])
+    public static function configure($dirs, $files, $params)
     {
+        $builder = new ContainerBuilder();
+        $container = $builder->newInstance();
+
+        $app = new static($container, $params);
+        $container->set('app', $app);
+
+        static::$_instance = $app;
+
         $loader = new Includer();
         $loader->setStrict(false);
         $loader->setDirs(is_array($dirs) ? $dirs : array($dirs));
         $loader->setFiles(is_array($files) ? $files : array($files));
-        $loader->setVars($vars);
+        $loader->setVars([
+            'di' => $container,
+        ]);
         $loader->load();
 
         // debug trace
@@ -63,29 +93,8 @@ class App
                 $logger->debug($message);
             }
         }
-    }
 
-    /**
-     * @param string|array $dirs
-     * @param string|array $files
-     * @return App
-     */
-    public static function configure($dirs, $files)
-    {
-        $builder = new ContainerBuilder();
-        $container = $builder->newInstance();
-
-        static::includePhp($dirs, $files, [
-            'di' => $container,
-        ]);
-
-        if (!$container->has('app')) {
-            throw new \UnexpectedValueException('App config missing');
-        }
-
-        static::$_instance = $container->get('app');
-
-        return static::getInstance();
+        return $app;
     }
 
     /**

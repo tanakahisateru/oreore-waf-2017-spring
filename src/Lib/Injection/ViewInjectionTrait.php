@@ -1,7 +1,7 @@
 <?php
 namespace My\Web\Lib\Injection;
 
-use My\Web\Lib\Util\MobileDetectFactory;
+use My\Web\Lib\Util\Mobile;
 use My\Web\Lib\View\View;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -61,7 +61,7 @@ trait ViewInjectionTrait
      */
     public function modifyTemplateFolderForMobile($request, $name = 'sp')
     {
-        $agent = MobileDetectFactory::detect($request);
+        $agent = Mobile::detect($request);
         if ($agent->isMobile()) {
             $this->templateFolderModifier = function ($base) use ($name) {
                 return rtrim($base, '/') . '/' . trim($name, '/');

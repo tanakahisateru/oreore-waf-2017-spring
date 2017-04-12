@@ -1,10 +1,8 @@
 <?php
 use Aura\Di\Container;
-use Aura\Dispatcher\Dispatcher;
 
 /** @var Container $di */
-/** @var Dispatcher $dispatcher */
 
-$dispatcher->addObjects([
+return [
     'site' => $di->lazyNew(\My\Web\Controller\SiteController::class),
-]);
+];

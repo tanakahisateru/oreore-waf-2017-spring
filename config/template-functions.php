@@ -5,4 +5,4 @@ use My\Web\Lib\View\TemplateEngine;
 /** @var Container $di */
 /** @var TemplateEngine $engine */
 
-$engine->setDirectory(__DIR__ . '/../templates');
+// Add functions for `$template->batch($values 'your_func|more_func')` call

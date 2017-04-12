@@ -4,7 +4,7 @@ namespace My\Web\Lib\Util;
 use Detection\MobileDetect;
 use Psr\Http\Message\RequestInterface;
 
-class MobileDetectFactory
+class Mobile
 {
     public static function detect(RequestInterface $request)
     {

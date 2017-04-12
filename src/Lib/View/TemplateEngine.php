@@ -6,8 +6,6 @@ use Zend\Escaper\Escaper;
 
 class TemplateEngine extends Engine
 {
-    protected $view;
-
     /**
      * @var Escaper
      */
@@ -15,28 +13,15 @@ class TemplateEngine extends Engine
 
     /**
      * TemplateEngine constructor.
-     * @param View $view
-     * @param callable $builder
+     * @param string $directory
+     * @param string $fileExtension
      * @param string $encoding
      */
-    public function __construct(View $view, $builder = null, $encoding = 'utf-8')
+    public function __construct($directory = null, $fileExtension = null, $encoding = 'utf-8')
     {
-        parent::__construct(null, null);
+        parent::__construct($directory, $fileExtension);
 
-        $this->view = $view;
         $this->escaper = new Escaper($encoding);
-
-        if ($builder) {
-            $builder($this);
-        }
-    }
-
-    /**
-     * @return View
-     */
-    public function getView()
-    {
-        return $this->view;
     }
 
     /**

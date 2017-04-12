@@ -1,18 +1,13 @@
 <?php
 namespace My\Web\Lib\View;
 
+/**
+ * Class Template
+ *
+ * @method View view() available if created by View object
+ */
 class Template extends \League\Plates\Template\Template
 {
-    /**
-     * @return View
-     */
-    public function view()
-    {
-        $engine = $this->engine;
-        assert($engine instanceof TemplateEngine);
-        return $engine->getView();
-    }
-
     /**
      * @inheritdoc
      */
