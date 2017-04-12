@@ -1,20 +1,26 @@
 <?php
 namespace My\Web\Lib\Router;
 
-
 use Aura\Dispatcher\Dispatcher;
+use Aura\Router\Exception\RouteNotFound;
 use Aura\Router\Route;
 use Aura\Router\RouterContainer;
+use My\Web\Lib\Injection\LoggerInjectionTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Log\LoggerAwareInterface;
 
-class Router
+class Router implements LoggerAwareInterface
 {
+    use LoggerInjectionTrait;
+
     /** @var RouterContainer */
     protected $routes;
 
     /** @var Dispatcher */
     protected $dispatcher;
+
+    // TODO Option to throw exception instead of logging
 
     /**
      * Router constructor.
@@ -53,6 +59,36 @@ class Router
 //        }
 
         return $response;
+    }
+
+    /**
+     * @param string $name
+     * @param array $data
+     * @return string
+     */
+    public function urlTo($name, $data = [])
+    {
+        try {
+            return $this->routes->getGenerator()->generate($name, $data);
+        } catch (RouteNotFound $e) {
+            $this->getLogger()->warning('Route not found: '. $e->getMessage());
+            return '#';
+        }
+    }
+
+    /**
+     * @param string $name
+     * @param array $data
+     * @return false|string
+     */
+    public function rawUrlTo($name, $data = [])
+    {
+        try {
+            return $this->routes->getGenerator()->generateRaw($name, $data);
+        } catch (RouteNotFound $e) {
+            $this->getLogger()->warning('Route not found: '. $e->getMessage());
+            return '#';
+        }
     }
 
     /**

@@ -4,14 +4,16 @@ namespace My\Web\Controller;
 use Aura\Sql\PdoInterface;
 use My\Web\Lib\Injection\LoggerInjectionTrait;
 use My\Web\Lib\Injection\ViewInjectionTrait;
+use My\Web\Lib\View\ViewAwareInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LogLevel;
 
-class SiteController
+class SiteController implements LoggerAwareInterface, ViewAwareInterface
 {
-    use ViewInjectionTrait;
     use LoggerInjectionTrait;
+    use ViewInjectionTrait;
 
     /**
      * @var PdoInterface|\PDO

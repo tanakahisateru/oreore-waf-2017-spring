@@ -4,14 +4,9 @@ namespace My\Web;
 use Aura\Di\Container;
 use Aura\Di\ContainerBuilder;
 use Aura\Includer\Includer;
-use My\Web\Lib\Router\Router;
-use My\Web\Lib\View\View;
 use Psr\Container\ContainerInterface;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
-use Zend\Diactoros\Response;
-use Zend\Diactoros\ServerRequestFactory;
+use Psr\Log\NullLogger;
 
 class App
 {
@@ -43,32 +38,15 @@ class App
     }
 
     /**
-     * @param string $_filename_
-     * @param array $vars
-     * @return mixed
-     */
-    public function runScript($_filename_, array $vars = [])
-    {
-        foreach ($vars as $k => $v) {
-            // if ($v instanceof LazyInterface) {
-            //     $vars[$k] = $v->__invoke();
-            // }
-            $$k = $v;
-        }
-        unset($k, $v);
-
-        /** @noinspection PhpIncludeInspection */
-        return require $_filename_;
-    }
-
-    /**
      * @param string|array $dirs
      * @param string|array $files
      * @param array $params
-     * @return App
+     * @return static
      */
     public static function configure($dirs, $files, $params)
     {
+        $startedAt = microtime(true);
+
         $builder = new ContainerBuilder();
         $container = $builder->newInstance();
 
@@ -86,11 +64,16 @@ class App
         ]);
         $loader->load();
 
+        $elapsed = microtime(true) - $startedAt;
+
         // debug trace
         if (static::$_instance && static::$_instance->getContainer()->has('logger')) {
             $logger = static::$_instance->getLogger();
+
+            $logger->debug(sprintf("App::configure took %0.3fms", $elapsed * 1000));
+
             foreach ($loader->getDebug() as $message) {
-                $logger->debug($message);
+                $logger->debug('App::configure | ' . $message);
             }
         }
 
@@ -98,7 +81,7 @@ class App
     }
 
     /**
-     * @return App
+     * @return static
      */
     public static function getInstance()
     {
@@ -151,92 +134,10 @@ class App
      */
     public function getLogger()
     {
+        if (!$this->getContainer()->has('logger')) {
+            return new NullLogger();
+        }
+
         return $this->getService('logger', LoggerInterface::class);
-    }
-
-    /**
-     * @return Router
-     */
-    public function getRouter()
-    {
-        return $this->getService('router', Router::class);
-    }
-
-    /**
-     * @return View
-     */
-    public function getView()
-    {
-        return $this->getService('router', View::class);
-    }
-
-    /**
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @return ResponseInterface
-     */
-    public function handle(ServerRequestInterface $request, ResponseInterface $response)
-    {
-        //try {
-            // filter
-
-        ob_start();
-        $responseBeforeDispatch = $response;
-
-        $response = $this->getRouter()->dispatch($request, $response);
-
-        if (empty($response)) {
-            $response = $responseBeforeDispatch;
-            $response->getBody()->write(ob_get_clean());
-        } elseif (is_array($response)) {
-            $response = $responseBeforeDispatch->withHeader('Content-Type', 'application/json');
-            $response->getBody()->write(json_encode($response));
-            ob_end_clean();
-        } elseif (is_scalar($response)) {
-            $response = $responseBeforeDispatch;
-            $response->getBody()->write($response);
-            ob_end_clean();
-        } elseif ($response instanceof ResponseInterface) {
-            $echo = ob_get_clean();
-            if (!empty($echo)) {
-                $stream = $response->getBody();
-                $body = $stream->getContents();
-                $stream->rewind();
-                $stream->write($body . $echo);
-            }
-        } else {
-            throw new \LogicException('Invalid response returned on: ' . $request->getUri());
-        }
-
-            // if response: filter
-        //} catch (\Exception)
-
-        return $response;
-    }
-
-    /**
-     *
-     */
-    public function run()
-    {
-        $request = ServerRequestFactory::fromGlobals($_SERVER, $_GET, $_POST, $_COOKIE, $_FILES);
-
-        $response = $this->handle($request, new Response());
-
-        if ($response->getStatusCode() != 200) {
-            @header(sprintf('HTTP/%s %d %s',
-                $response->getProtocolVersion(),
-                $response->getStatusCode(),
-                $response->getReasonPhrase()
-            ));
-        }
-
-        foreach ($response->getHeaders() as $name => $values) {
-            foreach ($values as $value) {
-                @header(sprintf('%s: %s', $name, $value), false);
-            }
-        }
-
-        echo $response->getBody();
     }
 }

@@ -34,7 +34,7 @@ trait ViewInjectionTrait
     /**
      * @param View $view
      */
-    public function setView($view)
+    public function setView(View $view)
     {
         $this->view = $view;
     }
@@ -50,7 +50,7 @@ trait ViewInjectionTrait
     /**
      * @param string $path
      */
-    public function setCurrentTemplateFolder($path)
+    public function setTemplateFolder($path)
     {
         $this->currentTemplateFolder = $path;
     }
@@ -59,7 +59,7 @@ trait ViewInjectionTrait
      * @param RequestInterface $request
      * @param string $name
      */
-    public function modifyTemplateFolderForMobile($request, $name = 'sp')
+    public function modifyTemplateFolderForMobile(RequestInterface $request, $name = 'sp')
     {
         $agent = Mobile::detect($request);
         if ($agent->isMobile()) {

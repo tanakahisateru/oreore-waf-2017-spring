@@ -26,7 +26,7 @@ trait LoggerInjectionTrait
     /**
      * @param LoggerInterface $logger
      */
-    public function setLogger($logger)
+    public function setLogger(LoggerInterface $logger)
     {
         $this->logger = $logger;
     }
