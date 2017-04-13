@@ -1,5 +1,5 @@
 <?php
-namespace My\Web\Lib\View;
+namespace My\Web\Lib\View\Template;
 
 use League\Plates\Engine;
 use Zend\Escaper\Escaper;

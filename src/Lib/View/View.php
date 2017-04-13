@@ -1,9 +1,11 @@
 <?php
 namespace My\Web\Lib\View;
 
-
 use League\Plates\Engine;
 use My\Web\Lib\Router\Router;
+use My\Web\Lib\View\Asset\AssetInterface;
+use My\Web\Lib\View\Asset\AssetManager;
+use My\Web\Lib\View\Template\TemplateEngine;
 use Psr\Http\Message\ResponseInterface;
 
 class View
@@ -11,12 +13,12 @@ class View
     /**
      * @var callable
      */
-    protected $engineFactory;
+    protected $templateEngineFactory;
 
     /**
      * @var callable
      */
-    protected $assetsFactory;
+    protected $assetManagerFactory;
 
     /**
      * @var callable
@@ -24,12 +26,14 @@ class View
     protected $routerFactory;
 
     /**
-     * @var Engine
+     * @var TemplateEngine
      */
-    protected $engine;
+    protected $templateEngine;
 
-    // assets (planning Assetic)
-
+    /**
+     * @var AssetManager
+     */
+    protected $assetManager;
 
     /**
      * @var Router
@@ -42,30 +46,48 @@ class View
     protected $attributes;
 
     /**
+     * @var AssetInterface[]
+     */
+    protected $requiredAssets;
+
+    /**
      * View constructor.
-     * @param callable $engineFactory
-     * @param callable $assetsFactory
+     * @param callable $templateEngineFactory
+     * @param callable $assetManagerFactory
      * @param callable $routerFactory
      */
-    public function __construct($engineFactory, $assetsFactory, $routerFactory)
+    public function __construct($templateEngineFactory, $assetManagerFactory, $routerFactory)
     {
-        $this->engineFactory = $engineFactory;
-        $this->assetsFactory = $assetsFactory;
+        $this->templateEngineFactory = $templateEngineFactory;
+        $this->assetManagerFactory = $assetManagerFactory;
         $this->routerFactory = $routerFactory;
 
         $this->attributes = [];
+        $this->requiredAssets = [];
     }
 
     /**
      * @return Engine
      */
-    public function getEngine()
+    protected function getTemplateEngine()
     {
-        if (!$this->engine) {
-            $this->engine = call_user_func($this->engineFactory);
+        if (!$this->templateEngine) {
+            $this->templateEngine = call_user_func($this->templateEngineFactory);
         }
 
-        return $this->engine;
+        return $this->templateEngine;
+    }
+
+    /**
+     * @return AssetManager
+     */
+    protected function getAssetManager()
+    {
+        if (!$this->assetManager) {
+            $this->assetManager = call_user_func($this->assetManagerFactory);
+        }
+
+        return $this->assetManager;
     }
 
     /**
@@ -101,11 +123,48 @@ class View
 
     /**
      * @param string $name
-     * @param array $value
+     * @param mixed $value
      */
     public function setAttribute($name, $value)
     {
         $this->attributes[$name] = $value;
+    }
+
+    /**
+     * @param string $name
+     */
+    public function requireAsset($name)
+    {
+        $asset = $this->getAssetManager()->getAsset($name);
+        if (!$asset) {
+            throw new \UnexpectedValueException('No such asset: ' . $name);
+        }
+
+        $this->requiredAssets[$asset->getName()] = $asset;
+    }
+
+    /**
+     * @param string $stage
+     * @return array
+     */
+    public function assetUrls($stage = null)
+    {
+        return $this->assetManager->collectAllUrls($this->requiredAssets, $stage);
+    }
+
+    /**
+     * @param string $name
+     * @param array $data
+     * @param bool $raw
+     * @return bool
+     */
+    public function routeUrlTo($name, $data=[], $raw = false)
+    {
+        if ($raw) {
+            return $this->getRouter()->rawUrlTo($name, $data);
+        } else {
+            return $this->getRouter()->urlTo($name, $data);
+        }
     }
 
     /**
@@ -114,7 +173,7 @@ class View
      */
     public function setTemplateFolder($folderName, $subPath)
     {
-        $engine = $this->getEngine();
+        $engine = $this->getTemplateEngine();
         $pe = [
             rtrim($engine->getDirectory(), '/'),
             trim($subPath, '/'),
@@ -143,7 +202,7 @@ class View
      */
     public function fetchTemplate($name, array $data)
     {
-        $engine = $this->getEngine();
+        $engine = $this->getTemplateEngine();
         $engine->registerFunction('view', function () {
             return $this;
         });

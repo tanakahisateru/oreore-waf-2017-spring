@@ -1,5 +1,7 @@
 <?php
-namespace My\Web\Lib\View;
+namespace My\Web\Lib\View\Template;
+
+use My\Web\Lib\View\View;
 
 /**
  * Class Template

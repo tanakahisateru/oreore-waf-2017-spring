@@ -1,21 +1,19 @@
 <?php
-use My\Web\Lib\View\Template;
+use My\Web\Lib\View\Template\Template;
 
 /**
  * @var Template $this
  */
-
-$router = $this->view()->getRouter();
-
 $this->layout('_shared/layout.php');
+
 ?>
 <h2>Site controller</h2>
 
-<div class="container">
+<div class="content">
     <?= $this->section('content') ?>
 
     <div>
-        Please <a href="<?= $router->urlTo('site.contact') ?>">contact</a> us.
+        Please <a href="<?= $this->view()->routeUrlTo('site.contact') ?>">contact</a> us.
     </div>
 
     <?php

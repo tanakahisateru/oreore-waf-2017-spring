@@ -3,7 +3,8 @@ use Aura\Di\Container;
 use Aura\Dispatcher\Dispatcher;
 use Aura\Router\RouterContainer;
 use My\Web\Lib\Util\PlainPhp;
-use My\Web\Lib\View\TemplateEngine;
+use My\Web\Lib\View\Asset\AssetManager;
+use My\Web\Lib\View\Template\TemplateEngine;
 use My\Web\Lib\View\View;
 
 /** @var Container $di */
@@ -47,11 +48,22 @@ $di->set('templateEngine', $di->lazy(function () use($di) {
     return $engine;
 }));
 
+$di->set('assetManager', $di->lazy(function () use ($di) {
+    $am = $di->newInstance(AssetManager::class);
+    PlainPhp::runner()->with([
+        'di' => $di,
+        'am' => $am,
+    ])->doRequire(__DIR__ . '/assets.php');
+    return $am;
+}));
+
 $di->params[View::class] = [
-    'engineFactory' => function () use ($di) {
+    'templateEngineFactory' => function () use ($di) {
         return $di->get('templateEngine');
     },
-    'assetsFactory' => null,
+    'assetManagerFactory' => function () use ($di) {
+        return $di->get('assetManager');
+    },
     'routerFactory' => function () use ($di) {
         return $di->get('router');
     },

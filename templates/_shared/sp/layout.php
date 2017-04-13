@@ -1,6 +1,8 @@
 <?php
+use My\Web\Lib\View\Template\Template;
+
 /**
- * @var \My\Web\Lib\View\Template $this
+ * @var Template $this
  */
 
 $title = $this->view()->getAttribute('title', 'My App');

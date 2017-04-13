@@ -1,0 +1,15 @@
+{
+  "dependencies": {
+    "bootstrap": "^3.3.7",
+    "jquery": "^3.2.1"
+  },
+  "devDependencies": {
+    "coffee-script": "^1.12.5",
+    "gulp": "^3.9.1",
+    "gulp-rev": "^7.1.2",
+    "gulp-rev-css-url": "^0.1.0",
+    "gulp-rev-outdated": "^0.1.1",
+    "rimraf": "^2.6.1"
+  },
+  "private": true
+}

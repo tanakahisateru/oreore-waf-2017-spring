@@ -9,8 +9,13 @@ composer.phar
 
 /composer.lock
 
+### NPM
+/node_modules/
+
 ### Codeception
 /tests/_support/_generated/*
 
 /log/*
 !/log/.gitkeep
+
+/web/assets/*
