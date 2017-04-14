@@ -11,3 +11,6 @@ $app = App::configure([
 ], require __DIR__ . '/../config/params.php');
 
 $app->getLogger()->info('console kicked');
+fprintf(STDOUT, "This is STDOUT\n");
+fprintf(STDERR, "This is STDERR\n");
+$app->getLogger()->info('console done');
