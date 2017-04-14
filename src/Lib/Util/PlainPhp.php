@@ -110,12 +110,11 @@ class PlainPhp
      */
     protected function run($filename, $statement)
     {
-        $runner = function ($_statement_, $_filename_, $vars) {
+        $runner = function ($_statement_, $_filename_, $_vars_) {
             if (!is_file($_filename_)) {
                 throw new \InvalidArgumentException('File not exists: ' . $_filename_);
             }
-            extract($vars);
-            unset($vars);
+            extract($_vars_);
             $_ = null;
             eval('$_ = ' . $_statement_ . ' $_filename_;');
             return $_;
