@@ -2,6 +2,7 @@
 use Aura\Di\Container;
 use Aura\Dispatcher\Dispatcher;
 use Aura\Router\RouterContainer;
+use My\Web\Lib\Router\Router;
 use My\Web\Lib\Util\PlainPhp;
 use My\Web\Lib\View\Asset\AssetManager;
 use My\Web\Lib\View\Template\TemplateEngine;
@@ -9,7 +10,7 @@ use My\Web\Lib\View\View;
 
 /** @var Container $di */
 
-$di->set('router', $di->lazyNew(\My\Web\Lib\Router\Router::class, [
+$di->set('router', $di->lazyNew(Router::class, [
     'routes' => $di->lazyGet('routerContainer'),
     'dispatcher' => $di->lazyGet('routerDispatcher'),
 ]));
