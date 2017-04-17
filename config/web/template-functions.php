@@ -1,6 +1,6 @@
 <?php
 use Aura\Di\Container;
-use My\Web\Lib\View\TemplateEngine;
+use My\Web\Lib\View\Template\TemplateEngine;
 
 /** @var Container $di */
 /** @var TemplateEngine $engine */
