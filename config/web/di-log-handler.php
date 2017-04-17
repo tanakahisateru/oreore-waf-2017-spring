@@ -8,6 +8,6 @@ use Monolog\Logger;
 $di->values['logHandlersDefault'] = $di->lazyArray([
     $di->lazyNew(RotatingFileHandler::class, [
         'filename' => __DIR__ . '/../../log/web.log',
-        'level' => Logger::INFO,
+        'level' => Logger::getLevels()[getenv('MY_APP_DEFAULT_LOG_LEVEL')],
     ])
 ]);
