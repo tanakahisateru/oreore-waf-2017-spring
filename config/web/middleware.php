@@ -1,6 +1,7 @@
 <?php
 use Aura\Di\Container;
 use My\Web\Lib\Middleware\RoutingMiddleware;
+use My\Web\Lib\Middleware\WhoopsResponseGenerator;
 use My\Web\Lib\Router\Router;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -17,10 +18,13 @@ $responseFactory = new \Http\Factory\Diactoros\ResponseFactory();
 /** @var ResponseInterface $responsePrototype */
 $responsePrototype = $responseFactory->createResponse(200);
 
-/** @var Router $router */
-$router = $di->get('router');
-
 $mp->setResponsePrototype($responsePrototype);
+
+$errorResponseGenerator = getenv('MY_APP_ENV') == 'dev' ?
+    new WhoopsResponseGenerator() :
+    new ErrorResponseGenerator(false);
+
+$mp->pipe(new ErrorHandler($responsePrototype, $errorResponseGenerator));
 
 // Express style middleware
 $mp->pipe(function (ServerRequestInterface $request, ResponseInterface $response, callable $next) use ($di) {
@@ -28,6 +32,7 @@ $mp->pipe(function (ServerRequestInterface $request, ResponseInterface $response
     return $next($request, $response);
 });
 
-$mp->pipe(new ErrorHandler($responsePrototype, new ErrorResponseGenerator(true)));
+/** @var Router $router */
+$router = $di->get('router');
 $mp->pipe(new RoutingMiddleware($router, $responseFactory));
 $mp->pipe(new NotFoundHandler($responsePrototype));
