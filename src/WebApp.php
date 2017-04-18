@@ -2,11 +2,10 @@
 namespace My\Web;
 
 use Aura\Di\Container;
+use My\Web\Lib\Http\HttpFactoryInterface;
 use My\Web\Lib\Router\Router;
 use Zend\Diactoros\Response\SapiEmitter;
 use Zend\Diactoros\Server;
-use Zend\Diactoros\ServerRequestFactory;
-use Zend\Stratigility\MiddlewarePipe;
 use Zend\Stratigility\NoopFinalHandler;
 
 class WebApp extends App
@@ -17,22 +16,35 @@ class WebApp extends App
     protected $router;
 
     /**
-     * @var MiddlewarePipe
+     * @var callable
      */
     protected $middlewarePipe;
+
+    /**
+     * @var HttpFactoryInterface
+     */
+    protected $httpFactory;
 
     /**
      * WebApp constructor.
      * @param Container $container
      * @param Router $router
-     * @param MiddlewarePipe $middlewarePipe
+     * @param callable $middlewarePipe
+     * @param HttpFactoryInterface $httpFactory
      * @param array $params
      */
-    public function __construct(Container $container, Router $router, MiddlewarePipe $middlewarePipe, array $params)
+    public function __construct(
+        Container $container,
+        Router $router,
+        callable $middlewarePipe,
+        HttpFactoryInterface $httpFactory,
+        array $params
+    )
     {
         parent::__construct($container, $params);
-        $this->middlewarePipe = $middlewarePipe;
         $this->router = $router;
+        $this->middlewarePipe = $middlewarePipe;
+        $this->httpFactory = $httpFactory;
     }
 
     /**
@@ -40,7 +52,7 @@ class WebApp extends App
      */
     public function run()
     {
-        $request = ServerRequestFactory::fromGlobals($_SERVER, $_GET, $_POST, $_COOKIE, $_FILES);
+        $request = $this->httpFactory->createRequestFromGlobals();
 
         $this->getLogger()->debug("Request handling started");
         $startedAt = microtime(true);

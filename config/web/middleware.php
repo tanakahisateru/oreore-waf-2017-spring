@@ -1,5 +1,6 @@
 <?php
 use Aura\Di\Container;
+use My\Web\Lib\Http\HttpFactoryInterface;
 use My\Web\Lib\Middleware\RoutingMiddleware;
 use My\Web\Lib\Middleware\WhoopsResponseGenerator;
 use My\Web\Lib\Router\Router;
@@ -13,10 +14,11 @@ use Zend\Stratigility\MiddlewarePipe;
 /** @var Container $di */
 /** @var MiddlewarePipe $mp */
 
-$responseFactory = new \Http\Factory\Diactoros\ResponseFactory();
+/** @var HttpFactoryInterface $httpFactory */
+$httpFactory = $di->get('httpFactory');
 
 /** @var ResponseInterface $responsePrototype */
-$responsePrototype = $responseFactory->createResponse(200);
+$responsePrototype = $httpFactory->createResponse();
 
 $mp->setResponsePrototype($responsePrototype);
 
@@ -34,5 +36,5 @@ $mp->pipe(function (ServerRequestInterface $request, ResponseInterface $response
 
 /** @var Router $router */
 $router = $di->get('router');
-$mp->pipe(new RoutingMiddleware($router, $responseFactory));
+$mp->pipe(new RoutingMiddleware($router, $httpFactory));
 $mp->pipe(new NotFoundHandler($responsePrototype));

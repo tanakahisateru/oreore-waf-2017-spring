@@ -2,6 +2,7 @@
 use Aura\Di\Container;
 use Aura\Dispatcher\Dispatcher;
 use Aura\Router\RouterContainer;
+use My\Web\Lib\Http\DiactorosHttpFactory;
 use My\Web\Lib\Router\Router;
 use My\Web\Lib\Util\PlainPhp;
 use My\Web\Lib\View\Asset\AssetManager;
@@ -21,8 +22,11 @@ $di->set('app', $di->lazyNew(\My\Web\WebApp::class, [
         ])->doRequire(__DIR__ . '/middleware.php');
         return $mp;
     }),
+    'httpFactory' => $di->lazyGet('httpFactory'),
     'params' => $di->lazyRequire(__DIR__ . '/../params.php'),
 ]));
+
+$di->set('httpFactory', $di->lazyNew(DiactorosHttpFactory::class));
 
 $di->set('router', $di->lazyNew(Router::class, [
     'routes' => $di->lazyGet('routerContainer'),
