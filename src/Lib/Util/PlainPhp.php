@@ -108,10 +108,10 @@ class PlainPhp
      * @param string $statement
      * @return mixed
      */
-    protected function run($filename, $statement)
+    public function run($filename, $statement = 'require')
     {
         $runner = function ($_statement_, $_filename_, $_vars_) {
-            if (!is_file($_filename_)) {
+            if ($_statement_[0] != '@' && !is_file($_filename_)) {
                 throw new \InvalidArgumentException('File not exists: ' . $_filename_);
             }
             extract($_vars_);
