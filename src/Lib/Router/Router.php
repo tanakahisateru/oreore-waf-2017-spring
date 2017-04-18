@@ -5,6 +5,8 @@ use Aura\Dispatcher\Dispatcher;
 use Aura\Router\Exception\RouteNotFound;
 use Aura\Router\Route;
 use Aura\Router\RouterContainer;
+use Aura\Router\Rule\Accepts;
+use Aura\Router\Rule\Allows;
 use My\Web\Lib\Injection\LoggerInjectionTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -14,10 +16,14 @@ class Router implements LoggerAwareInterface
 {
     use LoggerInjectionTrait;
 
-    /** @var RouterContainer */
+    /**
+     * @var RouterContainer
+     */
     protected $routes;
 
-    /** @var Dispatcher */
+    /**
+     * @var Dispatcher
+     */
     protected $dispatcher;
 
     // TODO Option to throw exception instead of logging
@@ -34,31 +40,28 @@ class Router implements LoggerAwareInterface
 
     /**
      * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @return ResponseInterface
+     * @param ResponseInterface $responsePrototype
+     * @return array|null|ResponseInterface|string
+     * @throws RoutingException
      */
-    public function dispatch(ServerRequestInterface $request, ResponseInterface $response)
+    public function dispatch($request, $responsePrototype)
     {
         $matcher = $this->routes->getMatcher();
         $route = $matcher->match($request);
 
         if (!$route) {
-            return $this->routingError($response, static::guessHttpStatus($matcher->getFailedRoute()));
+            $failedRoute = $matcher->getFailedRoute();
+            throw new RoutingException(static::guessHttpStatus($failedRoute));
         }
 
         $params = $this->guessDispatcherParams($route);
-        $params['request'] = $request;
-        $params['response'] = $response;
+        $params['request'] = $request->withAttribute('responsePrototype', $responsePrototype);
+        $params['response'] = $responsePrototype;
         foreach ($route->attributes as $k => $v) {
             $params[$k] = $v;
         }
 
-//        try {
-        $response = call_user_func($this->dispatcher, $params);
-//        } catch (\Exception $ex) {
-//        }
-
-        return $response;
+        return call_user_func($this->dispatcher, $params);
     }
 
     /**
@@ -122,23 +125,6 @@ class Router implements LoggerAwareInterface
     }
 
     /**
-     * @param ResponseInterface $response
-     * @param int $status
-     * @return ResponseInterface
-     */
-    private function routingError(ResponseInterface $response, $status)
-    {
-        /** @var ResponseInterface $response */
-        $response = $response
-            ->withStatus($status)
-            ->withHeader('Content-Type', 'text/html');
-
-        $response->getBody()->write($response->getReasonPhrase());
-
-        return $response;
-    }
-
-    /**
      * @param Route $failedRoute
      * @return int
      */
@@ -147,12 +133,11 @@ class Router implements LoggerAwareInterface
         if (!$failedRoute) {
             return 404;
         }
-
         switch ($failedRoute->failedRule) {
-            case 'Aura\Router\Rule\Allows':
+            case Allows::class:
                 // 405 METHOD NOT ALLOWED
                 return 405;
-            case 'Aura\Router\Rule\Accepts':
+            case Accepts::class:
                 // 406 NOT ACCEPTABLE
                 return 406;
             default:

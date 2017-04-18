@@ -1,70 +1,47 @@
 <?php
 namespace My\Web;
 
+use Aura\Di\Container;
 use My\Web\Lib\Router\Router;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Zend\Diactoros\Response;
+use Zend\Diactoros\Response\SapiEmitter;
+use Zend\Diactoros\Server;
 use Zend\Diactoros\ServerRequestFactory;
+use Zend\Stratigility\MiddlewarePipe;
+use Zend\Stratigility\NoopFinalHandler;
 
 class WebApp extends App
 {
     /**
-     * @return Router
+     * @var Router
+     */
+    protected $router;
+
+    /**
+     * @var MiddlewarePipe
+     */
+    protected $middlewarePipe;
+
+    /**
+     * WebApp constructor.
+     * @param Container $container
+     * @param Router $router
+     * @param MiddlewarePipe $middlewarePipe
+     * @param array $params
+     */
+    public function __construct(Container $container, Router $router, MiddlewarePipe $middlewarePipe, array $params)
+    {
+        parent::__construct($container, $params);
+        $this->middlewarePipe = $middlewarePipe;
+        $this->router = $router;
+    }
+
+
+    /**
+     * @return \My\Web\Lib\Router\Router
      */
     public function getRouter()
     {
         return $this->getService('router', Router::class);
-    }
-
-    /**
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @return ResponseInterface
-     */
-    public function handle(ServerRequestInterface $request, ResponseInterface $response)
-    {
-        //try {
-        $this->getLogger()->debug("Request handling started");
-        $startedAt = microtime(true);
-
-        // filter
-
-        ob_start();
-        $responseBeforeDispatch = $response;
-
-        $response = $this->getRouter()->dispatch($request, $response);
-
-        if (empty($response)) {
-            $response = $responseBeforeDispatch;
-            $response->getBody()->write(ob_get_clean());
-        } elseif (is_array($response)) {
-            $response = $responseBeforeDispatch->withHeader('Content-Type', 'application/json');
-            $response->getBody()->write(json_encode($response));
-            ob_end_clean();
-        } elseif (is_scalar($response)) {
-            $response = $responseBeforeDispatch;
-            $response->getBody()->write($response);
-            ob_end_clean();
-        } elseif ($response instanceof ResponseInterface) {
-            $echo = ob_get_clean();
-            if (!empty($echo)) {
-                $stream = $response->getBody();
-                $body = $stream->getContents();
-                $stream->rewind();
-                $stream->write($body . $echo);
-            }
-        } else {
-            throw new \LogicException('Invalid response returned on: ' . $request->getUri());
-        }
-
-        // if response: filter
-        $elapsed = microtime(true) - $startedAt;
-        $this->getLogger()->debug(sprintf("Request handling finished in %0.3fms", $elapsed * 1000));
-
-        //} catch (\Exception)
-
-        return $response;
     }
 
     /**
@@ -74,22 +51,14 @@ class WebApp extends App
     {
         $request = ServerRequestFactory::fromGlobals($_SERVER, $_GET, $_POST, $_COOKIE, $_FILES);
 
-        $response = $this->handle($request, new Response());
+        $this->getLogger()->debug("Request handling started");
+        $startedAt = microtime(true);
 
-        if ($response->getStatusCode() != 200) {
-            @header(sprintf('HTTP/%s %d %s',
-                $response->getProtocolVersion(),
-                $response->getStatusCode(),
-                $response->getReasonPhrase()
-            ));
-        }
+        $server = Server::createServerFromRequest($this->middlewarePipe, $request);
+        $server->setEmitter(new SapiEmitter());
+        $server->listen(new NoopFinalHandler());
 
-        foreach ($response->getHeaders() as $name => $values) {
-            foreach ($values as $value) {
-                @header(sprintf('%s: %s', $name, $value), false);
-            }
-        }
-
-        echo $response->getBody();
+        $elapsed = microtime(true) - $startedAt;
+        $this->getLogger()->debug(sprintf("Request handling finished in %0.3fms", $elapsed * 1000));
     }
 }

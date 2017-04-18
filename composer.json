@@ -6,13 +6,14 @@
         "aura/router": "^3.1",
         "aura/sql": "^2.5",
         "aura/sqlquery": "^2.7",
+        "http-interop/http-factory-diactoros": "^0.3.0",
         "josegonzalez/dotenv": "^3.0",
         "league/plates": "^3.3",
         "mobiledetect/mobiledetectlib": "^2.8",
         "monolog/monolog": "^1.22",
         "zendframework/zend-escaper": "^2.5",
         "zendframework/zend-diactoros": "^1.4",
-        "zendframework/zend-eventmanager": "^3.1"
+        "zendframework/zend-stratigility": "^2.0"
     },
     "require-dev": {
         "codeception/codeception": "^2.2"

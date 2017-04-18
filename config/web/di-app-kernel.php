@@ -10,6 +10,20 @@ use My\Web\Lib\View\View;
 
 /** @var Container $di */
 
+$di->set('app', $di->lazyNew(\My\Web\WebApp::class, [
+    'container' => $di,
+    'router' => $di->lazyGet('router'),
+    'middlewarePipe' => $di->lazy(function () use ($di) {
+        $mp = new \Zend\Stratigility\MiddlewarePipe();
+        PlainPhp::runner()->with([
+            'di' => $di,
+            'mp' => $mp,
+        ])->doRequire(__DIR__ . '/middleware.php');
+        return $mp;
+    }),
+    'params' => $di->lazyRequire(__DIR__ . '/../params.php'),
+]));
+
 $di->set('router', $di->lazyNew(Router::class, [
     'routes' => $di->lazyGet('routerContainer'),
     'dispatcher' => $di->lazyGet('routerDispatcher'),

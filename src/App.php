@@ -3,6 +3,7 @@ namespace My\Web;
 
 use Aura\Di\Container;
 use Aura\Di\ContainerBuilder;
+use Aura\Di\Exception\ServiceNotFound;
 use Aura\Includer\Includer;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -40,20 +41,14 @@ class App
     /**
      * @param string|array $dirs
      * @param string|array $files
-     * @param array $params
      * @return static
      */
-    public static function configure($dirs, $files, $params)
+    public static function configure($dirs, $files)
     {
         $startedAt = microtime(true);
 
         $builder = new ContainerBuilder();
         $container = $builder->newInstance();
-
-        $app = new static($container, $params);
-        $container->set('app', $app);
-
-        static::$_instance = $app;
 
         $loader = new Includer();
         $loader->setStrict(false);
@@ -64,8 +59,19 @@ class App
         ]);
         $loader->load();
 
-        $elapsed = microtime(true) - $startedAt;
+        try {
+            $app = $container->get('app');
+        } catch (ServiceNotFound $e) {
+            throw new \RuntimeException("Invalid configuration for app", 0, $e);
+        }
 
+        if (!($app instanceof App)) {
+            throw new \RuntimeException("Invalid configuration for app");
+        }
+
+        static::$_instance = $app;
+
+        $elapsed = microtime(true) - $startedAt;
         // debug trace
         if (static::$_instance && static::$_instance->getContainer()->has('logger')) {
             $logger = static::$_instance->getLogger();

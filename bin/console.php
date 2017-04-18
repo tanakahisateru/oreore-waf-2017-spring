@@ -6,9 +6,7 @@ require __DIR__ . '/../config/bootstrap.php';
 $app = App::configure([
     __DIR__ . '/../config',
     __DIR__ . '/../config/cli',
-], [
-    'di-*.php',
-], require __DIR__ . '/../config/params.php');
+], 'di-*.php');
 
 $app->getLogger()->info('console kicked');
 fprintf(STDOUT, "This is STDOUT\n");
