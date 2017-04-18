@@ -6,7 +6,7 @@ use My\Web\Lib\Router\Router;
 use My\Web\Lib\Util\PlainPhp;
 use My\Web\Lib\View\Asset\AssetManager;
 use My\Web\Lib\View\Template\TemplateEngine;
-use My\Web\Lib\View\View;
+use My\Web\Lib\View\ViewEngine;
 
 /** @var Container $di */
 
@@ -72,7 +72,7 @@ $di->set('assetManager', $di->lazy(function () use ($di) {
     return $am;
 }));
 
-$di->params[View::class] = [
+$di->set('viewEngine', $di->lazyNew(ViewEngine::class, [
     'templateEngineFactory' => function () use ($di) {
         return $di->get('templateEngine');
     },
@@ -82,4 +82,4 @@ $di->params[View::class] = [
     'routerFactory' => function () use ($di) {
         return $di->get('router');
     },
-];
+]));

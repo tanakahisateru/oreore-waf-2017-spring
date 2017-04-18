@@ -1,13 +1,12 @@
 <?php
 use Aura\Di\Container;
 use My\Web\Controller\SiteController;
-use My\Web\Lib\View\View;
 use My\Web\Lib\View\ViewAwareInterface;
 
 /** @var Container $di */
 
 $di->setters[ViewAwareInterface::class] = [
-    'setView' => $di->lazyNew(View::class),
+    'setView' => $di->lazyGetCall('viewEngine', 'createView'),
 ];
 
 $controllers['site'] = $di->lazyNew(SiteController::class, [
