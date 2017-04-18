@@ -35,15 +35,6 @@ class WebApp extends App
         $this->router = $router;
     }
 
-
-    /**
-     * @return \My\Web\Lib\Router\Router
-     */
-    public function getRouter()
-    {
-        return $this->getService('router', Router::class);
-    }
-
     /**
      *
      */
