@@ -14,7 +14,7 @@ class WhoopsResponseGenerator
     /**
      * Create/update the response representing the error.
      *
-     * @param \Throwable|\Exception $e
+     * @param \Exception|mixed $e
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
      * @return ResponseInterface
