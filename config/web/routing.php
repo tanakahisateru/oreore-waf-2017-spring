@@ -1,15 +1,24 @@
 <?php
 use Aura\Di\Container;
 use Aura\Router\Map;
+use My\Web\Lib\View\View;
 use Psr\Http\Message\ServerRequestInterface;
+use Zend\Diactoros\Response\HtmlResponse;
 use Zend\Diactoros\Response\JsonResponse;
 
 /** @var Container $di */
 /** @var Map $map */
 
-$map->attach('site.', '', function (Map $map) {
+$map->attach('site.', '', function (Map $map) use ($di) {
     $map->route('index', '/');
     $map->route('contact', '/contact');
+
+    $map->get('privacy', '/privacy')->handler(function () use ($di) {
+        $view = $di->get('viewEngine')->createView();
+        assert($view instanceof View);
+        $view->setFolder('current', 'site');
+        return new HtmlResponse($view->render('current::privacy.php'));
+    });
 });
 
 $map->attach('api.', '/api', function (Map $map) use ($di) {
