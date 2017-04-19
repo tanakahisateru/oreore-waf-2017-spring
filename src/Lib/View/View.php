@@ -1,7 +1,7 @@
 <?php
 namespace My\Web\Lib\View;
 
-use My\Web\Lib\View\Asset\AssetInterface;
+use My\Web\Lib\View\Asset\AssetCollection;
 
 class View
 {
@@ -21,7 +21,7 @@ class View
     protected $attributeCollection;
 
     /**
-     * @var AssetInterface[]
+     * @var AssetCollection
      */
     protected $requiredAssets;
 
@@ -29,16 +29,16 @@ class View
      * View constructor.
      *
      * @param ViewEngine $engine
+     * @param AssetCollection $requiredAssets
      */
-    public function __construct($engine)
+    public function __construct($engine, $requiredAssets)
     {
         $this->engine = $engine;
 
         $this->folderMap = [];
         $this->attributeCollection = [];
-        $this->requiredAssets = [];
+        $this->requiredAssets = $requiredAssets;
     }
-
 
     /**
      * @return array
@@ -120,12 +120,7 @@ class View
      */
     public function requireAsset($name)
     {
-        // TODO Move this management to AssetRequirement object
-        $asset = $this->engine->getAsset($name);
-        if (!$asset) {
-            throw new \UnexpectedValueException('No such asset: ' . $name);
-        }
-        $this->requiredAssets[$asset->getName()] = $asset;
+        $this->requiredAssets->add($name);
     }
 
     /**
@@ -134,7 +129,7 @@ class View
      */
     public function assetUrls($stage = null)
     {
-        return $this->engine->assetUrlsOf($this->requiredAssets, $stage);
+        return $this->requiredAssets->collectUrls($stage);
     }
 
     /**

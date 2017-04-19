@@ -3,7 +3,7 @@ namespace My\Web\Lib\View;
 
 use League\Plates\Engine;
 use My\Web\Lib\Router\Router;
-use My\Web\Lib\View\Asset\AssetInterface;
+use My\Web\Lib\View\Asset\AssetCollection;
 use My\Web\Lib\View\Asset\AssetManager;
 use My\Web\Lib\View\Template\TemplateEngine;
 use Webmozart\PathUtil\Path;
@@ -91,30 +91,11 @@ class ViewEngine
     }
 
     /**
-     * @param string $name
-     * @return AssetInterface
-     */
-    public function getAsset($name)
-    {
-        return $this->getAssetManager()->getAsset($name);
-    }
-
-    /**
      * @return View
      */
     public function createView()
     {
-        return new View($this);
-    }
-
-    /**
-     * @param array $assetNames
-     * @param string $stage
-     * @return array
-     */
-    public function assetUrlsOf(array $assetNames, $stage = null)
-    {
-        return $this->assetManager->collectAllUrls($assetNames, $stage);
+        return new View($this, new AssetCollection($this->getAssetManager()));
     }
 
     /**

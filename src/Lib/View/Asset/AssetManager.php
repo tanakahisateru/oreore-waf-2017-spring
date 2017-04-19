@@ -20,11 +20,49 @@ class AssetManager
 
 
     /**
-     * @param AssetInterface|mixed $asset
+     * @param string $name
+     * @param AssetInterface $asset
      */
-    public function registerAsset(AssetInterface $asset)
+    public function register($name, AssetInterface $asset)
     {
-        $this->assets[$asset->getName()] = $asset;
+        $this->assets[$name] = $asset;
+    }
+
+    public function newAsset(array $definition = [])
+    {
+        $baseUrl = isset($definition['baseUrl']) ? $definition['baseUrl'] : '';
+
+        $elements = isset($definition['elements']) ? $definition['elements'] : [];
+        if (!is_array($elements)) {
+            $elements = [$elements];
+        }
+
+        $stage = isset($definition['stage']) ? $definition['stage'] : null;
+
+        $dependencies = [];
+        if (isset($definition['dependencies'])) {
+            if (!is_array($definition['dependencies'])) {
+                $definition['dependencies'] = [$definition['dependencies']];
+            }
+
+            foreach ($definition['dependencies'] as $dependency) {
+                if ($dependency instanceof AssetInterface || is_scalar($dependency)) {
+                    $dependencies[] = $dependency;
+                } elseif (is_array($dependency)) {
+                    if (empty($dependency['baseUrl']) || !is_string($dependency['baseUrl'])) {
+                        $dependency['baseUrl'] = $baseUrl;
+                    }
+                    if (empty($dependency['stage']) || !is_string($dependency['stage'])) {
+                        $dependency['stage'] = $stage;
+                    }
+                    $dependencies[] = $this->newAsset($dependency);
+                } else {
+                    throw new \InvalidArgumentException('Asset dependency must be string, array or Asset object');
+                }
+            }
+        }
+
+        return new Asset($this, $baseUrl, $elements, $stage, $dependencies);
     }
 
     /**
@@ -41,28 +79,8 @@ class AssetManager
         
     }
 
-    public function mapRevision($manifest)
+    public function revManifest($manifest)
     {
 
-    }
-
-    /**
-     * @param AssetInterface[] $assets
-     * @param string $stage
-     * @return array
-     */
-    public function collectAllUrls($assets, $stage = null)
-    {
-        $urls = [];
-
-        foreach ($assets as $asset) {
-            foreach ($asset->collectUrls($stage) as $url) {
-                if (!in_array($url, $urls)) {
-                    $urls[] = $url;
-                }
-            }
-        }
-
-        return $urls;
     }
 }
