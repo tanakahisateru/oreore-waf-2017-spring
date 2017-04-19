@@ -10,6 +10,7 @@ use My\Web\Lib\View\Asset\AssetManager;
 use My\Web\Lib\View\Template\TemplateEngine;
 use My\Web\Lib\View\ViewAwareInterface;
 use My\Web\Lib\View\ViewEngine;
+use My\Web\WebApp;
 
 /** @var Container $di */
 
@@ -21,10 +22,7 @@ $di->setters[HttpFactoryAwareInterface::class] = [
     'setHttpFactory' => $di->lazyGet('httpFactory'),
 ];
 
-$di->set('app', $di->lazyNew(\My\Web\WebApp::class, [
-    'container' => $di,
-    // FIXME Router which contains big structure is instantiated before error trapping middleware
-    'router' => $di->lazyGet('router'),
+$di->set('app', $di->lazyNew(WebApp::class, [
     'middlewarePipe' => $di->lazy(function () use ($di) {
         $mp = new \Zend\Stratigility\MiddlewarePipe();
         PlainPhp::runner()->with([
@@ -33,8 +31,8 @@ $di->set('app', $di->lazyNew(\My\Web\WebApp::class, [
         ])->doRequire(__DIR__ . '/middleware.php');
         return $mp;
     }),
-    'httpFactory' => $di->lazyGet('httpFactory'),
-    'params' => $di->lazyRequire(__DIR__ . '/../params.php'),
+    // FIXME Router which contains big structure is instantiated before error trapping middleware
+    'router' => $di->lazyGet('router'),
 ]));
 
 $di->set('httpFactory', $di->lazyNew(DiactorosHttpFactory::class));
