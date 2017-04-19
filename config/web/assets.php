@@ -1,12 +1,9 @@
 <?php
 use Aura\Di\Container;
-use My\Web\Lib\View\Asset\AssetInterface;
 use My\Web\Lib\View\Asset\AssetManager;
 
 /** @var Container $di */
 /** @var AssetManager $am */
-
-/** @var AssetInterface[] $assets */
 
 $am->register('jquery', $am->newAsset([
     'baseUrl' => '/assets/jquery/dist',
