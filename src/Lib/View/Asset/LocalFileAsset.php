@@ -1,6 +1,8 @@
 <?php
 namespace My\Web\Lib\View\Asset;
 
+use Webmozart\PathUtil\Path;
+
 class LocalFileAsset implements AssetInterface
 {
     use AssetTrait;
@@ -58,7 +60,7 @@ class LocalFileAsset implements AssetInterface
         }
 
         foreach ($this->getElements($stage) as $element) {
-            $urls[] = rtrim($this->getBaseUrl(), '/') . '/' . ltrim($element, '/');
+            $urls[] = Path::join($this->getBaseUrl(), $element);
         }
 
         return $urls;

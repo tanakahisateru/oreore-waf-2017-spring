@@ -2,14 +2,17 @@
 namespace My\Web;
 
 use Aura\Di\Container;
-use My\Web\Lib\Http\HttpFactoryInterface;
+use My\Web\Lib\Http\HttpFactoryAwareInterface;
+use My\Web\Lib\Http\HttpFactoryInjectionTrait;
 use My\Web\Lib\Router\Router;
 use Zend\Diactoros\Response\SapiEmitter;
 use Zend\Diactoros\Server;
 use Zend\Stratigility\NoopFinalHandler;
 
-class WebApp extends App
+class WebApp extends App implements HttpFactoryAwareInterface
 {
+    use HttpFactoryInjectionTrait;
+
     /**
      * @var Router
      */
@@ -21,30 +24,22 @@ class WebApp extends App
     protected $middlewarePipe;
 
     /**
-     * @var HttpFactoryInterface
-     */
-    protected $httpFactory;
-
-    /**
      * WebApp constructor.
      * @param Container $container
-     * @param Router $router
      * @param callable $middlewarePipe
-     * @param HttpFactoryInterface $httpFactory
+     * @param Router $router
      * @param array $params
      */
     public function __construct(
         Container $container,
-        Router $router,
         callable $middlewarePipe,
-        HttpFactoryInterface $httpFactory,
+        Router $router,
         array $params
     )
     {
         parent::__construct($container, $params);
-        $this->router = $router;
         $this->middlewarePipe = $middlewarePipe;
-        $this->httpFactory = $httpFactory;
+        $this->router = $router;
     }
 
     /**

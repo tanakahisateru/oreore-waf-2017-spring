@@ -2,7 +2,6 @@
 namespace My\Web\Lib\View;
 
 use My\Web\Lib\View\Asset\AssetInterface;
-use Psr\Http\Message\ResponseInterface;
 
 class View
 {
@@ -14,7 +13,12 @@ class View
     /**
      * @var array
      */
-    protected $attributes;
+    protected $folderMap;
+
+    /**
+     * @var array
+     */
+    protected $attributeCollection;
 
     /**
      * @var AssetInterface[]
@@ -30,8 +34,66 @@ class View
     {
         $this->engine = $engine;
 
-        $this->attributes = [];
+        $this->folderMap = [];
+        $this->attributeCollection = [];
         $this->requiredAssets = [];
+    }
+
+
+    /**
+     * @return array
+     */
+    public function getFolderMap()
+    {
+        return $this->folderMap;
+    }
+
+    /**
+     * @param string $folderName
+     * @return bool
+     */
+    public function hasFolder($folderName)
+    {
+        return isset($this->folderMap[$folderName]);
+    }
+
+    /**
+     * @param string $folderName
+     * @return string
+     */
+    public function getFolder($folderName)
+    {
+        if ($this->hasFolder($folderName)) {
+            return $this->folderMap[$folderName];
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * @param string $folderName
+     * @param string $subPath
+     */
+    public function setFolder($folderName, $subPath)
+    {
+        $this->folderMap[$folderName] = $subPath;
+    }
+
+    /**
+     * @return array
+     */
+    public function getAttributeCollection()
+    {
+        return $this->attributeCollection;
+    }
+
+    /**
+     * @param string $name
+     * @return bool
+     */
+    public function hasAttribute($name)
+    {
+        return isset($this->attributeCollection[$name]);
     }
 
     /**
@@ -41,16 +103,7 @@ class View
      */
     public function getAttribute($name, $default = null)
     {
-        return $this->hasAttribute($name) ? $this->attributes[$name] : $default;
-    }
-
-    /**
-     * @param string $name
-     * @return bool
-     */
-    public function hasAttribute($name)
-    {
-        return isset($this->attributes[$name]);
+        return $this->hasAttribute($name) ? $this->attributeCollection[$name] : $default;
     }
 
     /**
@@ -59,7 +112,7 @@ class View
      */
     public function setAttribute($name, $value)
     {
-        $this->attributes[$name] = $value;
+        $this->attributeCollection[$name] = $value;
     }
 
     /**
@@ -96,34 +149,12 @@ class View
     }
 
     /**
-     * @param string $folderName
-     * @param string $subPath
-     */
-    public function setTemplateFolder($folderName, $subPath)
-    {
-        $this->engine->setTemplateFolder($folderName, $subPath);
-    }
-
-    /**
-     * @param ResponseInterface $response
-     * @param string $template
-     * @param array $data
-     * @return ResponseInterface
-     */
-    public function render(ResponseInterface $response, $template, array $data = [])
-    {
-        $content = $this->fetchTemplate($template, $data);
-        $response->getBody()->write($content);
-        return $response;
-    }
-
-    /**
      * @param string $name
      * @param array $data
      * @return string
      */
-    public function fetchTemplate($name, array $data = [])
+    public function render($name, array $data = [])
     {
-        return $this->engine->fetchTemplateIn($this, $name, $data);
+        return $this->engine->renderIn($this, $name, $data);
     }
 }

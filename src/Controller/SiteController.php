@@ -2,18 +2,23 @@
 namespace My\Web\Controller;
 
 use Aura\Sql\PdoInterface;
-use My\Web\Lib\Injection\LoggerInjectionTrait;
-use My\Web\Lib\Injection\ViewInjectionTrait;
+use My\Web\Lib\Http\HttpFactoryAwareInterface;
+use My\Web\Lib\Http\HttpFactoryInjectionTrait;
+use My\Web\Lib\Log\LoggerInjectionTrait;
 use My\Web\Lib\View\ViewAwareInterface;
+use My\Web\Lib\View\ViewInjectionTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LogLevel;
 
-class SiteController implements LoggerAwareInterface, ViewAwareInterface
+class SiteController implements LoggerAwareInterface, HttpFactoryAwareInterface, ViewAwareInterface
 {
     use LoggerInjectionTrait;
+    use HttpFactoryInjectionTrait;
     use ViewInjectionTrait;
+
+    use HtmlPageControllerTrait;
 
     /**
      * @var PdoInterface|\PDO
@@ -31,18 +36,19 @@ class SiteController implements LoggerAwareInterface, ViewAwareInterface
 
     /**
      * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
      * @return ResponseInterface
      */
-    public function actionIndex($request, $response)
+    public function actionIndex($request)
     {
-        $this->log(LogLevel::DEBUG, 'site.index');
+        $this->getLogger()->log(LogLevel::DEBUG, 'site.index');
 
         $qp = $request->getQueryParams();
         $greeting = isset($qp['greeting']) ? $qp['greeting'] : 'Hello,';
 
+        // TODO Needs event listener to move these cross-cutting concerns
         $this->modifyTemplateFolderForMobile($request);
-        return $this->render($response, 'current::index.php', [
+
+        return $this->htmlResponse('current::index.php', [
             'greeting' => $greeting,
         ]);
     }

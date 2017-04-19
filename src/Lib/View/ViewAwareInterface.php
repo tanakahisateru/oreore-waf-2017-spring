@@ -4,7 +4,7 @@ namespace My\Web\Lib\View;
 interface ViewAwareInterface
 {
     /**
-     * @param View $view
+     * @param ViewEngine $viewEngine
      */
-    public function setView(View $view);
+    public function setViewEngine(ViewEngine $viewEngine);
 }

@@ -7,7 +7,7 @@ use Aura\Router\Route;
 use Aura\Router\RouterContainer;
 use Aura\Router\Rule\Accepts;
 use Aura\Router\Rule\Allows;
-use My\Web\Lib\Injection\LoggerInjectionTrait;
+use My\Web\Lib\Log\LoggerInjectionTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerAwareInterface;

@@ -6,6 +6,7 @@ use My\Web\Lib\Router\Router;
 use My\Web\Lib\View\Asset\AssetInterface;
 use My\Web\Lib\View\Asset\AssetManager;
 use My\Web\Lib\View\Template\TemplateEngine;
+use Webmozart\PathUtil\Path;
 
 class ViewEngine
 {
@@ -132,34 +133,25 @@ class ViewEngine
     }
 
     /**
-     * @param string $folderName
-     * @param string $subPath
-     */
-    public function setTemplateFolder($folderName, $subPath)
-    {
-        $engine = $this->getTemplateEngine();
-        $pe = [
-            rtrim($engine->getDirectory(), '/'),
-            trim($subPath, '/'),
-        ];
-
-        $engine->addFolder($folderName, implode('/', $pe));
-    }
-
-    /**
      * @param View $view
      * @param string $name
      * @param array $data
      * @return string
      */
-    public function fetchTemplateIn(View $view, $name, array $data = [])
+    public function renderIn(View $view, $name, array $data = [])
     {
-        $engine = $this->getTemplateEngine();
+        // Plate engine is stateful
+        $engine = clone $this->getTemplateEngine();
+        $rootPath = $engine->getDirectory();
+
         $engine->registerFunction('view', function () use ($view) {
             return $view;
         });
-        $result = $engine->render($name, $data);
-        $engine->dropFunction('view');
-        return $result;
+
+        foreach ($view->getFolderMap() as $folder => $path) {
+            $engine->addFolder($folder, Path::join($rootPath, $path));
+        }
+
+        return $engine->render($name, $data);
     }
 }

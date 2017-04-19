@@ -1,18 +1,14 @@
 <?php
-namespace My\Web\Lib\Injection;
+namespace My\Web\Controller;
 
+use My\Web\Lib\Http\HttpFactoryInterface;
 use My\Web\Lib\Util\Mobile;
 use My\Web\Lib\View\View;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
-trait ViewInjectionTrait
+trait HtmlPageControllerTrait
 {
-    /**
-     * @var View
-     */
-    protected $view;
-
     /**
      * @var string
      */
@@ -26,31 +22,17 @@ trait ViewInjectionTrait
     /**
      * @return View
      */
-    public function getView()
-    {
-        return $this->view;
-    }
+    abstract public function createView();
 
     /**
-     * @param View $view
+     * @return HttpFactoryInterface
      */
-    public function setView(View $view)
-    {
-        $this->view = $view;
-    }
-
-    /**
-     * @return string
-     */
-    public function getCurrentTemplateFolder()
-    {
-        return $this->currentTemplateFolder;
-    }
+    abstract public function getHttpFactory();
 
     /**
      * @param string $path
      */
-    public function setTemplateFolder($path)
+    public function templateFolder($path)
     {
         $this->currentTemplateFolder = $path;
     }
@@ -70,20 +52,33 @@ trait ViewInjectionTrait
     }
 
     /**
-     * @param ResponseInterface $response
      * @param string $template
      * @param array $data
-     * @return ResponseInterface
+     * @return string
      */
-    public function render(ResponseInterface $response, $template, array $data = [])
+    public function render($template, array $data = [])
     {
-        $path = $this->getCurrentTemplateFolder();
+        $path = $this->currentTemplateFolder;
         if ($this->templateFolderModifier) {
             $path = call_user_func($this->templateFolderModifier, $path);
         }
 
-        $view = $this->getView();
-        $view->setTemplateFolder('current', $path);
-        return $view->render($response, $template, $data);
+        $view = $this->createView();
+        $view->setFolder('current', $path);
+
+        return $view->render($template, $data);
+    }
+
+    /**
+     * @param string $template
+     * @param array $data
+     * @param int $status
+     * @param array $headers
+     * @return ResponseInterface
+     */
+    public function htmlResponse($template, array $data = [], $status = 200, array $headers = [])
+    {
+        $html = $this->render($template, $data);
+        return $this->getHttpFactory()->createHtmlResponse($html, $status, $headers);
     }
 }

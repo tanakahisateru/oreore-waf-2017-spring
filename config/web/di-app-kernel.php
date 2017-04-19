@@ -3,16 +3,27 @@ use Aura\Di\Container;
 use Aura\Dispatcher\Dispatcher;
 use Aura\Router\RouterContainer;
 use My\Web\Lib\Http\DiactorosHttpFactory;
+use My\Web\Lib\Http\HttpFactoryAwareInterface;
 use My\Web\Lib\Router\Router;
 use My\Web\Lib\Util\PlainPhp;
 use My\Web\Lib\View\Asset\AssetManager;
 use My\Web\Lib\View\Template\TemplateEngine;
+use My\Web\Lib\View\ViewAwareInterface;
 use My\Web\Lib\View\ViewEngine;
 
 /** @var Container $di */
 
+$di->setters[ViewAwareInterface::class] = [
+    'setViewEngine' => $di->lazyGet('viewEngine'),
+];
+
+$di->setters[HttpFactoryAwareInterface::class] = [
+    'setHttpFactory' => $di->lazyGet('httpFactory'),
+];
+
 $di->set('app', $di->lazyNew(\My\Web\WebApp::class, [
     'container' => $di,
+    // FIXME Router which contains big structure is instantiated before error trapping middleware
     'router' => $di->lazyGet('router'),
     'middlewarePipe' => $di->lazy(function () use ($di) {
         $mp = new \Zend\Stratigility\MiddlewarePipe();

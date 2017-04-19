@@ -5,12 +5,16 @@ use Aura\Di\Container;
 use Aura\Di\ContainerBuilder;
 use Aura\Di\Exception\ServiceNotFound;
 use Aura\Includer\Includer;
+use My\Web\Lib\Log\LoggerInjectionTrait;
 use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
-class App
+class App implements LoggerAwareInterface
 {
+    use LoggerInjectionTrait;
+
     /**
      * @var static
      */

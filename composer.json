@@ -12,7 +12,8 @@
         "monolog/monolog": "^1.22",
         "zendframework/zend-escaper": "^2.5",
         "zendframework/zend-diactoros": "^1.4",
-        "zendframework/zend-stratigility": "^2.0"
+        "zendframework/zend-stratigility": "^2.0",
+        "webmozart/path-util": "^2.3"
     },
     "require-dev": {
         "codeception/codeception": "^2.2",
