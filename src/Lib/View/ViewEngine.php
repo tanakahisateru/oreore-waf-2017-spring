@@ -3,8 +3,8 @@ namespace My\Web\Lib\View;
 
 use League\Plates\Engine;
 use My\Web\Lib\Router\Router;
-use My\Web\Lib\View\Asset\AssetCollection;
 use My\Web\Lib\View\Asset\AssetManager;
+use My\Web\Lib\View\Asset\AssetUsage;
 use My\Web\Lib\View\Template\TemplateEngine;
 use Webmozart\PathUtil\Path;
 
@@ -95,7 +95,7 @@ class ViewEngine
      */
     public function createView()
     {
-        return new View($this, new AssetCollection($this->getAssetManager()));
+        return new View($this, new AssetUsage($this->getAssetManager()));
     }
 
     /**
@@ -111,6 +111,15 @@ class ViewEngine
         } else {
             return $this->getRouter()->urlTo($name, $data);
         }
+    }
+
+    /**
+     * @param string $url
+     * @return string
+     */
+    public function resourceUrlTo($url)
+    {
+        return $this->getAssetManager()->toManagedUrl($url);
     }
 
     /**

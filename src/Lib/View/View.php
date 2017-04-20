@@ -1,7 +1,7 @@
 <?php
 namespace My\Web\Lib\View;
 
-use My\Web\Lib\View\Asset\AssetCollection;
+use My\Web\Lib\View\Asset\AssetUsage;
 
 class View
 {
@@ -21,7 +21,7 @@ class View
     protected $attributeCollection;
 
     /**
-     * @var AssetCollection
+     * @var AssetUsage
      */
     protected $requiredAssets;
 
@@ -29,7 +29,7 @@ class View
      * View constructor.
      *
      * @param ViewEngine $engine
-     * @param AssetCollection $requiredAssets
+     * @param AssetUsage $requiredAssets
      */
     public function __construct($engine, $requiredAssets)
     {
@@ -114,6 +114,25 @@ class View
     {
         $this->attributeCollection[$name] = $value;
     }
+    /**
+     * @param string $name
+     * @param array $data
+     * @param bool $raw
+     * @return bool
+     */
+    public function routeUrlTo($name, $data=[], $raw = false)
+    {
+        return $this->engine->routeUrlTo($name, $data, $raw);
+    }
+
+    /**
+     * @param string $url
+     * @return string
+     */
+    public function resourceUrlTo($url)
+    {
+        return $this->engine->resourceUrlTo($url);
+    }
 
     /**
      * @param string $name
@@ -130,17 +149,6 @@ class View
     public function assetUrls($stage = null)
     {
         return $this->requiredAssets->collectUrls($stage);
-    }
-
-    /**
-     * @param string $name
-     * @param array $data
-     * @param bool $raw
-     * @return bool
-     */
-    public function routeUrlTo($name, $data=[], $raw = false)
-    {
-        return $this->engine->routeUrlTo($name, $data, $raw);
     }
 
     /**

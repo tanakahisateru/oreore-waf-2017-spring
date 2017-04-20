@@ -1,7 +1,7 @@
 <?php
 namespace My\Web\Lib\View\Asset;
 
-class AssetCollection
+class AssetUsage implements UrlCollectableInterface
 {
     /**
      * @var AssetManager
@@ -9,12 +9,12 @@ class AssetCollection
     protected $manager;
 
     /**
-     * @var AssetInterface[]
+     * @var UrlCollectableInterface[]
      */
     protected $assets;
 
     /**
-     * AssetCollection constructor.
+     * AssetUsage constructor.
      *
      * @param AssetManager $manager
      */
@@ -25,11 +25,11 @@ class AssetCollection
     }
 
     /**
-     * @param AssetInterface|string $asset
+     * @param UrlCollectableInterface|string $asset
      */
     public function add($asset)
     {
-        if (!($asset instanceof AssetInterface)) {
+        if (!($asset instanceof UrlCollectableInterface)) {
             if (!$this->manager->has($asset)) {
                 throw new \UnexpectedValueException('No such asset: ' . $asset);
             }
@@ -46,13 +46,9 @@ class AssetCollection
     public function collectUrls($stage = null)
     {
         $urls = [];
-
         foreach ($this->assets as $asset) {
-            foreach ($asset->collectUrls($stage) as $url) {
-                $urls[] = $url;
-            }
+            $urls = array_merge($urls, $asset->collectUrls($stage));
         }
-
         return array_unique($urls);
     }
 }

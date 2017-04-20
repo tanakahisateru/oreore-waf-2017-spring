@@ -1,10 +1,12 @@
 <?php
 namespace My\Web\Lib\View\Asset;
 
-class AssetManager
+use Psr\Container\ContainerInterface;
+
+class AssetManager implements ContainerInterface
 {
     /**
-     * @var AssetInterface[]
+     * @var UrlCollectableInterface[]
      */
     protected $assets = [];
 
@@ -18,66 +20,86 @@ class AssetManager
      */
     protected $revManifest = [];
 
+    /**
+     * @param string $name
+     * @param array $definition
+     */
+    public function asset($name, array $definition = [])
+    {
+        $this->set($name, $this->newBundle($definition));
+    }
 
     /**
      * @param string $name
-     * @param AssetInterface $asset
+     * @param UrlCollectableInterface $source
      */
-    public function set($name, AssetInterface $asset)
+    public function set($name, UrlCollectableInterface $source)
     {
-        $this->assets[$name] = $asset;
+        $this->assets[$name] = $source;
     }
 
-    public function asset(array $definition = [])
+    /**
+     * @param array $config
+     * @return ResourceBundle
+     */
+    public function newBundle(array $config = [])
     {
-        $baseUrl = isset($definition['baseUrl']) ? $definition['baseUrl'] : '';
+        $baseUrl = isset($config['baseUrl']) ? $config['baseUrl'] : '';
 
-        $elements = isset($definition['elements']) ? $definition['elements'] : [];
-        if (!is_array($elements)) {
-            $elements = [$elements];
+        if (isset($config['files'])) {
+            $files = $config['files'];
+        } elseif (isset($config['file'])) {
+            $files = $config['file'];
+        } else {
+            $files = [];
+        }
+        if (!is_array($files)) {
+            $files = [$files];
         }
 
-        $stage = isset($definition['stage']) ? $definition['stage'] : null;
+        $stage = isset($config['stage']) ? $config['stage'] : null;
 
-        $dependencies = [];
-        if (isset($definition['dependencies'])) {
-            if (!is_array($definition['dependencies'])) {
-                $definition['dependencies'] = [$definition['dependencies']];
-            }
-            foreach ($definition['dependencies'] as $dependency) {
-                if (!($dependency instanceof AssetInterface || is_scalar($dependency))) {
-                    throw new \InvalidArgumentException('Asset dependency must be string or Asset object');
-                }
-                $dependencies[] = $dependency;
+        if (isset($config['dependencies'])) {
+            $dependencies = $config['dependencies'];
+        } elseif (isset($config['dependency'])) {
+            $dependencies = $config['dependency'];
+        } else {
+            $dependencies = [];
+        }
+        if (!is_array($dependencies)) {
+            $dependencies = [$dependencies];
+        }
+        foreach ($dependencies as $dependency) {
+            if (!($dependency instanceof UrlCollectableInterface || is_scalar($dependency))) {
+                throw new \InvalidArgumentException('Asset dependency must be string or Asset object');
             }
         }
 
-        $subset = [];
-        if (isset($definition['subset'])) {
-            if (!is_array($definition['subset'])) {
-                throw new \InvalidArgumentException('Asset subset must be array');
+        $bundles = [];
+        if (isset($config['bundles'])) {
+            if (!is_array($config['bundles'])) {
+                throw new \InvalidArgumentException('Asset bundles must be array');
             }
-            foreach ($definition['subset'] as $asset) {
-                if (!is_array($asset)) {
-                    throw new \InvalidArgumentException('Asset subset must be array');
+            foreach ($config['bundles'] as $bundleConfig) {
+                if (!is_array($bundleConfig)) {
+                    throw new \InvalidArgumentException('Asset bundles definition must be array');
                 }
-                if (empty($asset['baseUrl']) || !is_string($asset['baseUrl'])) {
-                    $asset['baseUrl'] = $baseUrl;
+                if (empty($bundleConfig['baseUrl']) || !is_string($bundleConfig['baseUrl'])) {
+                    $bundleConfig['baseUrl'] = $baseUrl;
                 }
-                if (empty($asset['stage']) || !is_string($asset['stage'])) {
-                    $asset['stage'] = $stage;
+                if (empty($bundleConfig['stage']) || !is_string($bundleConfig['stage'])) {
+                    $bundleConfig['stage'] = $stage;
                 }
-                if (!isset($asset['dependencies'])) {
-                    $asset['dependencies'] = [];
+                if (!isset($bundleConfig['dependencies']) && !isset($bundleConfig['dependency'])) {
+                    $bundleConfig['dependencies'] = [];
                 }
-                $asset['dependencies'] = array_merge($dependencies, $asset['dependencies']);
+                $bundleConfig['dependencies'] = array_merge($dependencies, $bundleConfig['dependencies']);
 
-                $subset[] = $this->asset($asset);
+                $bundles[] = $this->newBundle($bundleConfig);
             }
         }
-        $dependencies = array_merge($dependencies, $subset);
 
-        return new Asset($this, $baseUrl, $elements, $stage, $dependencies);
+        return new ResourceBundle($this, $baseUrl, $files, $stage, array_merge($dependencies, $bundles));
     }
 
     /**
@@ -91,7 +113,7 @@ class AssetManager
 
     /**
      * @param string $name
-     * @return AssetInterface
+     * @return UrlCollectableInterface
      */
     public function get($name)
     {
@@ -139,12 +161,11 @@ class AssetManager
     }
 
     /**
-     * @param string $path
+     * @param string $url
      * @return string
      */
-    public function toUrl($path)
+    public function toManagedUrl($url)
     {
-        $url = $path;
         if (isset($this->mapping[$url])) {
             $url = $this->mapping[$url];
         }

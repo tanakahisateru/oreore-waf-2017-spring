@@ -1,13 +1,8 @@
 <?php
 namespace My\Web\Lib\View\Asset;
 
-interface AssetInterface
+interface UrlCollectableInterface
 {
-    /**
-     * @return AssetInterface[]
-     */
-    public function collectDependencies();
-
     /**
      * @param string $stage
      * @return array
