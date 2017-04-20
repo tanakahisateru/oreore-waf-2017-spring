@@ -121,11 +121,11 @@ class AssetManager implements ContainerInterface
     }
 
     /**
+     * @param string $prefix
      * @param string $target
      * @param array $source
-     * @param string $prefix
      */
-    public function map($target, $source, $prefix = '')
+    public function map($prefix, $target, $source)
     {
         if (!is_array($source)) {
             $source = [$source];
@@ -144,10 +144,10 @@ class AssetManager implements ContainerInterface
     }
 
     /**
-     * @param array $manifest
      * @param string $prefix
+     * @param array $manifest
      */
-    public function rev($manifest, $prefix = '')
+    public function rev($prefix, $manifest)
     {
         if (!empty($prefix)) {
             $prefixedManifest = [];
