@@ -164,7 +164,7 @@ class AssetManager implements ContainerInterface
      * @param string $url
      * @return string
      */
-    public function toManagedUrl($url)
+    public function url($url)
     {
         if (isset($this->mapping[$url])) {
             $url = $this->mapping[$url];

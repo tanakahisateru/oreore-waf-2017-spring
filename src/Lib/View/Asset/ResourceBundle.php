@@ -108,7 +108,7 @@ class ResourceBundle implements UrlCollectableInterface
     {
         return array_map(function ($file) {
             $url = Path::join($this->baseUrl, $file);
-            return $this->manager->toManagedUrl($url);
+            return $this->manager->url($url);
         }, $this->files);
     }
 }

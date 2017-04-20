@@ -77,7 +77,7 @@ class ViewEngine
      */
     public function resourceUrlTo($url)
     {
-        return $this->getAssetManager()->toManagedUrl($url);
+        return $this->getAssetManager()->url($url);
     }
 
     /**
