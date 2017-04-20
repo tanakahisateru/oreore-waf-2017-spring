@@ -1,6 +1,6 @@
 <?php
 use Aura\Di\Container;
-use My\Web\App;
+use My\Web\Lib\App;
 
 /** @var Container $di */
 

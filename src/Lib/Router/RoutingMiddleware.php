@@ -1,11 +1,9 @@
 <?php
-namespace My\Web\Lib\Middleware;
+namespace My\Web\Lib\Router;
 
 use Interop\Http\ServerMiddleware\DelegateInterface;
 use Interop\Http\ServerMiddleware\MiddlewareInterface;
 use My\Web\Lib\Http\HttpFactoryInterface;
-use My\Web\Lib\Router\Router;
-use My\Web\Lib\Router\RoutingException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 

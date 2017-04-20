@@ -1,9 +1,9 @@
 <?php
 use Aura\Di\Container;
 use My\Web\Lib\Http\HttpFactoryInterface;
-use My\Web\Lib\Middleware\RoutingMiddleware;
-use My\Web\Lib\Middleware\WhoopsResponseGenerator;
+use My\Web\Lib\Http\WhoopsResponseGenerator;
 use My\Web\Lib\Router\Router;
+use My\Web\Lib\Router\RoutingMiddleware;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Stratigility\Middleware\ErrorHandler;

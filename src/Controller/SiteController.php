@@ -2,22 +2,15 @@
 namespace My\Web\Controller;
 
 use Aura\Sql\PdoInterface;
-use My\Web\Lib\Http\HttpFactoryAwareInterface;
-use My\Web\Lib\Http\HttpFactoryInjectionTrait;
 use My\Web\Lib\Log\LoggerInjectionTrait;
-use My\Web\Lib\View\ViewAwareInterface;
-use My\Web\Lib\View\ViewInjectionTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LogLevel;
 
-class SiteController implements LoggerAwareInterface, HttpFactoryAwareInterface, ViewAwareInterface
+class SiteController implements LoggerAwareInterface, HtmlPageControllerInterface
 {
     use LoggerInjectionTrait;
-    use HttpFactoryInjectionTrait;
-    use ViewInjectionTrait;
-
     use HtmlPageControllerTrait;
 
     /**

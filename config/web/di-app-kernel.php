@@ -10,7 +10,8 @@ use My\Web\Lib\View\Asset\AssetManager;
 use My\Web\Lib\View\Template\TemplateEngine;
 use My\Web\Lib\View\ViewAwareInterface;
 use My\Web\Lib\View\ViewEngine;
-use My\Web\WebApp;
+use My\Web\Lib\WebApp;
+use Zend\Stratigility\MiddlewarePipe;
 
 /** @var Container $di */
 
@@ -24,7 +25,7 @@ $di->setters[HttpFactoryAwareInterface::class] = [
 
 $di->set('app', $di->lazyNew(WebApp::class, [
     'middlewarePipe' => $di->lazy(function () use ($di) {
-        $mp = new \Zend\Stratigility\MiddlewarePipe();
+        $mp = new MiddlewarePipe();
         PlainPhp::runner()->with([
             'di' => $di,
             'mp' => $mp,

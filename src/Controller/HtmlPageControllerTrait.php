@@ -1,14 +1,17 @@
 <?php
 namespace My\Web\Controller;
 
-use My\Web\Lib\Http\HttpFactoryInterface;
+use My\Web\Lib\Http\HttpFactoryInjectionTrait;
 use My\Web\Lib\Util\Mobile;
-use My\Web\Lib\View\View;
+use My\Web\Lib\View\ViewInjectionTrait;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
 trait HtmlPageControllerTrait
 {
+    use HttpFactoryInjectionTrait;
+    use ViewInjectionTrait;
+
     /**
      * @var string
      */
@@ -18,16 +21,6 @@ trait HtmlPageControllerTrait
      * @var callable
      */
     protected $templateFolderModifier;
-
-    /**
-     * @return View
-     */
-    abstract public function createView();
-
-    /**
-     * @return HttpFactoryInterface
-     */
-    abstract public function getHttpFactory();
 
     /**
      * @param string $path

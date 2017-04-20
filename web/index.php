@@ -1,5 +1,5 @@
 <?php
-use My\Web\WebApp;
+use My\Web\Lib\WebApp;
 
 require __DIR__ . '/../config/bootstrap.php';
 

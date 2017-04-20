@@ -1,7 +1,7 @@
 <?php
 use Aura\Di\Container;
 use Monolog\Logger;
-use My\Web\App;
+use My\Web\Lib\App;
 use Psr\Log\LoggerAwareInterface;
 
 /** @var Container $di */
