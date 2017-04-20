@@ -5,53 +5,23 @@ use League\Plates\Engine;
 use My\Web\Lib\Router\Router;
 use My\Web\Lib\View\Asset\AssetManager;
 use My\Web\Lib\View\Asset\AssetUsage;
-use My\Web\Lib\View\Template\TemplateEngine;
+use Psr\Container\ContainerInterface;
 use Webmozart\PathUtil\Path;
 
 class ViewEngine
 {
     /**
-     * @var callable
+     * @var ContainerInterface
      */
-    protected $templateEngineFactory;
-
-    /**
-     * @var callable
-     */
-    protected $assetManagerFactory;
-
-    /**
-     * @var callable
-     */
-    protected $routerFactory;
-
-    /**
-     * @var TemplateEngine
-     */
-    protected $templateEngine;
-
-    /**
-     * @var AssetManager
-     */
-    protected $assetManager;
-
-    /**
-     * @var Router
-     */
-    protected $router;
-
+    protected $container;
 
     /**
      * View constructor.
-     * @param callable $templateEngineFactory
-     * @param callable $assetManagerFactory
-     * @param callable $routerFactory
+     * @param ContainerInterface $container
      */
-    public function __construct($templateEngineFactory, $assetManagerFactory, $routerFactory)
+    public function __construct(ContainerInterface $container)
     {
-        $this->templateEngineFactory = $templateEngineFactory;
-        $this->assetManagerFactory = $assetManagerFactory;
-        $this->routerFactory = $routerFactory;
+        $this->container = $container;
     }
 
     /**
@@ -59,11 +29,7 @@ class ViewEngine
      */
     protected function getTemplateEngine()
     {
-        if (!$this->templateEngine) {
-            $this->templateEngine = call_user_func($this->templateEngineFactory);
-        }
-
-        return $this->templateEngine;
+        return $this->container->get('templateEngine');
     }
 
     /**
@@ -71,11 +37,7 @@ class ViewEngine
      */
     protected function getAssetManager()
     {
-        if (!$this->assetManager) {
-            $this->assetManager = call_user_func($this->assetManagerFactory);
-        }
-
-        return $this->assetManager;
+        return $this->container->get('assetManager');
     }
 
     /**
@@ -83,11 +45,7 @@ class ViewEngine
      */
     public function getRouter()
     {
-        if (!$this->router) {
-            $this->router = call_user_func($this->routerFactory);
-        }
-
-        return $this->router;
+        return $this->container->get('router');
     }
 
     /**

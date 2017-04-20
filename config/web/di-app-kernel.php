@@ -2,6 +2,7 @@
 use Aura\Di\Container;
 use Aura\Dispatcher\Dispatcher;
 use Aura\Router\RouterContainer;
+use My\Web\Lib\Container\AliasContainer;
 use My\Web\Lib\Http\DiactorosHttpFactory;
 use My\Web\Lib\Http\HttpFactoryAwareInterface;
 use My\Web\Lib\Router\Router;
@@ -87,13 +88,12 @@ $di->set('assetManager', $di->lazy(function () use ($di) {
 }));
 
 $di->set('viewEngine', $di->lazyNew(ViewEngine::class, [
-    'templateEngineFactory' => function () use ($di) {
-        return $di->get('templateEngine');
-    },
-    'assetManagerFactory' => function () use ($di) {
-        return $di->get('assetManager');
-    },
-    'routerFactory' => function () use ($di) {
-        return $di->get('router');
-    },
+    'container' => $di->lazyNew(AliasContainer::class, [
+        'parent' => $di,
+        'alias' => [
+            'templateEngine' => 'templateEngine',
+            'assetManager' => 'assetManager',
+            'router' => 'router',
+        ],
+    ]),
 ]));
