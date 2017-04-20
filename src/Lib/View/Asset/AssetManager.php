@@ -11,7 +11,7 @@ class AssetManager
     /**
      * @var array
      */
-    protected $unifiedMap = [];
+    protected $mapping = [];
 
     /**
      * @var array
@@ -23,12 +23,12 @@ class AssetManager
      * @param string $name
      * @param AssetInterface $asset
      */
-    public function register($name, AssetInterface $asset)
+    public function set($name, AssetInterface $asset)
     {
         $this->assets[$name] = $asset;
     }
 
-    public function newAsset(array $definition = [])
+    public function asset(array $definition = [])
     {
         $baseUrl = isset($definition['baseUrl']) ? $definition['baseUrl'] : '';
 
@@ -44,43 +44,113 @@ class AssetManager
             if (!is_array($definition['dependencies'])) {
                 $definition['dependencies'] = [$definition['dependencies']];
             }
-
             foreach ($definition['dependencies'] as $dependency) {
-                if ($dependency instanceof AssetInterface || is_scalar($dependency)) {
-                    $dependencies[] = $dependency;
-                } elseif (is_array($dependency)) {
-                    if (empty($dependency['baseUrl']) || !is_string($dependency['baseUrl'])) {
-                        $dependency['baseUrl'] = $baseUrl;
-                    }
-                    if (empty($dependency['stage']) || !is_string($dependency['stage'])) {
-                        $dependency['stage'] = $stage;
-                    }
-                    $dependencies[] = $this->newAsset($dependency);
-                } else {
-                    throw new \InvalidArgumentException('Asset dependency must be string, array or Asset object');
+                if (!($dependency instanceof AssetInterface || is_scalar($dependency))) {
+                    throw new \InvalidArgumentException('Asset dependency must be string or Asset object');
                 }
+                $dependencies[] = $dependency;
             }
         }
+
+        $subset = [];
+        if (isset($definition['subset'])) {
+            if (!is_array($definition['subset'])) {
+                throw new \InvalidArgumentException('Asset subset must be array');
+            }
+            foreach ($definition['subset'] as $asset) {
+                if (!is_array($asset)) {
+                    throw new \InvalidArgumentException('Asset subset must be array');
+                }
+                if (empty($asset['baseUrl']) || !is_string($asset['baseUrl'])) {
+                    $asset['baseUrl'] = $baseUrl;
+                }
+                if (empty($asset['stage']) || !is_string($asset['stage'])) {
+                    $asset['stage'] = $stage;
+                }
+                if (!isset($asset['dependencies'])) {
+                    $asset['dependencies'] = [];
+                }
+                $asset['dependencies'] = array_merge($dependencies, $asset['dependencies']);
+
+                $subset[] = $this->asset($asset);
+            }
+        }
+        $dependencies = array_merge($dependencies, $subset);
 
         return new Asset($this, $baseUrl, $elements, $stage, $dependencies);
     }
 
     /**
-     * @param $name
+     * @param string $name
+     * @return bool
+     */
+    public function has($name)
+    {
+        return isset($this->assets[$name]);
+    }
+
+    /**
+     * @param string $name
      * @return AssetInterface
      */
-    public function getAsset($name)
+    public function get($name)
     {
-        return isset($this->assets[$name]) ? $this->assets[$name] : null;
+        return $this->has($name) ? $this->assets[$name] : null;
     }
 
-    public function mapUnified($url, $glob)
+    /**
+     * @param string $target
+     * @param array $source
+     * @param string $prefix
+     */
+    public function map($target, $source, $prefix = '')
     {
-        
+        if (!is_array($source)) {
+            $source = [$source];
+        }
+
+        if (!empty($prefix)) {
+            $target = $prefix . $target;
+            $source = array_map(function ($s) use ($prefix) {
+                return $prefix . $s;
+            }, $source);
+        }
+
+        foreach ($source as $s) {
+            $this->mapping[$s] = $target;
+        }
     }
 
-    public function revManifest($manifest)
+    /**
+     * @param array $manifest
+     * @param string $prefix
+     */
+    public function rev($manifest, $prefix = '')
     {
+        if (!empty($prefix)) {
+            $prefixedManifest = [];
+            foreach ($manifest as $k => $v) {
+                $prefixedManifest[$prefix . $k] = $prefix . $v;
+            }
+            $manifest = $prefixedManifest;
+        }
 
+        $this->revManifest = array_merge($this->revManifest, $manifest);
+    }
+
+    /**
+     * @param string $path
+     * @return string
+     */
+    public function toUrl($path)
+    {
+        $url = $path;
+        if (isset($this->mapping[$url])) {
+            $url = $this->mapping[$url];
+        }
+        if (isset($this->revManifest[$url])) {
+            $url = $this->revManifest[$url];
+        }
+        return $url;
     }
 }

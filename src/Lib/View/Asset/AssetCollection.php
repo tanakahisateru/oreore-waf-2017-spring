@@ -30,11 +30,10 @@ class AssetCollection
     public function add($asset)
     {
         if (!($asset instanceof AssetInterface)) {
-            $a = $this->manager->getAsset($asset);
-            if (!$a) {
+            if (!$this->manager->has($asset)) {
                 throw new \UnexpectedValueException('No such asset: ' . $asset);
             }
-            $asset = $a;
+            $asset = $this->manager->get($asset);
         }
 
         $this->assets[] = $asset;
@@ -47,14 +46,13 @@ class AssetCollection
     public function collectUrls($stage = null)
     {
         $urls = [];
+
         foreach ($this->assets as $asset) {
             foreach ($asset->collectUrls($stage) as $url) {
-                if (!in_array($url, $urls)) {
-                    $urls[] = $url;
-                }
+                $urls[] = $url;
             }
         }
-        // TODO Replace URLs to unified and rev-ed version.
-        return $urls;
+
+        return array_unique($urls);
     }
 }

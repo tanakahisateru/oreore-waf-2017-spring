@@ -23,7 +23,7 @@ $title = $this->view()->getAttribute('title', 'My App');
 <?= $this->section('after-start-body') ?>
 <div class="container">
     <header>
-        <h1 class="brand"><?= $this->escapeHtml($title) ?></h1>
+        <h1 class="app-title"><?= $this->escapeHtml($title) ?></h1>
     </header>
 
     <?= $this->section('content') ?>

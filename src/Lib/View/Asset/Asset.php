@@ -75,16 +75,18 @@ class Asset implements AssetInterface
 
         foreach ($this->dependencies as $dependency) {
             if (is_scalar($dependency)) {
-                $dependency = $this->manager->getAsset($dependency);
-                if (empty($dependency)) {
-                    continue;
+                if (!$this->manager->has($dependency)) {
+                    throw new \RuntimeException('Missing asset dependency found: ' . $dependency);
                 }
+                $dependency = $this->manager->get($dependency);
             }
+
             foreach ($dependency->collectDependencies() as $nestedDependency) {
                 if (!in_array($nestedDependency, $summary, true)) {
                     $summary[] = $nestedDependency;
                 }
             }
+
             if (!in_array($dependency, $summary, true)) {
                 $summary[] = $dependency;
             }
@@ -109,6 +111,6 @@ class Asset implements AssetInterface
             $urls[] = Path::join($this->baseUrl, $element);
         }
 
-        return $urls;
+        return array_unique(array_map([$this->manager, 'toUrl'], $urls));
     }
 }

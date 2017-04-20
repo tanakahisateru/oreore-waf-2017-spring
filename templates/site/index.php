@@ -13,13 +13,17 @@ $this->view()->setAttribute('title', 'Index - My App');
     <p><?= $this->escape($greeting) ?></p>
 </div>
 
+<?php $this->view()->requireAsset('app'); ?>
 <?php $this->view()->requireAsset('jquery'); ?>
-<?php $this->push('before-end-body') ?>
+
+<?php $this->push('before-end-body'); ?>
 <script>
-    $(function () {
-        $('.site-index')
-            .css('background', '#ffffee')
-            .append('<small>...modified by jQuery</small>');
-    });
+    (function ($) {
+        $(function () {
+            $('.site-index')
+                .css('background', '#ffffee')
+                .appendCaption('...modified by jQuery');
+        });
+    })(jQuery);
 </script>
-<?php $this->end() ?>
+<?php $this->end(); ?>
