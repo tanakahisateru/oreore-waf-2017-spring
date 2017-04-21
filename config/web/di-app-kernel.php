@@ -20,8 +20,6 @@ $di->setters[ViewAwareInterface::class] = [
 
 $di->set('app', $di->lazyNew(WebApp::class, [
     'middlewarePipe' => $di->lazyGet('middlewarePipe'),
-    // FIXME Router which contains big structure is instantiated before error trapping middleware
-    'router' => $di->lazyGet('router'),
 ]));
 
 $di->set('sharedEventManager', $di->lazy(function() use ($di) {
