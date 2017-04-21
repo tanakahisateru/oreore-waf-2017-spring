@@ -4,8 +4,8 @@ namespace My\Web\Controller;
 use My\Web\Lib\Http\HttpFactoryInjectionTrait;
 use My\Web\Lib\Util\Mobile;
 use My\Web\Lib\View\ViewInjectionTrait;
-use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 trait HtmlPageControllerTrait
 {
@@ -31,11 +31,12 @@ trait HtmlPageControllerTrait
     }
 
     /**
-     * @param RequestInterface $request
+     * @param ServerRequestInterface $request
      * @param string $name
      */
-    public function modifyTemplateFolderForMobile(RequestInterface $request, $name = 'sp')
+    public function modifyTemplateFolderForMobile($request, $name = 'sp')
     {
+        assert($request instanceof ServerRequestInterface);
         $agent = Mobile::detect($request);
         if ($agent->isMobile()) {
             $this->templateFolderModifier = function ($base) use ($name) {

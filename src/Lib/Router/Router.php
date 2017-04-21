@@ -7,14 +7,18 @@ use Aura\Router\Route;
 use Aura\Router\RouterContainer;
 use Aura\Router\Rule\Accepts;
 use Aura\Router\Rule\Allows;
+use My\Web\Lib\Http\HttpFactoryAwareInterface;
+use My\Web\Lib\Http\HttpFactoryInjectionTrait;
 use My\Web\Lib\Log\LoggerInjectionTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerAwareInterface;
+use Zend\EventManager\EventsCapableInterface;
 
-class Router implements LoggerAwareInterface
+class Router implements LoggerAwareInterface, HttpFactoryAwareInterface
 {
     use LoggerInjectionTrait;
+    use HttpFactoryInjectionTrait;
 
     /**
      * @var RouterContainer
@@ -44,7 +48,7 @@ class Router implements LoggerAwareInterface
      * @return array|null|ResponseInterface|string
      * @throws RoutingException
      */
-    public function dispatch($request, $responsePrototype)
+    public function dispatch(ServerRequestInterface $request, ResponseInterface $responsePrototype)
     {
         $matcher = $this->routes->getMatcher();
         $route = $matcher->match($request);
@@ -61,7 +65,19 @@ class Router implements LoggerAwareInterface
             $params[$k] = $v;
         }
 
-        return call_user_func($this->dispatcher, $params);
+        $dispatcher = $this->dispatcher;
+        $dispatcher->setObjectParam('controller');
+        $dispatcher->setMethodParam('action');
+        $controller = $dispatcher->getObject($params['controller']);
+
+        try {
+            $this->triggerEvent('beforeAction', $controller, $request, $responsePrototype);
+            $response = call_user_func($dispatcher, $params);
+            $this->triggerEvent('afterAction', $controller, $request, $response);
+            return $response;
+        } catch (ActionStoppedException $e) {
+            return $e->getResponse();
+        }
     }
 
     /**
@@ -143,6 +159,35 @@ class Router implements LoggerAwareInterface
             default:
                 // 404 NOT FOUND
                 return 404;
+        }
+    }
+
+    /**
+     * @param string $eventName
+     * @param object $target
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $responsePrototype
+     * @throws ActionStoppedException
+     */
+    private function triggerEvent($eventName, $target, ServerRequestInterface $request, ResponseInterface $responsePrototype)
+    {
+        if (!($target instanceof EventsCapableInterface)) {
+            return;
+        }
+
+        $argv = new \ArrayObject(compact('request', 'responsePrototype'));
+        $results = $target->getEventManager()->trigger($eventName, $target, $argv);
+
+        if ($results->stopped()) {
+            if ($argv->offsetExists('response')) {
+                $response = $argv->offsetGet('response');
+            } else {
+                $response = $results->last();
+                if (empty($response)) {
+                    $response = $this->getHttpFactory()->createEmptyResponse();
+                }
+            }
+            throw new ActionStoppedException($response);
         }
     }
 }

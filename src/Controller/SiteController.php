@@ -7,11 +7,22 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LogLevel;
+use Zend\EventManager\EventInterface;
+use Zend\EventManager\EventManagerAwareInterface;
+use Zend\EventManager\EventManagerAwareTrait;
 
-class SiteController implements LoggerAwareInterface, HtmlPageControllerInterface
+class SiteController implements
+    LoggerAwareInterface,
+    EventManagerAwareInterface,
+    DefaultListenerAttachableInterface,
+    HtmlPageControllerInterface
 {
     use LoggerInjectionTrait;
+    use EventManagerAwareTrait;
     use HtmlPageControllerTrait;
+
+    // Category tag for system-wide event listener
+    public $eventIdentifier = ['controller'];
 
     /**
      * @var PdoInterface|\PDO
@@ -28,6 +39,31 @@ class SiteController implements LoggerAwareInterface, HtmlPageControllerInterfac
     }
 
     /**
+     *
+     */
+    public function attachDefaultListeners()
+    {
+        $events = $this->getEventManager();
+
+        $events->attach('beforeAction', function (EventInterface $event) {
+            $request = $event->getParam('request');
+            $this->modifyTemplateFolderForMobile($request);
+        });
+
+        $events->attach('afterAction', function (EventInterface $event) {
+            if (!isset($event->getParam('request')->getQueryParams()['stop'])) {
+                return;
+            }
+
+            $response = $this->httpFactory->createTextResponse(
+                'The action stopped while afterAction because query param "stop" was specified.'
+            );
+            $event->setParam('response', $response);
+            $event->stopPropagation();
+        });
+    }
+
+    /**
      * @param ServerRequestInterface $request
      * @return ResponseInterface
      */
@@ -37,9 +73,6 @@ class SiteController implements LoggerAwareInterface, HtmlPageControllerInterfac
 
         $qp = $request->getQueryParams();
         $greeting = isset($qp['greeting']) ? $qp['greeting'] : 'Hello,';
-
-        // TODO Needs event listener to move these cross-cutting concerns
-        $this->modifyTemplateFolderForMobile($request);
 
         return $this->htmlResponse('current::index.php', [
             'greeting' => $greeting,

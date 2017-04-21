@@ -47,14 +47,15 @@ class WebApp extends App implements HttpFactoryAwareInterface
      */
     public function run()
     {
-        $request = $this->httpFactory->createRequestFromGlobals();
-
         $this->getLogger()->debug("Request handling started");
         $startedAt = microtime(true);
 
+        $this->getEventManager()->trigger('beforeServe', $this);
+        $request = $this->httpFactory->createRequestFromGlobals();
         $server = Server::createServerFromRequest($this->middlewarePipe, $request);
         $server->setEmitter(new SapiEmitter());
         $server->listen(new NoopFinalHandler());
+        $this->getEventManager()->trigger('afterServe', $this);
 
         $elapsed = microtime(true) - $startedAt;
         $this->getLogger()->debug(sprintf("Request handling finished in %0.3fms", $elapsed * 1000));

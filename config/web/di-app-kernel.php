@@ -3,8 +3,6 @@ use Aura\Di\Container;
 use Aura\Dispatcher\Dispatcher;
 use Aura\Router\RouterContainer;
 use My\Web\Lib\Container\AliasContainer;
-use My\Web\Lib\Http\DiactorosHttpFactory;
-use My\Web\Lib\Http\HttpFactoryAwareInterface;
 use My\Web\Lib\Router\Router;
 use My\Web\Lib\Util\PlainPhp;
 use My\Web\Lib\View\Asset\AssetManager;
@@ -12,7 +10,7 @@ use My\Web\Lib\View\Template\TemplateEngine;
 use My\Web\Lib\View\ViewAwareInterface;
 use My\Web\Lib\View\ViewEngine;
 use My\Web\Lib\WebApp;
-use Zend\Stratigility\MiddlewarePipe;
+use Zend\EventManager\SharedEventManager;
 
 /** @var Container $di */
 
@@ -20,24 +18,20 @@ $di->setters[ViewAwareInterface::class] = [
     'setViewEngine' => $di->lazyGet('viewEngine'),
 ];
 
-$di->setters[HttpFactoryAwareInterface::class] = [
-    'setHttpFactory' => $di->lazyGet('httpFactory'),
-];
-
 $di->set('app', $di->lazyNew(WebApp::class, [
-    'middlewarePipe' => $di->lazy(function () use ($di) {
-        $mp = new MiddlewarePipe();
-        PlainPhp::runner()->with([
-            'di' => $di,
-            'mp' => $mp,
-        ])->doRequire(__DIR__ . '/middleware.php');
-        return $mp;
-    }),
+    'middlewarePipe' => $di->lazyGet('middlewarePipe'),
     // FIXME Router which contains big structure is instantiated before error trapping middleware
     'router' => $di->lazyGet('router'),
 ]));
 
-$di->set('httpFactory', $di->lazyNew(DiactorosHttpFactory::class));
+$di->set('sharedEventManager', $di->lazy(function() use ($di) {
+    $events = new SharedEventManager();
+    PlainPhp::runner()->with([
+        'di' => $di,
+        'events' => $events,
+    ])->doRequire(__DIR__ . '/events.php');
+    return $events;
+}));
 
 $di->set('router', $di->lazyNew(Router::class, [
     'routes' => $di->lazyGet('routerContainer'),
@@ -59,10 +53,7 @@ $di->set('routerContainer', $di->lazyNew(RouterContainer::class, [
 ]));
 
 $di->set('routerDispatcher', $di->lazyNew(Dispatcher::class, [
-    'object_param' => 'controller',
-    'method_param' => 'action',
-], [
-    'setObjects' => $di->lazyValue('controllers'),
+    'objects' => $di->lazyValue('controllers'),
 ]));
 
 $di->set('templateEngine', $di->lazy(function () use($di) {

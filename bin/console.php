@@ -8,7 +8,13 @@ $app = App::configure([
     __DIR__ . '/../config/cli',
 ], 'di-*.php');
 
+$app->getEventManager()->attach('exit', function () {
+    echo "bye-bye\n";
+});
+
 $app->getLogger()->info('console kicked');
 fprintf(STDOUT, "This is STDOUT\n");
 fprintf(STDERR, "This is STDERR\n");
 $app->getLogger()->info('console done');
+
+$app->getEventManager()->trigger('exit', $app);

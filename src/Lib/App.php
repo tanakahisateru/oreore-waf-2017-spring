@@ -10,10 +10,16 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Zend\EventManager\EventManagerAwareInterface;
+use Zend\EventManager\EventManagerAwareTrait;
 
-class App implements LoggerAwareInterface
+class App implements LoggerAwareInterface, EventManagerAwareInterface
 {
     use LoggerInjectionTrait;
+    use EventManagerAwareTrait;
+
+    // Category tag for system-wide event listener
+    public $eventIdentifier = ['app'];
 
     /**
      * @var static
@@ -49,8 +55,6 @@ class App implements LoggerAwareInterface
      */
     public static function configure($dirs, $files)
     {
-        $startedAt = microtime(true);
-
         $builder = new ContainerBuilder();
         $container = $builder->newInstance();
 
@@ -75,13 +79,9 @@ class App implements LoggerAwareInterface
 
         static::$_instance = $app;
 
-        $elapsed = microtime(true) - $startedAt;
         // debug trace
         if (static::$_instance && static::$_instance->getContainer()->has('logger')) {
             $logger = static::$_instance->getLogger();
-
-            $logger->debug(sprintf("App::configure took %0.3fms", $elapsed * 1000));
-
             foreach ($loader->getDebug() as $message) {
                 $logger->debug('App::configure | ' . $message);
             }
