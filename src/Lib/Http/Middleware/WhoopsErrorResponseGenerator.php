@@ -1,5 +1,5 @@
 <?php
-namespace My\Web\Lib\Http;
+namespace My\Web\Lib\Http\Middleware;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -9,7 +9,7 @@ use Whoops\Run;
 use Whoops\Util\Misc;
 use Zend\Stratigility\Utils;
 
-class WhoopsResponseGenerator
+class WhoopsErrorResponseGenerator
 {
     /**
      * Create/update the response representing the error.

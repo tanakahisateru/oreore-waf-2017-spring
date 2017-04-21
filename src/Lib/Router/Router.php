@@ -45,10 +45,10 @@ class Router implements LoggerAwareInterface, HttpFactoryAwareInterface
     /**
      * @param ServerRequestInterface $request
      * @param ResponseInterface $responsePrototype
-     * @return array|null|ResponseInterface|string
+     * @return ResponseInterface
      * @throws RoutingException
      */
-    public function dispatch(ServerRequestInterface $request, ResponseInterface $responsePrototype)
+    public function handle(ServerRequestInterface $request, ResponseInterface $responsePrototype)
     {
         $matcher = $this->routes->getMatcher();
         $route = $matcher->match($request);
@@ -65,19 +65,45 @@ class Router implements LoggerAwareInterface, HttpFactoryAwareInterface
             $params[$k] = $v;
         }
 
+        return $this->dispatch($params, $request, $responsePrototype);
+    }
+
+    /**
+     * @param array $params
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $responsePrototype
+     * @return ResponseInterface
+     */
+    public function dispatch(array $params, ServerRequestInterface $request, ResponseInterface $responsePrototype)
+    {
         $dispatcher = $this->dispatcher;
         $dispatcher->setObjectParam('controller');
         $dispatcher->setMethodParam('action');
+
         $controller = $dispatcher->getObject($params['controller']);
 
+        ob_start();
         try {
             $this->triggerEvent('beforeAction', $controller, $request, $responsePrototype);
-            $response = call_user_func($dispatcher, $params);
-            $this->triggerEvent('afterAction', $controller, $request, $response);
-            return $response;
+            try {
+                $response = call_user_func($dispatcher, $params);
+
+                $response = $this->fixUpReturnedValue($response, $responsePrototype);
+                $echo = ob_get_contents();
+                if (!empty($echo)) {
+                    $response = $this->insertEchoIntoBody($echo, $response);
+                }
+            } finally {
+                $this->triggerEvent('afterAction', $controller, $request, $response);
+            }
         } catch (ActionStoppedException $e) {
             return $e->getResponse();
+        } finally {
+            ob_end_clean();
         }
+
+        /** @noinspection PhpUndefinedVariableInspection */
+        return $response;
     }
 
     /**
@@ -189,5 +215,53 @@ class Router implements LoggerAwareInterface, HttpFactoryAwareInterface
             }
             throw new ActionStoppedException($response);
         }
+    }
+
+    /**
+     * @param mixed $response
+     * @param ResponseInterface $responsePrototype
+     * @return ResponseInterface
+     */
+    private function fixUpReturnedValue($response, ResponseInterface $responsePrototype)
+    {
+        if (empty($response)) {
+            $response = $responsePrototype;
+        } elseif (is_scalar($response)) {
+            $value = $response;
+            $response = $responsePrototype;
+            $response->getBody()->write($value);
+        } elseif (is_array($response)) {
+            $value = $response;
+            $response = $responsePrototype->withHeader('Content-Type', 'application/json');
+            $response->getBody()->write(json_encode($value));
+        }
+
+        if (!($response instanceof ResponseInterface)) {
+            throw new \LogicException('Unsupported response returned');
+        }
+
+        return $response;
+    }
+
+
+    /**
+     * @param string $echo
+     * @param ResponseInterface $response
+     * @return mixed
+     */
+    private function insertEchoIntoBody($echo, ResponseInterface $response)
+    {
+        $stream = $response->getBody();
+        if ($stream->isSeekable()) {
+            $stream->rewind();
+            $streamedContents = $stream->getContents();
+            $stream = $this->getHttpFactory()->createStream('php://temp', 'rw');
+            $response = $response->withBody($stream);
+            $stream->write($echo);
+            $stream->write($streamedContents);
+        } else {
+            $stream->write($echo);
+        }
+        return $response;
     }
 }

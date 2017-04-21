@@ -2,11 +2,12 @@
 use Aura\Di\Container;
 use My\Web\Lib\Http\DiactorosHttpFactory;
 use My\Web\Lib\Http\HttpFactoryAwareInterface;
-use My\Web\Lib\Http\WhoopsResponseGenerator;
+use My\Web\Lib\Http\Middleware\WhoopsErrorResponseGenerator;
+use My\Web\Lib\Router\Router;
 use My\Web\Lib\Util\PlainPhp;
+use My\Web\Lib\View\Middleware\ErrorResponseGenerator;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Stratigility\Middleware\ErrorHandler;
-use Zend\Stratigility\Middleware\ErrorResponseGenerator;
 use Zend\Stratigility\MiddlewarePipe;
 
 /** @var Container $di */
@@ -27,9 +28,11 @@ $di->set('middlewarePipe', $di->lazy(function () use ($di) {
 }));
 
 $di->set('errorHandlerMiddleware', $di->lazy(function () use ($di) {
+    /** @var Router $router */
+    $router = $di->get('router');
     $errorResponseGenerator = getenv('MY_APP_ENV') == 'dev' ?
-        new WhoopsResponseGenerator() :
-        new ErrorResponseGenerator(false);
+        new WhoopsErrorResponseGenerator() :
+        new ErrorResponseGenerator($router);
 
     $errorHandler = new ErrorHandler(
         $di->get('httpFactory')->createResponse(),
@@ -37,7 +40,7 @@ $di->set('errorHandlerMiddleware', $di->lazy(function () use ($di) {
     );
 
     $errorHandler->attachListener(function ($error, ServerRequestInterface $request) use ($di) {
-        /** @var Throwable|Exception $error */
+        /** @var Exception|mixed $error */
         $logger = $di->get('logger');
         $logger->error(sprintf("%s(\"%s\") - %s", get_class($error), $error->getMessage(), $request->getUri()));
         foreach (explode("\n", $error->getTraceAsString()) as $trace) {

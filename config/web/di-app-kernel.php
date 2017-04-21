@@ -1,6 +1,5 @@
 <?php
 use Aura\Di\Container;
-use Aura\Dispatcher\Dispatcher;
 use Aura\Router\RouterContainer;
 use My\Web\Lib\Container\AliasContainer;
 use My\Web\Lib\Router\Router;
@@ -48,10 +47,6 @@ $di->set('routerContainer', $di->lazyNew(RouterContainer::class, [
             'map' => $map,
         ])->doRequire(__DIR__ . '/routing.php');
     },
-]));
-
-$di->set('routerDispatcher', $di->lazyNew(Dispatcher::class, [
-    'objects' => $di->lazyValue('controllers'),
 ]));
 
 $di->set('templateEngine', $di->lazy(function () use($di) {

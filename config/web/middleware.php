@@ -1,9 +1,9 @@
 <?php
 use Aura\Di\Container;
 use My\Web\Lib\Http\HttpFactoryInterface;
+use My\Web\Lib\Router\Middleware\RoutingHandler;
 use My\Web\Lib\Router\Router;
-use My\Web\Lib\Router\RoutingMiddleware;
-use Zend\Stratigility\Middleware\NotFoundHandler;
+use My\Web\Lib\View\Middleware\NotFoundHandler;
 use Zend\Stratigility\MiddlewarePipe;
 
 /** @var Container $di */
@@ -27,6 +27,11 @@ $pipe->pipe($di->get('errorHandlerMiddleware'));
 //     return $next($request, $response);
 // });
 
-$pipe->pipe(new RoutingMiddleware($router, $httpFactory));
+$pipe->pipe($di->newInstance(RoutingHandler::class, [
+    'router' => $router,
+]));
 
-$pipe->pipe(new NotFoundHandler($responsePrototype));
+$pipe->pipe($di->newInstance(NotFoundHandler::class, [
+    'router' => $router,
+    'responsePrototype' => $responsePrototype,
+]));

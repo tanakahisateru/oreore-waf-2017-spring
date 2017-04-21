@@ -97,9 +97,16 @@ class ViewEngine
         });
 
         foreach ($view->getFolderMap() as $folder => $path) {
+            if ($engine->getFolders()->exists($folder)) {
+                $engine->removeFolder($folder);
+            }
             $engine->addFolder($folder, Path::join($rootPath, $path));
         }
 
-        return $engine->render($name, $data);
+        $result = $engine->render($name, $data);
+
+        $engine->dropFunction('view');
+
+        return $result;
     }
 }
