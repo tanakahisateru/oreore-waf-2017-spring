@@ -1,44 +1,44 @@
-var gulp = require('gulp');
-var pump = require('pump');
-var del = require('del');
-var concat = require('gulp-concat');
-// var urlAdjuster = require('gulp-css-url-adjuster');
-var uglifycss = require('gulp-uglifycss');
-var uglify = require('gulp-uglify');
-var rename = require("gulp-rename");
-var sourcemaps = require('gulp-sourcemaps');
-var rev = require('gulp-rev');
-var revReplace = require('gulp-rev-replace');
+const gulp = require('gulp');
+const pump = require('pump');
+const del = require('del');
+const concat = require('gulp-concat');
+// const urlAdjuster = require('gulp-css-url-adjuster');
+const uglifycss = require('gulp-uglifycss');
+const uglify = require('gulp-uglify');
+const rename = require("gulp-rename");
+const sourcemaps = require('gulp-sourcemaps');
+const rev = require('gulp-rev');
+const revReplace = require('gulp-rev-replace');
 
-var basedir = './web/assets';
+const basedir = './web/assets';
 
 gulp.task('default', ['vendor']);
 
 gulp.task('build', ['fonts', 'css', 'js']);
 gulp.task('dist', ['rev-replace']);
 
-gulp.task('clean', function(cb) {
+gulp.task('clean', () => {
     return del([
         basedir + '/dist',
         basedir + '/vendor'
     ]);
 });
 
-gulp.task('vendor', ['clean'], function(cb) {
+gulp.task('vendor', ['clean'], (cb) => {
     pump([
         gulp.src('./node_modules/+(jquery|bootstrap)/dist/**/*', { base: './node_modules/' }),
         gulp.dest(basedir + '/vendor')
     ], cb);
 });
 
-gulp.task('fonts', ['vendor'], function(cb) {
+gulp.task('fonts', ['vendor'], (cb) => {
     pump([
         gulp.src(basedir + '/vendor/bootstrap/dist/fonts/*'),
         gulp.dest(basedir + '/dist/fonts')
     ], cb);
 });
 
-gulp.task('css', ['vendor'], function(cb) {
+gulp.task('css', ['vendor'], (cb) => {
     pump([
         gulp.src([
             basedir + '/vendor/bootstrap/dist/css/bootstrap.css',
@@ -61,7 +61,7 @@ gulp.task('css', ['vendor'], function(cb) {
     ], cb);
 });
 
-gulp.task('js', ['vendor'], function(cb) {
+gulp.task('js', ['vendor'], (cb) => {
     pump([
         gulp.src([
             basedir + '/vendor/jquery/dist/jquery.js',
@@ -80,7 +80,7 @@ gulp.task('js', ['vendor'], function(cb) {
     ], cb);
 });
 
-gulp.task('rev', ['build'], function(cb) {
+gulp.task('rev', ['build'], (cb) => {
     pump([
         // gulp.src(basedir + '/dist/**/*.+(js|css|png|gif|jpg|jpeg|svg|woff|woff2|ttf|eot|ico)'),
         gulp.src(basedir + '/dist/**/*'),
@@ -93,7 +93,7 @@ gulp.task('rev', ['build'], function(cb) {
     ], cb);
 });
 
-gulp.task('rev-replace', ['rev'], function(cb) {
+gulp.task('rev-replace', ['rev'], (cb) => {
     pump([
         gulp.src(basedir + '/dist/**/*.+(js|css)'),
         revReplace({manifest: gulp.src(basedir + '/dist/rev-manifest.json')}),
