@@ -12,6 +12,7 @@ use My\Web\Lib\WebApp;
 use Zend\EventManager\SharedEventManager;
 
 /** @var Container $di */
+/** @var array $params */
 
 $di->setters[ViewAwareInterface::class] = [
     'setViewEngine' => $di->lazyGet('viewEngine'),

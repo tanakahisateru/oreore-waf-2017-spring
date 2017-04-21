@@ -5,6 +5,7 @@ use My\Web\Controller\ErrorController;
 use My\Web\Controller\SiteController;
 
 /** @var Container $di */
+/** @var array $params */
 
 $di->set('routerDispatcher', $di->lazyNew(Dispatcher::class, [
     'objects' => $di->lazyArray([

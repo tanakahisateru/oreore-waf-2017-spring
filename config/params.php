@@ -1,4 +1,5 @@
 <?php
 return [
-    // ... app params
+    'env' => getenv('MY_APP_ENV'),
+    'defaultLogLevel' => getenv('MY_APP_DEFAULT_LOG_LEVEL'),
 ];

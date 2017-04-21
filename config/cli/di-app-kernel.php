@@ -5,6 +5,7 @@ use My\Web\Lib\Util\PlainPhp;
 use Zend\EventManager\SharedEventManager;
 
 /** @var Container $di */
+/** @var array $params */
 
 $di->set('app', $di->lazyNew(App::class));
 

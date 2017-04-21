@@ -11,6 +11,7 @@ use Zend\Stratigility\Middleware\ErrorHandler;
 use Zend\Stratigility\MiddlewarePipe;
 
 /** @var Container $di */
+/** @var array $params */
 
 $di->setters[HttpFactoryAwareInterface::class] = [
     'setHttpFactory' => $di->lazyGet('httpFactory'),
@@ -27,10 +28,10 @@ $di->set('middlewarePipe', $di->lazy(function () use ($di) {
     return $pipe;
 }));
 
-$di->set('errorHandlerMiddleware', $di->lazy(function () use ($di) {
+$di->set('errorHandlerMiddleware', $di->lazy(function () use ($di, $params) {
     /** @var Router $router */
     $router = $di->get('router');
-    $errorResponseGenerator = getenv('MY_APP_ENV') == 'dev' ?
+    $errorResponseGenerator = $params['env'] == 'dev' ?
         new WhoopsErrorResponseGenerator() :
         new ErrorResponseGenerator($router);
 

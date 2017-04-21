@@ -21,15 +21,10 @@ class WebApp extends App implements HttpFactoryAwareInterface
      * WebApp constructor.
      * @param Container $container
      * @param callable $middlewarePipe
-     * @param array $params
      */
-    public function __construct(
-        Container $container,
-        callable $middlewarePipe,
-        array $params
-    )
+    public function __construct(Container $container, callable $middlewarePipe)
     {
-        parent::__construct($container, $params);
+        parent::__construct($container);
         $this->middlewarePipe = $middlewarePipe;
     }
 

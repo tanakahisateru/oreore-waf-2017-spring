@@ -32,28 +32,22 @@ class App implements LoggerAwareInterface, EventManagerAwareInterface
     protected $container;
 
     /**
-     * @var array
-     */
-    protected $params;
-
-    /**
      * App constructor.
      *
      * @param Container $container
-     * @param array $params
      */
-    public function __construct(Container $container, array $params)
+    public function __construct(Container $container)
     {
         $this->container = $container;
-        $this->params = $params;
     }
 
     /**
      * @param string|array $dirs
      * @param string|array $files
+     * @param array $params
      * @return static
      */
-    public static function configure($dirs, $files)
+    public static function configure($dirs, $files, array $params = [])
     {
         $builder = new ContainerBuilder();
         $container = $builder->newInstance();
@@ -64,6 +58,7 @@ class App implements LoggerAwareInterface, EventManagerAwareInterface
         $loader->setFiles(is_array($files) ? $files : array($files));
         $loader->setVars([
             'di' => $container,
+            'params' => $params,
         ]);
         $loader->load();
 
@@ -108,14 +103,6 @@ class App implements LoggerAwareInterface, EventManagerAwareInterface
     public function getContainer()
     {
         return $this->container;
-    }
-
-    /**
-     * @return array
-     */
-    public function getParams()
-    {
-        return $this->params;
     }
 
     /**

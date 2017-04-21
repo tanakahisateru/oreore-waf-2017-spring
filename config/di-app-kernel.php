@@ -7,6 +7,7 @@ use Zend\EventManager\EventManager;
 use Zend\EventManager\EventManagerAwareInterface;
 
 /** @var Container $di */
+/** @var array $params */
 
 $di->set('logger', $di->lazyNew(Logger::class, [
     'name' => 'default',
