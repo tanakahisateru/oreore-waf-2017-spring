@@ -41,19 +41,25 @@ $am->asset('app', [
 ]);
 
 //////////////////////////////////////////////////////////
-$allCssMapPath = __DIR__ . '/../../web/assets/dist/css/all.min.css.map';
-$allJsMapPath = __DIR__ . '/../../web/assets/dist/js/all.min.js.map';
+$pathMapping = [
+    'dist/css/all.min.css' =>
+        __DIR__ . '/../../web/assets/dist/css/all.min.css.map',
+    'dist/js/all.min.js' =>
+        __DIR__ . '/../../web/assets/dist/js/all.min.js.map',
+];
+
 $revManifestPath = __DIR__ . '/../../web/assets/dist/rev-manifest.json';
 
-if (is_file($allCssMapPath)) {
-    $sources = json_decode(file_get_contents($allCssMapPath), true)['sources'];
-    $am->map('/assets/', 'dist/css/all.min.css', $sources);
-}
-if (is_file($allJsMapPath)) {
-    $sources = json_decode(file_get_contents($allJsMapPath), true)['sources'];
-    $am->map('/assets/', 'dist/js/all.min.js', $sources);
-}
-if (is_file($revManifestPath)) {
-    $manifest = json_decode(file_get_contents($revManifestPath), true);
-    $am->rev('/assets/dist/', $manifest);
-}
+$mapping = array_combine(
+    array_keys($pathMapping),
+    array_map(function ($mapPath) {
+        return is_file($mapPath) ?
+            json_decode(file_get_contents($mapPath), true)['sources'] : [];
+    }, array_values($pathMapping))
+);
+
+$am->map('/assets/', $mapping);
+
+$manifest = is_file($revManifestPath) ?
+    json_decode(file_get_contents($revManifestPath), true) : [];
+$am->rev('/assets/dist/', $manifest);

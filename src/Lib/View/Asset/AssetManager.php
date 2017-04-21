@@ -122,24 +122,25 @@ class AssetManager implements ContainerInterface
 
     /**
      * @param string $prefix
-     * @param string $target
-     * @param array $source
+     * @param array $mapping
      */
-    public function map($prefix, $target, $source)
+    public function map($prefix, array $mapping)
     {
-        if (!is_array($source)) {
-            $source = [$source];
-        }
+        foreach ($mapping as $combined => $sources) {
+            if (!is_array($sources)) {
+                $sources = [$sources];
+            }
 
-        if (!empty($prefix)) {
-            $target = $prefix . $target;
-            $source = array_map(function ($s) use ($prefix) {
-                return $prefix . $s;
-            }, $source);
-        }
+            if (!empty($prefix)) {
+                $combined = $prefix . $combined;
+                $sources = array_map(function ($s) use ($prefix) {
+                    return $prefix . $s;
+                }, $sources);
+            }
 
-        foreach ($source as $s) {
-            $this->mapping[$s] = $target;
+            foreach ($sources as $s) {
+                $this->mapping[$s] = $combined;
+            }
         }
     }
 
@@ -147,7 +148,7 @@ class AssetManager implements ContainerInterface
      * @param string $prefix
      * @param array $manifest
      */
-    public function rev($prefix, $manifest)
+    public function rev($prefix, array $manifest)
     {
         if (!empty($prefix)) {
             $prefixedManifest = [];
