@@ -8,8 +8,6 @@ use Aura\Includer\Includer;
 use My\Web\Lib\Log\LoggerInjectionTrait;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerAwareInterface;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 use Zend\EventManager\EventManagerAwareInterface;
 use Zend\EventManager\EventManagerAwareTrait;
 
@@ -124,17 +122,5 @@ class App implements LoggerAwareInterface, EventManagerAwareInterface
         }
 
         return $object;
-    }
-
-    /**
-     * @return LoggerInterface
-     */
-    public function getLogger()
-    {
-        if (!$this->getContainer()->has('logger')) {
-            return new NullLogger();
-        }
-
-        return $this->getService('logger', LoggerInterface::class);
     }
 }
