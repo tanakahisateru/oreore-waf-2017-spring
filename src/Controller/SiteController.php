@@ -2,6 +2,9 @@
 namespace My\Web\Controller;
 
 use Aura\Sql\PdoInterface;
+use My\Web\Controller\General\DefaultListenerAttachableInterface;
+use My\Web\Controller\General\HtmlPageControllerInterface;
+use My\Web\Controller\General\HtmlPageControllerTrait;
 use My\Web\Lib\Log\LoggerInjectionTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;

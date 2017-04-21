@@ -1,9 +1,12 @@
 <?php
 namespace My\Web\Controller;
 
+use My\Web\Controller\General\HtmlPageControllerInterface;
+use My\Web\Controller\General\HtmlPageControllerTrait;
 use Psr\Http\Message\ResponseInterface;
 
-class ErrorController implements HtmlPageControllerInterface
+class ErrorController implements
+    HtmlPageControllerInterface
 {
     use HtmlPageControllerTrait;
 

@@ -1,5 +1,5 @@
 <?php
-namespace My\Web\Controller;
+namespace My\Web\Controller\General;
 
 use My\Web\Lib\Http\HttpFactoryInjectionTrait;
 use My\Web\Lib\Util\Mobile;

@@ -1,5 +1,5 @@
 <?php
-namespace My\Web\Controller;
+namespace My\Web\Controller\General;
 
 interface DefaultListenerAttachableInterface
 {
