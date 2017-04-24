@@ -1,5 +1,6 @@
 <?php
 use Aura\Di\Container;
+use My\Web\Lib\Util\DebugBarInsertion;
 use Zend\EventManager\EventInterface;
 use Zend\EventManager\SharedEventManagerInterface;
 
@@ -26,17 +27,11 @@ $events->attach('*', '*', function (EventInterface $event) use ($di) {
 
 // DebugBar
 $events->attach('view', 'beforeRender', function (EventInterface $event) use ($di) {
-    if (!$di->has('debugbar')) {
-        return;
+    if ($di->has('debugbar')) {
+        DebugBarInsertion::placeholder(
+            $event->getParam('template'),
+            'before-end-head',
+            'before-end-body'
+        );
     }
-
-    /** @var \DebugBar\DebugBar $debugbar */
-    $debugbar = $di->get('debugbar');
-
-    \My\Web\Lib\Util\DebugBarInsertion::exec(
-        $debugbar,
-        $event->getParam('template'),
-        'before-end-head',
-        'before-end-body'
-    );
 });

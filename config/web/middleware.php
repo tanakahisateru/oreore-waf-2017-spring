@@ -3,6 +3,7 @@ use Aura\Di\Container;
 use My\Web\Lib\Http\HttpFactoryInterface;
 use My\Web\Lib\Router\Middleware\RoutingHandler;
 use My\Web\Lib\Router\Router;
+use My\Web\Lib\Util\DebugBarInsertion;
 use My\Web\Lib\View\Middleware\NotFoundHandler;
 use Zend\Stratigility\MiddlewarePipe;
 
@@ -17,6 +18,13 @@ $httpFactory = $di->get('httpFactory');
 $responsePrototype = $httpFactory->createResponse();
 
 $pipe->pipe($di->get('errorHandlerMiddleware'));
+
+if ($di->has('debugbar')) {
+    $pipe->pipe($di->newInstance(DebugBarInsertion::class, [
+        'debugbar' => $di->get('debugbar'),
+        'baseUrl' => '/assets/debugbar',
+    ]));
+}
 
 // Express style middleware example:
 //
