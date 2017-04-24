@@ -38,7 +38,7 @@ class ErrorController implements
      * @param $response
      * @return ResponseInterface
      */
-    public function actionIndex($statusCode, $reasonPhrase, $request, ResponseInterface $response)
+    public function __invoke($statusCode, $reasonPhrase, $request, ResponseInterface $response)
     {
         if (isset($this->statusToTemplate[$statusCode])) {
             $template = $this->statusToTemplate[$statusCode];

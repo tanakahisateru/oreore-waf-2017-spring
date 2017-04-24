@@ -33,7 +33,7 @@ $di->set('errorHandlerMiddleware', $di->lazy(function () use ($di, $params) {
     $router = $di->get('router');
     $errorResponseGenerator = $params['env'] == 'dev' ?
         new WhoopsErrorResponseGenerator() :
-        new ErrorResponseGenerator($router);
+        new ErrorResponseGenerator($router, 'error');
 
     $errorHandler = new ErrorHandler(
         $di->get('httpFactory')->createResponse(),

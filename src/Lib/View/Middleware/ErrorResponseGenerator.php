@@ -14,12 +14,26 @@ class ErrorResponseGenerator
     protected $router;
 
     /**
+     * @var object|callable
+     */
+    protected $controller;
+
+    /**
+     * @var string|null
+     */
+    protected $action;
+
+    /**
      * ErrorResponseGenerator constructor.
      * @param Router $router
+     * @param object|callable $controller
+     * @param string|null $action
      */
-    public function __construct($router)
+    public function __construct($router, $controller, $action = null)
     {
         $this->router = $router;
+        $this->controller = $controller;
+        $this->action = $action;
     }
 
     /**
@@ -36,14 +50,20 @@ class ErrorResponseGenerator
         $response = $response->withStatus(Utils::getStatusCode($e, $response));
 
         try{
-            $response = $this->router->dispatch([
-                'controller' => 'error',
-                'action' => 'actionIndex',
+            $params = [
+                'controller' => $this->controller,
+            ];
+            if ($this->action) {
+                $params['action'] = $this->action;
+            }
+            $params = array_merge($params, [
                 'statusCode' => $response->getStatusCode(),
                 'reasonPhrase' => $response->getReasonPhrase(),
                 'request' => $request->withAttribute('responsePrototype', $response),
                 'response' => $response,
-            ], $request, $response);
+            ]);
+
+            $response = $this->router->dispatch($params, $request, $response);
         } /** @noinspection PhpUndefinedClassInspection */ catch (\Throwable $ee) {
             $response = $this->handleErrorViewError($response);
         } catch (\Exception $ee) {
