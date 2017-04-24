@@ -18,5 +18,6 @@ composer.phar
 /log/*
 !/log/.gitkeep
 
-/web/assets/dist/*
-/web/assets/vendor/*
+/web/assets/dist/
+/web/assets/vendor/
+/web/assets/debugbar/

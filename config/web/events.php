@@ -18,7 +18,25 @@ use Zend\EventManager\SharedEventManagerInterface;
 //     $di->get('logger')->debug($message);
 // });
 
-$events->attach('*', '*', function (EventInterface $event) use($di) {
+// Log all
+$events->attach('*', '*', function (EventInterface $event) use ($di) {
     $message = 'Event ' . $event->getName() . ' triggered at ' . get_class($event->getTarget());
     $di->get('logger')->debug($message);
+});
+
+// DebugBar
+$events->attach('view', 'beforeRender', function (EventInterface $event) use ($di) {
+    if (!$di->has('debugbar')) {
+        return;
+    }
+
+    /** @var \DebugBar\DebugBar $debugbar */
+    $debugbar = $di->get('debugbar');
+
+    \My\Web\Lib\Util\DebugBarInsertion::exec(
+        $debugbar,
+        $event->getParam('template'),
+        'before-end-head',
+        'before-end-body'
+    );
 });

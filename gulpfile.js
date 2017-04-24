@@ -31,6 +31,19 @@ gulp.task('vendor', ['clean'], (cb) => {
     ], cb);
 });
 
+gulp.task('clean-debugbar', () => {
+    return del([
+        basedir + '/debugbar'
+    ]);
+});
+
+gulp.task('vendor-debugbar', ['clean-debugbar'], (cb) => {
+    pump([
+        gulp.src('./vendor/maximebf/debugbar/src/DebugBar/Resources/**/*', { base: './vendor/maximebf/debugbar/src/DebugBar/Resources/' }),
+        gulp.dest(basedir + '/debugbar')
+    ], cb);
+});
+
 gulp.task('fonts', ['vendor'], (cb) => {
     pump([
         gulp.src(basedir + '/vendor/bootstrap/dist/fonts/*'),
