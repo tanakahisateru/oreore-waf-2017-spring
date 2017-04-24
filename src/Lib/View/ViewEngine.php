@@ -2,9 +2,10 @@
 namespace My\Web\Lib\View;
 
 use League\Plates\Engine;
+use My\Web\Lib\Event\Interceptor;
+use My\Web\Lib\Event\InterceptorException;
 use My\Web\Lib\Router\Router;
 use My\Web\Lib\View\Asset\AssetManager;
-use My\Web\Lib\View\Asset\AssetUsage;
 use Psr\Container\ContainerInterface;
 use Webmozart\PathUtil\Path;
 
@@ -53,7 +54,8 @@ class ViewEngine
      */
     public function createView()
     {
-        return new View($this, new AssetUsage($this->getAssetManager()));
+        $factory = $this->container->get('viewFactory');
+        return $factory();
     }
 
     /**
@@ -82,11 +84,11 @@ class ViewEngine
 
     /**
      * @param View $view
-     * @param string $name
+     * @param string $templateName
      * @param array $data
      * @return string
      */
-    public function renderIn(View $view, $name, array $data = [])
+    public function renderIn(View $view, $templateName, array $data = [])
     {
         // Plate engine is stateful
         $engine = clone $this->getTemplateEngine();
@@ -103,10 +105,36 @@ class ViewEngine
             $engine->addFolder($folder, Path::join($rootPath, $path));
         }
 
-        $result = $engine->render($name, $data);
+        $template = $engine->make($templateName);
 
-        $engine->dropFunction('view');
+        $interceptor = Interceptor::createForEventCapable($view, function ($last, $argv) {
+            if (isset($argv['content'])) {
+                return $argv['content'];
+            } elseif ($last) {
+                return $last;
+            } else {
+                return "";
+            }
+        });
 
-        return $result;
+        try {
+            $interceptor->trigger('beforeRender', $view, new \ArrayObject([
+                'template' => $template,
+                'data' => $data,
+            ]));
+
+            $result = $template->render($data);
+
+            $interceptor->trigger('afterRender', $view, new \ArrayObject([
+                'content' => $result,
+                'data' => $data,
+            ]));
+
+            return $result;
+        } catch (InterceptorException $e) {
+            return $e->getLastResult();
+        } finally {
+            $engine->dropFunction('view');
+        }
     }
 }

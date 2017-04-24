@@ -2,9 +2,16 @@
 namespace My\Web\Lib\View;
 
 use My\Web\Lib\View\Asset\AssetUsage;
+use Zend\EventManager\EventManagerAwareInterface;
+use Zend\EventManager\EventManagerAwareTrait;
 
-class View
+class View implements EventManagerAwareInterface
 {
+    use EventManagerAwareTrait;
+
+    // Category tag for system-wide event listener
+    public $eventIdentifier = ['view'];
+
     /**
      * @var ViewEngine
      */

@@ -5,7 +5,9 @@ use My\Web\Lib\Container\AliasContainer;
 use My\Web\Lib\Router\Router;
 use My\Web\Lib\Util\PlainPhp;
 use My\Web\Lib\View\Asset\AssetManager;
+use My\Web\Lib\View\Asset\AssetUsage;
 use My\Web\Lib\View\Template\TemplateEngine;
+use My\Web\Lib\View\View;
 use My\Web\Lib\View\ViewAwareInterface;
 use My\Web\Lib\View\ViewEngine;
 use My\Web\Lib\WebApp;
@@ -72,6 +74,13 @@ $di->set('assetManager', $di->lazy(function () use ($di) {
     return $am;
 }));
 
+$di->set('viewFactory', $di->newFactory(View::class, [
+    'engine' => $di->lazyGet('viewEngine'),
+    'requiredAssets' => $di->lazyNew(AssetUsage::class, [
+        'manager' => $di->lazyGet('assetManager'),
+    ]),
+]));
+
 $di->set('viewEngine', $di->lazyNew(ViewEngine::class, [
     'container' => $di->lazyNew(AliasContainer::class, [
         'parent' => $di,
@@ -79,6 +88,7 @@ $di->set('viewEngine', $di->lazyNew(ViewEngine::class, [
             'templateEngine' => 'templateEngine',
             'assetManager' => 'assetManager',
             'router' => 'router',
+            'viewFactory' => 'viewFactory',
         ],
     ]),
 ]));
