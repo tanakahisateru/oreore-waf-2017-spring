@@ -28,13 +28,13 @@ class SiteController implements
     public $eventIdentifier = ['controller'];
 
     /**
-     * @var PdoInterface|\PDO
+     * @var \PDO
      */
     protected $db;
 
     /**
      * SiteController constructor.
-     * @param PdoInterface|\PDO $db
+     * @param \PDO $db
      */
     public function __construct($db)
     {
