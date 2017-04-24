@@ -7,5 +7,5 @@
 class_name: FunctionalTester
 modules:
     enabled:
-        # add framework module here
+        - \My\Web\Test\Module\Psr15
         - \Helper\Functional

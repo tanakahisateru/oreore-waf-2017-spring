@@ -13,6 +13,7 @@ composer.phar
 /node_modules/
 
 ### Codeception
+/tests/_output/*
 /tests/_support/_generated/*
 
 /log/*
