@@ -1,6 +1,6 @@
 <?php
 use Aura\Di\Container;
-use My\Web\Lib\App;
+use My\Web\Lib\App\App;
 use My\Web\Lib\Util\PlainPhp;
 use Zend\EventManager\SharedEventManager;
 

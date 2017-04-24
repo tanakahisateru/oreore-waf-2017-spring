@@ -1,5 +1,5 @@
 <?php
-namespace My\Web\Lib;
+namespace My\Web\Lib\App;
 
 use Aura\Di\Container;
 use Aura\Di\ContainerBuilder;

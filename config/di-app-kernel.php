@@ -1,7 +1,7 @@
 <?php
 use Aura\Di\Container;
 use Monolog\Logger;
-use My\Web\Lib\App;
+use My\Web\Lib\App\App;
 use Psr\Log\LoggerAwareInterface;
 use Zend\EventManager\EventManager;
 use Zend\EventManager\EventManagerAwareInterface;

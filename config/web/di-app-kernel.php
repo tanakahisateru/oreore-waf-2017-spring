@@ -1,6 +1,7 @@
 <?php
 use Aura\Di\Container;
 use Aura\Router\RouterContainer;
+use My\Web\Lib\App\WebApp;
 use My\Web\Lib\Container\AliasContainer;
 use My\Web\Lib\Router\Router;
 use My\Web\Lib\Util\PlainPhp;
@@ -10,7 +11,6 @@ use My\Web\Lib\View\Template\TemplateEngine;
 use My\Web\Lib\View\View;
 use My\Web\Lib\View\ViewAwareInterface;
 use My\Web\Lib\View\ViewEngine;
-use My\Web\Lib\WebApp;
 use Zend\EventManager\SharedEventManager;
 
 /** @var Container $di */
