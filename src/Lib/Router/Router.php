@@ -7,13 +7,14 @@ use Aura\Router\Route;
 use Aura\Router\RouterContainer;
 use Aura\Router\Rule\Accepts;
 use Aura\Router\Rule\Allows;
+use My\Web\Lib\Event\Interceptor;
+use My\Web\Lib\Event\InterceptorException;
 use My\Web\Lib\Http\HttpFactoryAwareInterface;
 use My\Web\Lib\Http\HttpFactoryInjectionTrait;
 use My\Web\Lib\Log\LoggerInjectionTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerAwareInterface;
-use Zend\EventManager\EventsCapableInterface;
 
 class Router implements LoggerAwareInterface, HttpFactoryAwareInterface
 {
@@ -80,24 +81,46 @@ class Router implements LoggerAwareInterface, HttpFactoryAwareInterface
         $dispatcher->setObjectParam('controller');
         $dispatcher->setMethodParam('action');
 
-        $controller = $dispatcher->getObject($params['controller']);
+        assert(isset($params['controller']));
+        if (is_scalar($params['controller'])) {
+            $controller = $dispatcher->getObject($params['controller']);
+        } else {
+            $controller = $params['controller'];
+        }
+
+        $interceptor = Interceptor::createForEventCapable($controller, function ($last, $argv) {
+            if (isset($argv['response'])) {
+                return $argv['response'];
+            } elseif ($last) {
+                return $last;
+            } else {
+                return $this->getHttpFactory()->createEmptyResponse();
+            }
+        });
 
         ob_start();
-        try {
-            $this->triggerEvent('beforeAction', $controller, $request, $responsePrototype);
-            try {
-                $response = call_user_func($dispatcher, $params);
 
-                $response = $this->fixUpReturnedValue($response, $responsePrototype);
-                $echo = ob_get_contents();
-                if (!empty($echo)) {
-                    $response = $this->insertEchoIntoBody($echo, $response);
-                }
-            } finally {
-                $this->triggerEvent('afterAction', $controller, $request, $response);
+        $response = $responsePrototype;
+        try {
+            $interceptor->trigger('beforeAction', $controller, new \ArrayObject([
+                'request' => $request,
+                'responsePrototype' => $responsePrototype,
+            ]));
+
+            $response = $dispatcher($params);
+
+            $response = $this->fixUpReturnedValue($response, $responsePrototype);
+            $echo = ob_get_contents();
+            if (!empty($echo)) {
+                $response = $this->insertEchoIntoBody($echo, $response);
             }
-        } catch (ActionStoppedException $e) {
-            return $e->getResponse();
+
+            $interceptor->trigger('afterAction', $controller, new \ArrayObject([
+                'request' => $request,
+                'responsePrototype' => $response,
+            ]));
+        } catch (InterceptorException $e) {
+            return $e->getLastResult();
         } finally {
             ob_end_clean();
         }
@@ -189,35 +212,6 @@ class Router implements LoggerAwareInterface, HttpFactoryAwareInterface
     }
 
     /**
-     * @param string $eventName
-     * @param object $target
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $responsePrototype
-     * @throws ActionStoppedException
-     */
-    private function triggerEvent($eventName, $target, ServerRequestInterface $request, ResponseInterface $responsePrototype)
-    {
-        if (!($target instanceof EventsCapableInterface)) {
-            return;
-        }
-
-        $argv = new \ArrayObject(compact('request', 'responsePrototype'));
-        $results = $target->getEventManager()->trigger($eventName, $target, $argv);
-
-        if ($results->stopped()) {
-            if ($argv->offsetExists('response')) {
-                $response = $argv->offsetGet('response');
-            } else {
-                $response = $results->last();
-                if (empty($response)) {
-                    $response = $this->getHttpFactory()->createEmptyResponse();
-                }
-            }
-            throw new ActionStoppedException($response);
-        }
-    }
-
-    /**
      * @param mixed $response
      * @param ResponseInterface $responsePrototype
      * @return ResponseInterface
@@ -242,7 +236,6 @@ class Router implements LoggerAwareInterface, HttpFactoryAwareInterface
 
         return $response;
     }
-
 
     /**
      * @param string $echo
