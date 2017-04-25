@@ -12,19 +12,22 @@ class SiteCest
     }
 
     // tests
-    public function index(AcceptanceTester $I)
+    public function index(FunctionalTester $I)
     {
         $I->amOnPage('/');
         $I->seeInTitle('Index');
+
+        $logger = $I->getContainer()->get('logger');
+        $I->assertInstanceOf(\Psr\Log\LoggerInterface::class, $logger);
     }
 
-    public function contact(AcceptanceTester $I)
+    public function contact(FunctionalTester $I)
     {
         $I->amOnPage('/contact');
         $I->see('contact page');
     }
 
-    public function privacy(AcceptanceTester $I)
+    public function privacy(FunctionalTester $I)
     {
         $I->amOnPage('/privacy');
         $I->seeInTitle('Privacy Policy');

@@ -7,5 +7,9 @@
 class_name: FunctionalTester
 modules:
     enabled:
-        - \My\Web\Test\Module\Psr15
+        - \My\Web\Test\Module\Psr15:
+            applicationFile: config/test/app.php
+            processorField: middlewarePipe
+            containerField: container
         - \Helper\Functional
+        - Asserts

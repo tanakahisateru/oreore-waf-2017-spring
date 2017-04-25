@@ -1,6 +1,7 @@
 <?php
 namespace My\Web\Test\Lib\Connector;
 
+use Interop\Http\ServerMiddleware\MiddlewareInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use Symfony\Component\BrowserKit\Client;
@@ -8,20 +9,22 @@ use Symfony\Component\BrowserKit\Request;
 use Symfony\Component\BrowserKit\Response;
 use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\UploadedFile;
+use Zend\Stratigility\Delegate\CallableDelegateDecorator;
+use Zend\Stratigility\NoopFinalHandler;
 
 class Psr15 extends Client
 {
     /**
      * @var callable
      */
-    protected $pipelineProcessor;
+    protected $processor;
 
     /**
-     * @param callable $processor
+     * @param MiddlewareInterface|callable $processor
      */
-    public function setPipelineProcessor(callable $processor)
+    public function setProcessor($processor)
     {
-        $this->pipelineProcessor = $processor;
+        $this->processor = $processor;
     }
 
     /**
@@ -70,7 +73,13 @@ class Psr15 extends Client
         $cwd = getcwd();
         chdir(codecept_root_dir());
 
-        $psr7Response = call_user_func($this->pipelineProcessor, $psr7Request, new \Zend\Diactoros\Response());
+        $psr7ResponsePrototype = new \Zend\Diactoros\Response();
+        if ($this->processor instanceof MiddlewareInterface) {
+            $delegate = new CallableDelegateDecorator(new NoopFinalHandler(), $psr7ResponsePrototype);
+            $psr7Response = $this->processor->process($psr7Request, $delegate);
+        } else {
+            $psr7Response = call_user_func($this->processor, $psr7Request, $psr7ResponsePrototype);
+        }
 
         chdir($cwd);
 
