@@ -18,8 +18,8 @@ to design framework free well connected components by small implementations.
 ```bash
 composer install
 npm install
-node_modules/.bin/gulp
-node_modules/.bin/gulp vendor-debugbar
+gulp
+gulp vendor-debugbar
 php -S 0.0.0.0:8080 -t web
 ```
 
@@ -30,8 +30,8 @@ vendor/bin/codecept run
 
 You can check css/js minification and revisioning:
 ```bash
-node_modules/.bin/gulp build
-node_modules/.bin/gulp dist
+gulp build
+gulp dist
 ```
 
 ## Features
