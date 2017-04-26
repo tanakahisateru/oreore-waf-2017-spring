@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/tanakahisateru/oreore-waf-2017-spring.svg?branch=master)](https://travis-ci.org/tanakahisateru/oreore-waf-2017-spring)
+
 # OREORE-WAF 2017 Spring
 
 This is experimental project using modern (2017 spring) PHP standards/technologies.
