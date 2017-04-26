@@ -53,7 +53,8 @@ class SiteController implements
         });
 
         $events->attach('afterAction', function (EventInterface $event) {
-            if (!isset($event->getParam('request')->getQueryParams()['stop'])) {
+            $queryParams = $event->getParam('request')->getQueryParams();
+            if (!isset($queryParams['stop'])) {
                 return;
             }
 
