@@ -150,12 +150,12 @@ class View implements EventManagerAwareInterface
     }
 
     /**
-     * @param string $stage
+     * @param string $section
      * @return array
      */
-    public function assetUrls($stage = null)
+    public function assetUrls($section = null)
     {
-        return $this->requiredAssets->collectUrls($stage);
+        return $this->requiredAssets->collectUrls($section);
     }
 
     /**

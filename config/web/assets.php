@@ -7,7 +7,7 @@ use My\Web\Lib\View\Asset\AssetManager;
 
 $am->asset('jquery', [
     'file' => '/assets/vendor/jquery/dist/jquery.js',
-    'stage' => 'before-end-body-script',
+    'section' => 'before-end-body-script',
 ]);
 
 $am->asset('bootstrap', [
@@ -15,11 +15,11 @@ $am->asset('bootstrap', [
     'bundles' => [
         [
             'files' => ['css/bootstrap.css', 'css/bootstrap-theme.css'],
-            'stage' => 'before-end-head-css',
+            'section' => 'before-end-head-css',
         ],
         [
             'file' => 'js/bootstrap.js',
-            'stage' => 'before-end-body-script',
+            'section' => 'before-end-body-script',
         ],
     ],
     'dependency' => 'jquery',
@@ -30,11 +30,11 @@ $am->asset('app', [
     'bundles' => [
         [
             'file' => 'app.css',
-            'stage' => 'before-end-head-css',
+            'section' => 'before-end-head-css',
         ],
         [
             'file' => 'app.js',
-            'stage' => 'before-end-body-script',
+            'section' => 'before-end-body-script',
         ],
     ],
     'dependencies' => ['jquery', 'bootstrap'],

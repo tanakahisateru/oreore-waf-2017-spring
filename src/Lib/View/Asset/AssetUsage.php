@@ -40,14 +40,14 @@ class AssetUsage implements UrlCollectableInterface
     }
 
     /**
-     * @param string $stage
+     * @param string $section
      * @return array
      */
-    public function collectUrls($stage = null)
+    public function collectUrls($section = null)
     {
         $urls = [];
         foreach ($this->assets as $asset) {
-            $urls = array_merge($urls, $asset->collectUrls($stage));
+            $urls = array_merge($urls, $asset->collectUrls($section));
         }
         return array_unique($urls);
     }

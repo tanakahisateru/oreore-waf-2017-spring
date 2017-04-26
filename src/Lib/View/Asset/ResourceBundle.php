@@ -23,7 +23,7 @@ class ResourceBundle implements UrlCollectableInterface
     /**
      * @var string
      */
-    protected $stage;
+    protected $section;
 
     /**
      * @var UrlCollectableInterface[]|string[]
@@ -36,41 +36,41 @@ class ResourceBundle implements UrlCollectableInterface
      * @param AssetManager $manager
      * @param string $baseUrl
      * @param array $files
-     * @param string|null $stage
+     * @param string|null $section
      * @param UrlCollectableInterface[]|string[] $dependencies
      */
-    public function __construct(AssetManager $manager, $baseUrl, array $files, $stage, array $dependencies = [])
+    public function __construct(AssetManager $manager, $baseUrl, array $files, $section, array $dependencies = [])
     {
         $this->manager = $manager;
         $this->baseUrl = $baseUrl;
         $this->files = $files;
-        $this->stage = $stage;
+        $this->section = $section;
         $this->dependencies = $dependencies;
     }
 
     /**
-     * @param string $stage
+     * @param string $section
      * @return array
      */
-    public function collectUrls($stage = null)
+    public function collectUrls($section = null)
     {
-        $urls = $this->collectDependencyUrls($stage);
-        if ($this->matchesStageTo($stage)) {
+        $urls = $this->collectDependencyUrls($section);
+        if ($this->matchesSectionTo($section)) {
             $urls = array_merge($urls, $this->ownUrls());
         }
         return array_unique($urls);
     }
 
     /**
-     * @param string $stage
+     * @param string $section
      * @return array
      */
-    protected function collectDependencyUrls($stage)
+    protected function collectDependencyUrls($section)
     {
         $urls = [];
         foreach ($this->dependencies as $dependency) {
             $dependency = $this->ensureObject($dependency);
-            $urls = array_merge($urls, $dependency->collectUrls($stage));
+            $urls = array_merge($urls, $dependency->collectUrls($section));
         }
         return array_unique($urls);
     }
@@ -93,12 +93,12 @@ class ResourceBundle implements UrlCollectableInterface
     }
 
     /**
-     * @param string|null $stage
+     * @param string|null $section
      * @return bool
      */
-    private function matchesStageTo($stage)
+    private function matchesSectionTo($section)
     {
-        return empty($this->stage) || empty($stage) || $stage == $this->stage;
+        return empty($this->section) || empty($section) || $section == $this->section;
     }
 
     /**

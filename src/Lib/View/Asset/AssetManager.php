@@ -57,7 +57,7 @@ class AssetManager implements ContainerInterface
             $files = [$files];
         }
 
-        $stage = isset($config['stage']) ? $config['stage'] : null;
+        $section = isset($config['section']) ? $config['section'] : null;
 
         if (isset($config['dependencies'])) {
             $dependencies = $config['dependencies'];
@@ -87,8 +87,8 @@ class AssetManager implements ContainerInterface
                 if (empty($bundleConfig['baseUrl']) || !is_string($bundleConfig['baseUrl'])) {
                     $bundleConfig['baseUrl'] = $baseUrl;
                 }
-                if (empty($bundleConfig['stage']) || !is_string($bundleConfig['stage'])) {
-                    $bundleConfig['stage'] = $stage;
+                if (empty($bundleConfig['section']) || !is_string($bundleConfig['section'])) {
+                    $bundleConfig['section'] = $section;
                 }
                 if (!isset($bundleConfig['dependencies']) && !isset($bundleConfig['dependency'])) {
                     $bundleConfig['dependencies'] = [];
@@ -99,7 +99,7 @@ class AssetManager implements ContainerInterface
             }
         }
 
-        return new ResourceBundle($this, $baseUrl, $files, $stage, array_merge($dependencies, $bundles));
+        return new ResourceBundle($this, $baseUrl, $files, $section, array_merge($dependencies, $bundles));
     }
 
     /**

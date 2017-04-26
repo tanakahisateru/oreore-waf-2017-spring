@@ -4,8 +4,8 @@ namespace My\Web\Lib\View\Asset;
 interface UrlCollectableInterface
 {
     /**
-     * @param string $stage
+     * @param string $section
      * @return array
      */
-    public function collectUrls($stage = null);
+    public function collectUrls($section = null);
 }
