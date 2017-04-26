@@ -6,7 +6,7 @@ php:
   - 7.1
 
 env:
-  - 'MY_APP_ENV=dev MY_APP_DEFAULT_LOG_LEVEL=DEBUG MY_APP_DB_DSN=sqlite::memory: MY_APP_DB_USERNAME=test MY_APP_DB_PASSWORD=test'
+  - 'MY_APP_NAME=OREORE-WAF-2017-Spring MY_APP_ENV=dev MY_APP_DEFAULT_LOG_LEVEL=DEBUG MY_APP_DB_DSN=sqlite::memory: MY_APP_DB_USERNAME=test MY_APP_DB_PASSWORD=test'
 
 install:
   - composer install --no-interaction
