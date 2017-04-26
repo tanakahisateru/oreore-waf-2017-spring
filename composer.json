@@ -4,7 +4,7 @@
         "aura/dispatcher": "^2.0",
         "aura/includer": "^2.0",
         "aura/router": "^3.1",
-        "josegonzalez/dotenv": "^3.0",
+        "josegonzalez/dotenv": "^2.1",
         "league/plates": "^3.3",
         "mobiledetect/mobiledetectlib": "^2.8",
         "monolog/monolog": "^1.22",
