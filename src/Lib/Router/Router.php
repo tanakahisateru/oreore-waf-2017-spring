@@ -99,13 +99,11 @@ class Router implements LoggerAwareInterface, HttpFactoryAwareInterface
         });
 
         ob_start();
-
-        $response = $responsePrototype;
         try {
-            $interceptor->trigger('beforeAction', $controller, new \ArrayObject([
+            $interceptor->trigger('beforeAction', $controller, [
                 'request' => $request,
                 'responsePrototype' => $responsePrototype,
-            ]));
+            ]);
 
             $response = $dispatcher($params);
 
@@ -115,18 +113,17 @@ class Router implements LoggerAwareInterface, HttpFactoryAwareInterface
                 $response = $this->insertEchoIntoBody($echo, $response);
             }
 
-            $interceptor->trigger('afterAction', $controller, new \ArrayObject([
+            $interceptor->trigger('afterAction', $controller, [
                 'request' => $request,
                 'responsePrototype' => $response,
-            ]));
+            ]);
+
+            return $response;
         } catch (InterceptorException $e) {
             return $e->getLastResult();
         } finally {
             ob_end_clean();
         }
-
-        /** @noinspection PhpUndefinedVariableInspection */
-        return $response;
     }
 
     /**

@@ -118,17 +118,17 @@ class ViewEngine
         });
 
         try {
-            $interceptor->trigger('beforeRender', $view, new \ArrayObject([
+            $interceptor->trigger('beforeRender', $view, [
                 'template' => $template,
                 'data' => $data,
-            ]));
+            ]);
 
             $result = $template->render($data);
 
-            $interceptor->trigger('afterRender', $view, new \ArrayObject([
+            $interceptor->trigger('afterRender', $view, [
                 'content' => $result,
                 'data' => $data,
-            ]));
+            ]);
 
             return $result;
         } catch (InterceptorException $e) {
