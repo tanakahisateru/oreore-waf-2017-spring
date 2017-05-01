@@ -1,6 +1,5 @@
 <?php
 use Aura\Di\Container;
-use Monolog\Logger;
 use My\Web\Lib\App\App;
 use Psr\Log\LoggerAwareInterface;
 use Zend\EventManager\EventManager;
@@ -8,12 +7,6 @@ use Zend\EventManager\EventManagerAwareInterface;
 
 /** @var Container $di */
 /** @var array $params */
-
-$di->set('logger', $di->lazyNew(Logger::class, [
-    'name' => 'default',
-    'handlers' => $di->lazyValue('logHandlersDefault'),
-    'processors' => [],
-]));
 
 $di->setters[LoggerAwareInterface::class] = [
     'setLogger' => $di->lazyGet('logger'),
