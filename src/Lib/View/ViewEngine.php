@@ -50,12 +50,13 @@ class ViewEngine
     }
 
     /**
+     * @param string $class
      * @return View
      */
-    public function createView()
+    public function createView($class = View::class)
     {
         $factory = $this->container->get('viewFactory');
-        return $factory();
+        return $factory($this, $this->getAssetManager(), $class);
     }
 
     /**

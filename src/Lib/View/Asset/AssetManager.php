@@ -175,4 +175,13 @@ class AssetManager implements ContainerInterface
         }
         return $url;
     }
+
+    /**
+     * @return AssetUsage
+     */
+    public function createUsage()
+    {
+        // should be locked here
+        return new AssetUsage($this);
+    }
 }
