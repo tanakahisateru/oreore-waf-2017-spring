@@ -38,6 +38,7 @@ class SiteController implements
     public function __construct($db)
     {
         $this->db = $db;
+        $this->templateFolder('site');
     }
 
     /**
