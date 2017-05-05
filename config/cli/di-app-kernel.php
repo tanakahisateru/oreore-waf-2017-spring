@@ -36,7 +36,7 @@ $di->set('logger', $di->lazyNew(Logger::class, [
 ]));
 
 $di->set('sharedEventManager', $di->lazy(function() use ($di) {
-    $events = new SharedEventManager();
+    $events = $di->newInstance(SharedEventManager::class);
     PlainPhp::runner()->with([
         'di' => $di,
         'events' => $events,

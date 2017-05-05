@@ -53,7 +53,7 @@ $di->set('logger', $di->lazyNew(Logger::class, [
 ]));
 
 $di->set('sharedEventManager', $di->lazy(function() use ($di) {
-    $events = new SharedEventManager();
+    $events = $di->newInstance(SharedEventManager::class);
     PlainPhp::runner()->with([
         'di' => $di,
         'events' => $events,
@@ -67,7 +67,7 @@ $di->set('sharedEventManager', $di->lazy(function() use ($di) {
 $di->set('httpFactory', $di->lazyNew(DiactorosHttpFactory::class));
 
 $di->set('middlewarePipe', $di->lazy(function () use ($di) {
-    $pipe = new MiddlewarePipe();
+    $pipe = $di->newInstance(MiddlewarePipe::class);
     PlainPhp::runner()->with([
         'di' => $di,
         'pipe' => $pipe,
@@ -76,16 +76,15 @@ $di->set('middlewarePipe', $di->lazy(function () use ($di) {
 }));
 
 $di->set('errorHandlerMiddleware', $di->lazy(function () use ($di, $params) {
-    /** @var Router $router */
-    $router = $di->get('router');
-    $errorResponseGenerator = $params['env'] == 'dev' ?
-        new WhoopsErrorResponseGenerator() :
-        new ErrorResponseGenerator($router, 'error');
-
-    $errorHandler = new ErrorHandler(
-        $di->get('httpFactory')->createResponse(),
-        $errorResponseGenerator
-    );
+    $errorHandler = $di->newInstance(ErrorHandler::class, [
+        'responsePrototype' => $di->get('httpFactory')->createResponse(),
+        'responseGenerator' => $params['env'] == 'dev' ?
+            $di->newInstance(WhoopsErrorResponseGenerator::class) :
+            $di->newInstance(ErrorResponseGenerator::class, [
+                'router' => $di->get('router'),
+                'controller' => 'error',
+            ]),
+    ]);
 
     $errorHandler->attachListener(function ($error, ServerRequestInterface $request) use ($di) {
         /** @var Exception|mixed $error */
@@ -174,11 +173,11 @@ $di->set('viewEngine', $di->lazyNew(ViewEngine::class, [
 
 if ($params['env'] == 'dev') {
     $di->set('debugbar', $di->lazy(function () use ($di, $params) {
-        $debugbar = new StandardDebugBar();
-        $debugbar->addCollector(new MonologCollector(
-            $di->get('logger'),
-            Logger::getLevels()[$params['defaultLogLevel']]
-        ));
-        return $debugbar;
+        $debugBar = $di->newInstance(StandardDebugBar::class);
+        $debugBar->addCollector($di->newInstance(MonologCollector::class, [
+            'logger' => $di->get('logger'),
+            'level' => Logger::getLevels()[$params['defaultLogLevel']],
+        ]));
+        return $debugBar;
     }));
 }

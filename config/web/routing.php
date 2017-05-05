@@ -17,7 +17,9 @@ $map->attach('site.', '', function (Map $map) use ($di) {
         $view = $di->get('viewEngine')->createView();
         assert($view instanceof View);
         $view->setFolder('current', 'site');
-        return new HtmlResponse($view->render('current::privacy.php'));
+        return $di->newInstance(HtmlResponse::class, [
+            'html' => $view->render('current::privacy.php'),
+        ]);
     });
 });
 
@@ -26,7 +28,11 @@ $map->attach('api.', '/api', function (Map $map) use ($di) {
     $postsHandler = function (ServerRequestInterface $request) use ($di) {
         $di->get('logger')->debug('api.posts');
         $di->get('logger')->debug(http_build_query($request->getQueryParams()));
-        return new JsonResponse(['posts' => []]);
+        return $di->newInstance(JsonResponse::class, [
+            'data' => [
+                'posts' => []
+            ],
+        ]);
     };
 
     $map->get('posts', '/posts')->handler($postsHandler);
