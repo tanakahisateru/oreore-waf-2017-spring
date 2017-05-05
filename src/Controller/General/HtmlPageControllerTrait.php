@@ -2,14 +2,17 @@
 namespace My\Web\Controller\General;
 
 use My\Web\Lib\Http\HttpFactoryInjectionTrait;
+use My\Web\Lib\Log\LoggerInjectionTrait;
 use My\Web\Lib\Util\Mobile;
 use My\Web\Lib\View\ViewInjectionTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Zend\EventManager\EventManagerAwareTrait;
 
 trait HtmlPageControllerTrait
 {
-    use HttpFactoryInjectionTrait;
+    use LoggerInjectionTrait;
+    use EventManagerAwareTrait;
     use ViewInjectionTrait;
 
     /**
@@ -21,6 +24,13 @@ trait HtmlPageControllerTrait
      * @var callable
      */
     protected $templateFolderModifier;
+
+    /**
+     *
+     */
+    public function attachDefaultListeners()
+    {
+    }
 
     /**
      * @param string $path

@@ -4,9 +4,9 @@ namespace My\Web\Controller;
 use My\Web\Controller\General\HtmlPageControllerInterface;
 use My\Web\Controller\General\HtmlPageControllerTrait;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
-class ErrorController implements
-    HtmlPageControllerInterface
+class ErrorController implements HtmlPageControllerInterface
 {
     use HtmlPageControllerTrait;
 
@@ -38,7 +38,7 @@ class ErrorController implements
      * @param $response
      * @return ResponseInterface
      */
-    public function __invoke($statusCode, $reasonPhrase, $request, ResponseInterface $response)
+    public function __invoke($statusCode, $reasonPhrase, ServerRequestInterface $request, ResponseInterface $response)
     {
         if (isset($this->statusToTemplate[$statusCode])) {
             $template = $this->statusToTemplate[$statusCode];

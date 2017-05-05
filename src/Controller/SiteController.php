@@ -1,27 +1,19 @@
 <?php
 namespace My\Web\Controller;
 
-use My\Web\Controller\General\DefaultListenerAttachableInterface;
 use My\Web\Controller\General\HtmlPageControllerInterface;
 use My\Web\Controller\General\HtmlPageControllerTrait;
-use My\Web\Lib\Log\LoggerInjectionTrait;
+use My\Web\Lib\Http\HttpFactoryAwareInterface;
+use My\Web\Lib\Http\HttpFactoryInjectionTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LogLevel;
 use Zend\EventManager\EventInterface;
-use Zend\EventManager\EventManagerAwareInterface;
-use Zend\EventManager\EventManagerAwareTrait;
 
-class SiteController implements
-    LoggerAwareInterface,
-    EventManagerAwareInterface,
-    DefaultListenerAttachableInterface,
-    HtmlPageControllerInterface
+class SiteController implements HtmlPageControllerInterface, HttpFactoryAwareInterface
 {
-    use LoggerInjectionTrait;
-    use EventManagerAwareTrait;
     use HtmlPageControllerTrait;
+    use HttpFactoryInjectionTrait;
 
     // Category tag for system-wide event listener
     public $eventIdentifier = ['controller'];
