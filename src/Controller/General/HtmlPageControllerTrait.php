@@ -1,7 +1,6 @@
 <?php
 namespace My\Web\Controller\General;
 
-use My\Web\Lib\Http\HttpFactoryInjectionTrait;
 use My\Web\Lib\Log\LoggerInjectionTrait;
 use My\Web\Lib\Util\Mobile;
 use My\Web\Lib\View\ViewInjectionTrait;
