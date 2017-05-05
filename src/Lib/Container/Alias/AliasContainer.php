@@ -1,5 +1,5 @@
 <?php
-namespace My\Web\Lib\Container;
+namespace My\Web\Lib\Container\Alias;
 
 use Psr\Container\ContainerInterface;
 

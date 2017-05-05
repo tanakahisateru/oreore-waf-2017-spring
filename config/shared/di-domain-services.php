@@ -1,5 +1,5 @@
 <?php
-use Aura\Di\Container;
+use My\Web\Lib\Container\Container;
 
 /** @var Container $di */
 /** @var array $params */

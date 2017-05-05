@@ -1,8 +1,8 @@
 <?php
-use Aura\Di\Container;
 use Aura\Dispatcher\Dispatcher;
 use My\Web\Controller\ErrorController;
 use My\Web\Controller\SiteController;
+use My\Web\Lib\Container\Container;
 
 /** @var Container $di */
 /** @var array $params */

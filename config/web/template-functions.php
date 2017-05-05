@@ -1,5 +1,5 @@
 <?php
-use Aura\Di\Container;
+use My\Web\Lib\Container\Container;
 use My\Web\Lib\View\Template\TemplateEngine;
 
 /** @var Container $di */

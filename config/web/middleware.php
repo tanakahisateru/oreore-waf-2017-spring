@@ -1,6 +1,6 @@
 <?php
-use Aura\Di\Container;
 use My\Web\Lib\App\Middleware\WebAppBootstrap;
+use My\Web\Lib\Container\Container;
 use My\Web\Lib\Http\HttpFactoryInterface;
 use My\Web\Lib\Router\Middleware\RoutingHandler;
 use My\Web\Lib\Router\Router;

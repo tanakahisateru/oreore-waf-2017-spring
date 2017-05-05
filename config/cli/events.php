@@ -1,5 +1,5 @@
 <?php
-use Aura\Di\Container;
+use My\Web\Lib\Container\Container;
 use Zend\EventManager\EventInterface;
 use Zend\EventManager\SharedEventManagerInterface;
 

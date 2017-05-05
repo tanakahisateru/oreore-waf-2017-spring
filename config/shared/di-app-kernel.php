@@ -1,6 +1,6 @@
 <?php
-use Aura\Di\Container;
 use My\Web\Lib\App\App;
+use My\Web\Lib\Container\Container;
 use Psr\Log\LoggerAwareInterface;
 use Zend\EventManager\EventManager;
 use Zend\EventManager\EventManagerAwareInterface;
