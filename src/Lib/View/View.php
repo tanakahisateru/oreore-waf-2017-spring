@@ -36,15 +36,14 @@ class View implements EventManagerAwareInterface
      * View constructor.
      *
      * @param ViewEngine $engine
-     * @param AssetUsage $requiredAssets
      */
-    public function __construct($engine, $requiredAssets)
+    public function __construct($engine)
     {
         $this->engine = $engine;
 
         $this->folderMap = [];
         $this->attributeCollection = [];
-        $this->requiredAssets = $requiredAssets;
+        $this->requiredAssets = $engine->createAssetUsage();
     }
 
     /**

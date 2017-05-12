@@ -1,62 +1,70 @@
 <?php
 namespace My\Web\Lib\View;
 
-use League\Plates\Engine;
 use My\Web\Lib\Event\Interceptor;
 use My\Web\Lib\Event\InterceptorException;
 use My\Web\Lib\Router\Router;
 use My\Web\Lib\View\Asset\AssetManager;
-use Psr\Container\ContainerInterface;
+use My\Web\Lib\View\Asset\AssetUsage;
+use My\Web\Lib\View\Template\TemplateEngine;
 use Webmozart\PathUtil\Path;
 
 class ViewEngine
 {
     /**
-     * @var ContainerInterface
+     * @var Router
      */
-    protected $container;
+    protected $router;
+
+    /**
+     * @var TemplateEngine
+     */
+    protected $templateEngine;
+
+    /**
+     * @var AssetManager
+     */
+    protected $assetManager;
+
+    /**
+     * @var callable
+     */
+    protected $viewFactory;
 
     /**
      * View constructor.
-     * @param ContainerInterface $container
+     * @param Router $router
+     * @param TemplateEngine $templateEngine
+     * @param AssetManager $assetManager
+     * @param callable $viewFactory
      */
-    public function __construct(ContainerInterface $container)
+    public function __construct(
+        Router $router,
+        TemplateEngine $templateEngine,
+        AssetManager $assetManager,
+        callable $viewFactory
+    )
     {
-        $this->container = $container;
+        $this->router = $router;
+        $this->templateEngine = $templateEngine;
+        $this->assetManager = $assetManager;
+        $this->viewFactory = $viewFactory;
     }
 
     /**
-     * @return Engine
-     */
-    protected function getTemplateEngine()
-    {
-        return $this->container->get('templateEngine');
-    }
-
-    /**
-     * @return AssetManager
-     */
-    protected function getAssetManager()
-    {
-        return $this->container->get('assetManager');
-    }
-
-    /**
-     * @return Router
-     */
-    public function getRouter()
-    {
-        return $this->container->get('router');
-    }
-
-    /**
-     * @param string $class
      * @return View
      */
-    public function createView($class = View::class)
+    public function createView()
     {
-        $factory = $this->container->get('viewFactory');
-        return $factory($this, $this->getAssetManager(), $class);
+        return call_user_func($this->viewFactory, $this);
+    }
+
+    /**
+     * @return AssetUsage
+     */
+    public function createAssetUsage()
+    {
+        return $this->assetManager->createUsage();
     }
 
     /**
@@ -68,9 +76,9 @@ class ViewEngine
     public function routeUrlTo($name, $data=[], $raw = false)
     {
         if ($raw) {
-            return $this->getRouter()->rawUrlTo($name, $data);
+            return $this->router->rawUrlTo($name, $data);
         } else {
-            return $this->getRouter()->urlTo($name, $data);
+            return $this->router->urlTo($name, $data);
         }
     }
 
@@ -80,7 +88,7 @@ class ViewEngine
      */
     public function resourceUrlTo($url)
     {
-        return $this->getAssetManager()->url($url);
+        return $this->assetManager->url($url);
     }
 
     /**
@@ -92,7 +100,7 @@ class ViewEngine
     public function renderIn(View $view, $templateName, array $data = [])
     {
         // Plate engine is stateful
-        $engine = clone $this->getTemplateEngine();
+        $engine = clone $this->templateEngine;
         $rootPath = $engine->getDirectory();
 
         $engine->registerFunction('view', function () use ($view) {
