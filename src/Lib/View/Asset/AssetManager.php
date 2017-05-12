@@ -40,7 +40,7 @@ class AssetManager implements ContainerInterface
 
     /**
      * @param array $config
-     * @return ResourceBundle
+     * @return Asset
      */
     public function newBundle(array $config = [])
     {
@@ -99,7 +99,7 @@ class AssetManager implements ContainerInterface
             }
         }
 
-        return new ResourceBundle($this, $baseUrl, $files, $section, array_merge($dependencies, $bundles));
+        return new Asset($this, $baseUrl, $files, $section, array_merge($dependencies, $bundles));
     }
 
     /**
@@ -177,11 +177,11 @@ class AssetManager implements ContainerInterface
     }
 
     /**
-     * @return AssetUsage
+     * @return AssetCollection
      */
-    public function createUsage()
+    public function createCollection()
     {
         // should be locked here
-        return new AssetUsage($this);
+        return new AssetCollection($this);
     }
 }

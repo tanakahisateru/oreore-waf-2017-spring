@@ -3,7 +3,7 @@ namespace My\Web\Lib\View\Asset;
 
 use Webmozart\PathUtil\Path;
 
-class ResourceBundle implements UrlCollectableInterface
+class Asset implements UrlCollectableInterface
 {
     /**
      * @var AssetManager

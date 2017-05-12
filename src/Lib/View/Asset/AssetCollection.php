@@ -1,7 +1,7 @@
 <?php
 namespace My\Web\Lib\View\Asset;
 
-class AssetUsage implements UrlCollectableInterface
+class AssetCollection implements UrlCollectableInterface
 {
     /**
      * @var AssetManager

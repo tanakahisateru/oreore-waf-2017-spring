@@ -1,7 +1,7 @@
 <?php
 namespace My\Web\Lib\View;
 
-use My\Web\Lib\View\Asset\AssetUsage;
+use My\Web\Lib\View\Asset\AssetCollection;
 use Zend\EventManager\EventManagerAwareInterface;
 use Zend\EventManager\EventManagerAwareTrait;
 
@@ -28,7 +28,7 @@ class View implements EventManagerAwareInterface
     protected $attributeCollection;
 
     /**
-     * @var AssetUsage
+     * @var AssetCollection
      */
     protected $requiredAssets;
 
@@ -43,7 +43,7 @@ class View implements EventManagerAwareInterface
 
         $this->folderMap = [];
         $this->attributeCollection = [];
-        $this->requiredAssets = $engine->createAssetUsage();
+        $this->requiredAssets = $engine->createAssetCollection();
     }
 
     /**

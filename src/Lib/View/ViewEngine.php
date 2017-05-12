@@ -4,8 +4,8 @@ namespace My\Web\Lib\View;
 use My\Web\Lib\Event\Interceptor;
 use My\Web\Lib\Event\InterceptorException;
 use My\Web\Lib\Router\Router;
+use My\Web\Lib\View\Asset\AssetCollection;
 use My\Web\Lib\View\Asset\AssetManager;
-use My\Web\Lib\View\Asset\AssetUsage;
 use My\Web\Lib\View\Template\TemplateEngine;
 use Webmozart\PathUtil\Path;
 
@@ -60,11 +60,11 @@ class ViewEngine
     }
 
     /**
-     * @return AssetUsage
+     * @return AssetCollection
      */
-    public function createAssetUsage()
+    public function createAssetCollection()
     {
-        return $this->assetManager->createUsage();
+        return $this->assetManager->createCollection();
     }
 
     /**
