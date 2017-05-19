@@ -1,6 +1,7 @@
 <?php
+use Lapaz\Amechan\AssetManager;
+use Lapaz\Amechan\Mapper\UnifiedResourceMapper;
 use My\Web\Lib\Container\Container;
-use My\Web\Lib\View\Asset\AssetManager;
 
 /** @var Container $di */
 /** @var AssetManager $am */
@@ -58,8 +59,15 @@ $mapping = array_combine(
     }, array_values($pathMapping))
 );
 
-$am->map('/assets/', $mapping);
+$am->mapping($di->newInstance(UnifiedResourceMapper::class, [
+    'baseUrl' => '/assets/',
+    'mapping' => $mapping,
+]));
 
 $manifest = is_file($revManifestPath) ?
     json_decode(file_get_contents($revManifestPath), true) : [];
-$am->rev('/assets/dist/', $manifest);
+$am->mapping($di->newInstance(\Lapaz\Amechan\Mapper\RevisionHashMapper::class, [
+    'baseUrl' => '/assets/dist/',
+    'manifest' => $manifest,
+
+]));

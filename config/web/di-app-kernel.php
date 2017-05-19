@@ -3,6 +3,8 @@ use Aura\Router\RouterContainer;
 use DebugBar\Bridge\MonologCollector;
 use DebugBar\DebugBar;
 use DebugBar\StandardDebugBar;
+use Lapaz\Amechan\AssetManager;
+use Lapaz\PlainPhp\ScriptRunner;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger;
 use My\Web\Lib\App\WebApp;
@@ -11,8 +13,6 @@ use My\Web\Lib\Http\DiactorosHttpFactory;
 use My\Web\Lib\Http\HttpFactoryAwareInterface;
 use My\Web\Lib\Http\Middleware\WhoopsErrorResponseGenerator;
 use My\Web\Lib\Router\Router;
-use My\Web\Lib\Util\PlainPhp;
-use My\Web\Lib\View\Asset\AssetManager;
 use My\Web\Lib\View\Middleware\ErrorResponseGenerator;
 use My\Web\Lib\View\Template\TemplateEngine;
 use My\Web\Lib\View\View;
@@ -53,10 +53,10 @@ $di->set('logger', $di->lazyNew(Logger::class, [
 ]));
 
 $di->set('sharedEventManager', $di->lazyNew(SharedEventManager::class, [], [], function ($events) use ($di) {
-    PlainPhp::runner()->with([
+    ScriptRunner::which()->requires(__DIR__ . '/events.php')->with([
         'di' => $di,
         'events' => $events,
-    ])->run(__DIR__ . '/events.php');
+    ])->run();
 }));
 
 /////////////////////////////////////////////////////////////////////
@@ -65,10 +65,10 @@ $di->set('sharedEventManager', $di->lazyNew(SharedEventManager::class, [], [], f
 $di->set('httpFactory', $di->lazyNew(DiactorosHttpFactory::class));
 
 $di->set('middlewarePipe', $di->lazyNew(MiddlewarePipe::class, [], [], function ($pipe) use ($di) {
-    PlainPhp::runner()->with([
+    ScriptRunner::which()->requires(__DIR__ . '/middleware.php')->with([
         'di' => $di,
         'pipe' => $pipe,
-    ])->run(__DIR__ . '/middleware.php');
+    ])->run();
 }));
 
 $di->set('errorHandlerMiddleware', $di->lazyNew(ErrorHandler::class, [
@@ -107,10 +107,10 @@ $di->set('routerContainer', $di->lazyNew(RouterContainer::class, [
         return $di->get('logger');
     },
     'setMapBuilder' => function ($map) use ($di) {
-        PlainPhp::runner()->with([
+        ScriptRunner::which()->requires(__DIR__ . '/routing.php')->with([
             'di' => $di,
             'map' => $map,
-        ])->doRequire(__DIR__ . '/routing.php');
+        ])->run();
     },
 ]));
 
@@ -122,17 +122,17 @@ $di->set('templateEngine', $di->lazyNew(TemplateEngine::class, [
     'fileExtension' => null,
     'encoding' => 'utf-8',
 ], [], function ($engine) use ($di) {
-    PlainPhp::runner()->with([
+    ScriptRunner::which()->requires(__DIR__ . '/template-functions.php')->with([
         'di' => $di,
         'engine' => $engine,
-    ])->run(__DIR__ . '/template-functions.php');
+    ])->run();
 }));
 
 $di->set('assetManager', $di->lazyNew(AssetManager::class, [], [], function ($am) use ($di) {
-    PlainPhp::runner()->with([
+    ScriptRunner::which()->requires(__DIR__ . '/assets.php')->with([
         'di' => $di,
         'am' => $am,
-    ])->run(__DIR__ . '/assets.php');
+    ])->run();
 }));
 
 $di->set('viewEngine', $di->lazyNew(ViewEngine::class, [
