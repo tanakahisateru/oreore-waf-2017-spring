@@ -17,7 +17,7 @@ class SiteCest
         $I->amOnPage('/');
         $I->seeInTitle('Index');
 
-        $logger = $I->getContainer()->get('logger');
+        $logger = $I->getMiddlewareContainer()->get('logger');
         $I->assertInstanceOf(\Psr\Log\LoggerInterface::class, $logger);
     }
 

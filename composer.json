@@ -21,7 +21,10 @@
         "codeception/codeception": "^2.2",
         "filp/whoops": "^2.1",
         "maximebf/debugbar": "^1.13",
-        "symfony/var-dumper": "^3.2"
+        "symfony/var-dumper": "^3.2",
+        "http-interop/http-factory": "^0.3.0",
+        "http-interop/http-factory-diactoros": "^0.3.0",
+        "lapaz/codeception-generic-middleware": "^0.1.0"
     },
     "autoload": {
         "psr-4": {

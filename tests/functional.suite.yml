@@ -7,9 +7,13 @@
 class_name: FunctionalTester
 modules:
     enabled:
-        - \My\Web\Test\Module\Psr15:
-            applicationFile: config/test/app.php
-            processorField: middlewarePipe
-            containerField: container
+        - \Lapaz\Codeception\GenericMiddleware\Module\MiddlewareContainer:
+            containerFile: tests/_app/container.php
+            processorName: middlewarePipe
+            requestFactoryName: http.requestFactory
+            responseFactoryName: http.responseFactory
+            uriFactoryName: http.uriFactory
+            streamFactoryName: http.streamFactory
+            uploadedFileFactoryName: http.uploadedFileFactory
         - \Helper\Functional
         - Asserts
