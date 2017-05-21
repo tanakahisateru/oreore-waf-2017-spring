@@ -1,5 +1,7 @@
 <?php
+namespace My\Web\Tests\Acceptance;
 
+use AcceptanceTester;
 
 class ApiCest
 {

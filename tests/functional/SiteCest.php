@@ -1,5 +1,7 @@
 <?php
+namespace My\Web\Tests\Functional;
 
+use FunctionalTester;
 
 class SiteCest
 {
