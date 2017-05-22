@@ -1,10 +1,11 @@
 <?php
+use Aura\Di\Container;
+use Lapaz\PlainPhp\ScriptRunner;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use My\Web\Lib\App\App;
-use My\Web\Lib\Container\Container;
 use Zend\EventManager\SharedEventManager;
 
 /** @var Container $di */
@@ -34,6 +35,12 @@ $di->set('logger', $di->lazyNew(Logger::class, [
     'processors' => [],
 ]));
 
-$di->set('sharedEventManager', $di->lazyNew(SharedEventManager::class, [], [], $di->requireBuilder(
-    __DIR__ . '/events.php', 'events', ['di' => $di]
-)));
+
+$di->set('sharedEventManager', $di->lazy(function () use ($di) {
+    $events = $di->newInstance(SharedEventManager::class);
+    ScriptRunner::which()->requires(__DIR__ . '/events.php')->with([
+        'di' => $di,
+        'events' => $events,
+    ])->run();
+    return $events;
+}));

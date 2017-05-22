@@ -1,10 +1,10 @@
 <?php
 namespace My\Web\Lib\App;
 
+use Aura\Di\Container;
+use Aura\Di\ContainerBuilder;
 use Aura\Di\Exception\ServiceNotFound;
 use Aura\Includer\Includer;
-use My\Web\Lib\Container\Container;
-use My\Web\Lib\Container\ContainerBuilder;
 use My\Web\Lib\Log\LoggerInjectionTrait;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerAwareInterface;
@@ -63,7 +63,7 @@ class App implements LoggerAwareInterface, EventManagerAwareInterface
         try {
             $app = $container->get('app');
         } catch (ServiceNotFound $e) {
-            throw new \RuntimeException("Invalid configuration for app", 0, $e);
+            throw new \RuntimeException("Invalid configuration: " . $e->getMessage(), 0, $e);
         }
 
         if (!($app instanceof App)) {
