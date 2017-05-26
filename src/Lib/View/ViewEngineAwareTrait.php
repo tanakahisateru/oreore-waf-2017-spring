@@ -1,7 +1,7 @@
 <?php
 namespace My\Web\Lib\View;
 
-trait ViewInjectionTrait
+trait ViewEngineAwareTrait
 {
     /**
      * @var ViewEngine
@@ -16,11 +16,4 @@ trait ViewInjectionTrait
         $this->viewEngine = $viewEngine;
     }
 
-    /**
-     * @return View
-     */
-    public function createView()
-    {
-        return $this->viewEngine->createView();
-    }
 }

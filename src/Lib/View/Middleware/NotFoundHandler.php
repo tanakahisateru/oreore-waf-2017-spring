@@ -4,14 +4,14 @@ namespace My\Web\Lib\View\Middleware;
 use Interop\Http\ServerMiddleware\DelegateInterface;
 use Interop\Http\ServerMiddleware\MiddlewareInterface;
 use My\Web\Lib\Router\Router;
-use My\Web\Lib\View\ViewAwareInterface;
-use My\Web\Lib\View\ViewInjectionTrait;
+use My\Web\Lib\View\ViewEngineAwareInterface;
+use My\Web\Lib\View\ViewEngineAwareTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-class NotFoundHandler implements MiddlewareInterface, ViewAwareInterface
+class NotFoundHandler implements MiddlewareInterface, ViewEngineAwareInterface
 {
-    use ViewInjectionTrait;
+    use ViewEngineAwareTrait;
 
     /**
      * @var Router

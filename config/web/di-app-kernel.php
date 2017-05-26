@@ -2,9 +2,10 @@
 use Aura\Di\Container;
 use Aura\Router\RouterContainer;
 use DebugBar\Bridge\MonologCollector;
+use DebugBar\DebugBar;
 use DebugBar\StandardDebugBar;
 use Lapaz\Amechan\AssetManager;
-use Lapaz\PlainPhp\ScriptRunner;
+use Lapaz\Aura\Di\ContainerExtension;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger;
 use My\Web\Lib\App\WebApp;
@@ -15,8 +16,8 @@ use My\Web\Lib\Router\Router;
 use My\Web\Lib\View\Middleware\ErrorResponseGenerator;
 use My\Web\Lib\View\Template\TemplateEngine;
 use My\Web\Lib\View\View;
-use My\Web\Lib\View\ViewAwareInterface;
 use My\Web\Lib\View\ViewEngine;
+use My\Web\Lib\View\ViewEngineAwareInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\EventManager\SharedEventManager;
 use Zend\Stratigility\Middleware\ErrorHandler;
@@ -25,11 +26,13 @@ use Zend\Stratigility\MiddlewarePipe;
 /** @var Container $di */
 /** @var array $params */
 
+$dix = ContainerExtension::createFrom($di);
+
 $di->setters[HttpFactoryAwareInterface::class] = [
     'setHttpFactory' => $di->lazyGet('httpFactory'),
 ];
 
-$di->setters[ViewAwareInterface::class] = [
+$di->setters[ViewEngineAwareInterface::class] = [
     'setViewEngine' => $di->lazyGet('viewEngine'),
 ];
 
@@ -51,56 +54,43 @@ $di->set('logger', $di->lazyNew(Logger::class, [
     'processors' => [],
 ]));
 
-$di->set('sharedEventManager', $di->lazy(function () use ($di) {
-    $events = $di->newInstance(SharedEventManager::class);
-    ScriptRunner::which()->requires(__DIR__ . '/events.php')->with([
-        'di' => $di,
-        'events' => $events,
-    ])->run();
-    return $events;
-}));
-
-//Planning:
-//$di->set('sharedEventManager', $di2->lazyNew(SharedEventManager::class)
-//    ->initAs(function ($events) use ($di) {
-//        ScriptRunner::which()->requires(__DIR__ . '/events.php')->with([
-//            'di' => $di,
-//            'events' => $events,
-//        ])->run();
-//    })
-//);
-//
-//$di->set('sharedEventManager', $di2->lazyNew(SharedEventManager::class)
-//    ->initByScript(__DIR__ . '/events.php', [
+//$di->set('sharedEventManager', $di->lazy(function () use ($di) {
+//    $events = $di->newInstance(SharedEventManager::class);
+//    ScriptRunner::which()->requires(__DIR__ . '/events.php')->with([
 //        'di' => $di,
-//    ])
-//);
+//        'events' => $events,
+//    ])->run();
+//    return $events;
+//}));
+
+$di->set('sharedEventManager', $dix->lazyNew(SharedEventManager::class)
+    ->modifiedByScript(__DIR__ . '/events.php', [
+        'di' => $di,
+        'params' => $params,
+    ])
+);
 
 /////////////////////////////////////////////////////////////////////
 // PSR-15 pipeline
 
 $di->set('httpFactory', $di->lazyNew(DiactorosHttpFactory::class));
 
-$di->set('middlewarePipe', $di->lazy(function () use ($di) {
-    $pipe = $di->newInstance(MiddlewarePipe::class);
-    ScriptRunner::which()->requires(__DIR__ . '/middleware.php')->with([
+$di->set('middlewarePipe', $dix->lazyNew(MiddlewarePipe::class)
+    ->modifiedByScript(__DIR__ . '/middleware.php', [
         'di' => $di,
-        'pipe' => $pipe,
-    ])->run();
-    return $pipe;
-}));
+        'params' => $params,
+    ])
+);
 
 $di->set('errorResponseGenerator', $di->lazyNew(ErrorResponseGenerator::class, [
     'router' => $di->lazyGet('router'),
     'controller' => 'error',
 ]));
 
-$di->set('errorHandlerMiddleware', $di->lazy(function () use ($di) {
-    $errorHandler = $di->newInstance(ErrorHandler::class, [
-        'responsePrototype' => $di->get('httpFactory')->createResponse(),
-        'responseGenerator' => $di->get('errorResponseGenerator'),
-    ]);
-
+$di->set('errorHandlerMiddleware', $dix->lazyNew(ErrorHandler::class, [
+    'responsePrototype' => $di->lazyGetCall('httpFactory', 'createResponse'),
+    'responseGenerator' => $di->lazyGet('errorResponseGenerator'),
+])->modifiedBy(function (ErrorHandler $errorHandler) use ($di) {
     $logger = $di->get('logger');
     $errorHandler->attachListener(function ($error, ServerRequestInterface $request) use ($logger) {
         /** @var Exception|mixed $error */
@@ -109,8 +99,6 @@ $di->set('errorHandlerMiddleware', $di->lazy(function () use ($di) {
             $logger->error($trace);
         }
     });
-
-    return $errorHandler;
 }));
 
 /////////////////////////////////////////////////////////////////////
@@ -121,53 +109,33 @@ $di->set('router', $di->lazyNew(Router::class, [
     'dispatcher' => $di->lazyGet('routerDispatcher'),
 ]));
 
-$di->set('routerContainer', $di->lazyNew(RouterContainer::class, [
+$di->set('routerContainer', $dix->lazyNew(RouterContainer::class, [
     'basepath' => null,
 ], [
-    'setLoggerFactory' => function () use ($di) {
-        return $di->get('logger');
-    },
-    'setMapBuilder' => function ($map) use ($di) {
-        ScriptRunner::which()->requires(__DIR__ . '/routing.php')->with([
-            'di' => $di,
-            'map' => $map,
-        ])->run();
-    },
+    'setLoggerFactory' => $dix->newLocator('logger'),
+])->modifiedByScript(__DIR__ . '/routing.php', [
+    'di' => $di,
+    'params' => $params,
 ]));
-
-// Planning
-// $di->set('loggerFactory', $di2->newLocator('logger'));
-//
-// [
-//    'setLoggerFactory' => $di->lazyGet('loggerFactory'),
-
-// [
-//    'setLoggerFactory' => $di2->lazyCallableReturns('logger'),
 
 /////////////////////////////////////////////////////////////////////
 // HTML rendering
 
-$di->set('templateEngine', $di->lazy(function () use ($di) {
-    $engine = $di->newInstance(TemplateEngine::class, [
-        'directory' => __DIR__ . '/../../templates',
-        'fileExtension' => null,
-        'encoding' => 'utf-8',
-    ]);
-    ScriptRunner::which()->requires(__DIR__ . '/template-functions.php')->with([
-        'di' => $di,
-        'engine' => $engine,
-    ])->run();
-    return $engine;
-}));
+$di->set('templateEngine', $dix->lazyNew(TemplateEngine::class, [
+    'directory' => __DIR__ . '/../../templates',
+    'fileExtension' => null,
+    'encoding' => 'utf-8',
+])->modifiedByScript(__DIR__ . '/template-functions.php', [
+    'di' => $di,
+    'params' => $params,
+]));
 
-$di->set('assetManager', $di->lazy(function () use ($di) {
-    $am = $di->newInstance(AssetManager::class);
-    ScriptRunner::which()->requires(__DIR__ . '/assets.php')->with([
+$di->set('assetManager', $dix->lazyNew(AssetManager::class)
+    ->modifiedByScript(__DIR__ . '/assets.php', [
         'di' => $di,
-        'am' => $am,
-    ])->run();
-    return $am;
-}));
+        'params' => $params,
+    ])
+);
 
 $di->set('viewEngine', $di->lazyNew(ViewEngine::class, [
     'router' => $di->lazyGet('router'),
@@ -187,12 +155,14 @@ if ($params['env'] == 'dev') {
 
     $di->set('errorResponseGenerator', $di->lazyNew(WhoopsErrorResponseGenerator::class));
 
-    $di->set('debugbar', $di->lazy(function () use ($di, $params) {
-        $debugBar = $di->newInstance(StandardDebugBar::class);
-        $debugBar->addCollector($di->newInstance(MonologCollector::class, [
-            'logger' => $di->get('logger'),
-            'level' => Logger::getLevels()[$params['defaultLogLevel']],
-        ]));
-        return $debugBar;
-    }));
+    $di->set('debugbar', $dix->lazyNew(StandardDebugBar::class)
+        ->modifiedBy(function (DebugBar $debugBar) use ($di, $params) {
+            $collector = $di->newInstance(MonologCollector::class, [
+                'logger' => $di->get('logger'),
+                'level' => Logger::getLevels()[$params['defaultLogLevel']],
+            ]);
+            assert($collector instanceof MonologCollector);
+            $debugBar->addCollector($collector);
+        })
+    );
 }

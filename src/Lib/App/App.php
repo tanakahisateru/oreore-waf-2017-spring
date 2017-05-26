@@ -5,15 +5,15 @@ use Aura\Di\Container;
 use Aura\Di\ContainerBuilder;
 use Aura\Di\Exception\ServiceNotFound;
 use Aura\Includer\Includer;
-use My\Web\Lib\Log\LoggerInjectionTrait;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 use Zend\EventManager\EventManagerAwareInterface;
 use Zend\EventManager\EventManagerAwareTrait;
 
 class App implements LoggerAwareInterface, EventManagerAwareInterface
 {
-    use LoggerInjectionTrait;
+    use LoggerAwareTrait;
     use EventManagerAwareTrait;
 
     // Category tag for system-wide event listener
@@ -70,15 +70,14 @@ class App implements LoggerAwareInterface, EventManagerAwareInterface
             throw new \RuntimeException("Invalid configuration for app");
         }
 
-        static::$_instance = $app;
-
         // debug trace
-        if (static::$_instance && static::$_instance->getContainer()->has('logger')) {
-            $logger = static::$_instance->getLogger();
+        if ($app && $app->getContainer()->has('logger')) {
             foreach ($loader->getDebug() as $message) {
-                $logger->debug('App::configure | ' . $message);
+                $app->logger->debug('App::configure | ' . $message);
             }
         }
+
+        static::$_instance = $app;
 
         return $app;
     }

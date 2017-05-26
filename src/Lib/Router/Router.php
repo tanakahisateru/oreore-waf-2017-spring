@@ -11,14 +11,14 @@ use My\Web\Lib\Event\Interceptor;
 use My\Web\Lib\Event\InterceptorException;
 use My\Web\Lib\Http\HttpFactoryAwareInterface;
 use My\Web\Lib\Http\HttpFactoryInjectionTrait;
-use My\Web\Lib\Log\LoggerInjectionTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 
 class Router implements LoggerAwareInterface, HttpFactoryAwareInterface
 {
-    use LoggerInjectionTrait;
+    use LoggerAwareTrait;
     use HttpFactoryInjectionTrait;
 
     /**
@@ -136,7 +136,7 @@ class Router implements LoggerAwareInterface, HttpFactoryAwareInterface
         try {
             return $this->routes->getGenerator()->generate($name, $data);
         } catch (RouteNotFound $e) {
-            $this->getLogger()->warning('Route not found: '. $e->getMessage());
+            $this->logger->warning('Route not found: '. $e->getMessage());
             return '#';
         }
     }
@@ -151,7 +151,7 @@ class Router implements LoggerAwareInterface, HttpFactoryAwareInterface
         try {
             return $this->routes->getGenerator()->generateRaw($name, $data);
         } catch (RouteNotFound $e) {
-            $this->getLogger()->warning('Route not found: '. $e->getMessage());
+            $this->logger->warning('Route not found: '. $e->getMessage());
             return '#';
         }
     }

@@ -6,9 +6,13 @@ use Interop\Http\ServerMiddleware\MiddlewareInterface;
 use My\Web\Lib\App\App;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 
-class WebAppBootstrap implements MiddlewareInterface
+class WebAppBootstrap implements MiddlewareInterface, LoggerAwareInterface
 {
+    use LoggerAwareTrait;
+
     /**
      * @var ContainerInterface
      */
@@ -38,7 +42,7 @@ class WebAppBootstrap implements MiddlewareInterface
         $app = $this->container->get($this->appName);
         assert($app instanceof App);
 
-        $app->getLogger()->debug("Request handling started");
+        $this->logger->debug("Request handling started");
         $startedAt = microtime(true);
         $app->getEventManager()->trigger('beforeServe', $this);
 
@@ -46,7 +50,7 @@ class WebAppBootstrap implements MiddlewareInterface
 
         $app->getEventManager()->trigger('afterServe', $this);
         $elapsed = microtime(true) - $startedAt;
-        $app->getLogger()->debug(sprintf("Request handling finished in %0.3fms", $elapsed * 1000));
+        $this->logger->debug(sprintf("Request handling finished in %0.3fms", $elapsed * 1000));
 
         return $response;
     }

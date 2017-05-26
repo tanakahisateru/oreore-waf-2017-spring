@@ -1,12 +1,12 @@
 <?php
 namespace My\Web\Controller;
 
-use My\Web\Controller\General\HtmlPageControllerInterface;
+use My\Web\Controller\General\HtmlPageControllerInterfaceEngine;
 use My\Web\Controller\General\HtmlPageControllerTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-class ErrorController implements HtmlPageControllerInterface
+class ErrorController implements HtmlPageControllerInterfaceEngine
 {
     use HtmlPageControllerTrait;
 
@@ -47,7 +47,8 @@ class ErrorController implements HtmlPageControllerInterface
         }
 
         $response = $response->withHeader('Content-Type', 'text/html');
-        $response->getBody()->write($this->createView()->render($template, [
+        $view = $this->viewEngine->createView();
+        $response->getBody()->write($view->render($template, [
             'statusCode' => $statusCode,
             'reasonPhrase' => $reasonPhrase,
             'request' => $request,

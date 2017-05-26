@@ -1,7 +1,7 @@
 <?php
 namespace My\Web\Lib\View;
 
-interface ViewAwareInterface
+interface ViewEngineAwareInterface
 {
     /**
      * @param ViewEngine $viewEngine

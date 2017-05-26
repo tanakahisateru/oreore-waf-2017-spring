@@ -1,17 +1,19 @@
 <?php
+use Aura\Di\Container;
 use Lapaz\Amechan\AssetManager;
+use Lapaz\Amechan\Mapper\RevisionHashMapper;
 use Lapaz\Amechan\Mapper\UnifiedResourceMapper;
-use My\Web\Lib\Container\Container;
 
+/** @var AssetManager $this */
 /** @var Container $di */
-/** @var AssetManager $am */
+/** @var array $params */
 
-$am->asset('jquery', [
+$this->asset('jquery', [
     'file' => '/assets/vendor/jquery/dist/jquery.js',
     'section' => 'before-end-body-script',
 ]);
 
-$am->asset('bootstrap', [
+$this->asset('bootstrap', [
     'baseUrl' => '/assets/vendor/bootstrap/dist',
     'bundles' => [
         [
@@ -26,7 +28,7 @@ $am->asset('bootstrap', [
     'dependency' => 'jquery',
 ]);
 
-$am->asset('app', [
+$this->asset('app', [
     'baseUrl' => '/assets/local',
     'bundles' => [
         [
@@ -59,15 +61,9 @@ $mapping = array_combine(
     }, array_values($pathMapping))
 );
 
-$am->mapping($di->newInstance(UnifiedResourceMapper::class, [
-    'baseUrl' => '/assets/',
-    'mapping' => $mapping,
-]));
+$this->mapping(new UnifiedResourceMapper('/assets/', $mapping));
 
 $manifest = is_file($revManifestPath) ?
     json_decode(file_get_contents($revManifestPath), true) : [];
-$am->mapping($di->newInstance(\Lapaz\Amechan\Mapper\RevisionHashMapper::class, [
-    'baseUrl' => '/assets/dist/',
-    'manifest' => $manifest,
 
-]));
+$this->mapping(new RevisionHashMapper('/assets/dist/', $manifest));

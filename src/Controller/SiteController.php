@@ -1,7 +1,7 @@
 <?php
 namespace My\Web\Controller;
 
-use My\Web\Controller\General\HtmlPageControllerInterface;
+use My\Web\Controller\General\HtmlPageControllerInterfaceEngine;
 use My\Web\Controller\General\HtmlPageControllerTrait;
 use My\Web\Lib\Http\HttpFactoryAwareInterface;
 use My\Web\Lib\Http\HttpFactoryInjectionTrait;
@@ -10,7 +10,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LogLevel;
 use Zend\EventManager\EventInterface;
 
-class SiteController implements HtmlPageControllerInterface, HttpFactoryAwareInterface
+class SiteController implements HtmlPageControllerInterfaceEngine, HttpFactoryAwareInterface
 {
     use HtmlPageControllerTrait;
     use HttpFactoryInjectionTrait;
@@ -65,7 +65,7 @@ class SiteController implements HtmlPageControllerInterface, HttpFactoryAwareInt
      */
     public function actionIndex($request)
     {
-        $this->getLogger()->log(LogLevel::DEBUG, 'site.index');
+        $this->logger->log(LogLevel::DEBUG, 'site.index');
 
         $qp = $request->getQueryParams();
         $greeting = isset($qp['greeting']) ? $qp['greeting'] : 'Hello,';
@@ -80,7 +80,7 @@ class SiteController implements HtmlPageControllerInterface, HttpFactoryAwareInt
      */
     public function actionContact($response)
     {
-        $this->getLogger()->debug('site.contact');
+        $this->logger->debug('site.contact');
 
         echo 'contact page';
         $response->getBody()->write("");

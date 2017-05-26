@@ -1,18 +1,18 @@
 <?php
 namespace My\Web\Controller\General;
 
-use My\Web\Lib\Log\LoggerInjectionTrait;
 use My\Web\Lib\Util\Mobile;
-use My\Web\Lib\View\ViewInjectionTrait;
+use My\Web\Lib\View\ViewEngineAwareTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Log\LoggerAwareTrait;
 use Zend\EventManager\EventManagerAwareTrait;
 
 trait HtmlPageControllerTrait
 {
-    use LoggerInjectionTrait;
+    use LoggerAwareTrait;
     use EventManagerAwareTrait;
-    use ViewInjectionTrait;
+    use ViewEngineAwareTrait;
 
     /**
      * @var string
@@ -66,7 +66,7 @@ trait HtmlPageControllerTrait
             $path = call_user_func($this->templateFolderModifier, $path);
         }
 
-        $view = $this->createView();
+        $view = $this->viewEngine->createView();
         $view->setFolder('current', $path);
 
         return $view->render($template, $data);

@@ -1,6 +1,6 @@
 <?php
+use Aura\Di\Container;
 use My\Web\Lib\App\Middleware\WebAppBootstrap;
-use My\Web\Lib\Container\Container;
 use My\Web\Lib\Http\HttpFactoryInterface;
 use My\Web\Lib\Router\Middleware\RoutingHandler;
 use My\Web\Lib\Router\Router;
@@ -8,8 +8,9 @@ use My\Web\Lib\Util\DebugBarInsertion;
 use My\Web\Lib\View\Middleware\NotFoundHandler;
 use Zend\Stratigility\MiddlewarePipe;
 
+/** @var MiddlewarePipe $this */
 /** @var Container $di */
-/** @var MiddlewarePipe $pipe */
+/** @var array $params */
 
 /** @var Router $router */
 $router = $di->get('router');
@@ -18,16 +19,16 @@ $router = $di->get('router');
 $httpFactory = $di->get('httpFactory');
 $responsePrototype = $httpFactory->createResponse();
 
-$pipe->pipe($di->get('errorHandlerMiddleware'));
+$this->pipe($di->get('errorHandlerMiddleware'));
 
 if ($di->has('debugbar')) {
-    $pipe->pipe($di->newInstance(DebugBarInsertion::class, [
+    $this->pipe($di->newInstance(DebugBarInsertion::class, [
         'debugbar' => $di->get('debugbar'),
         'baseUrl' => '/assets/debugbar',
     ]));
 }
 
-$pipe->pipe($di->newInstance(WebAppBootstrap::class, [
+$this->pipe($di->newInstance(WebAppBootstrap::class, [
     'container' => $di,
     'appName' => 'app',
 ]));
@@ -41,11 +42,11 @@ $pipe->pipe($di->newInstance(WebAppBootstrap::class, [
 //     return $next($request, $response);
 // });
 
-$pipe->pipe($di->newInstance(RoutingHandler::class, [
+$this->pipe($di->newInstance(RoutingHandler::class, [
     'router' => $router,
 ]));
 
-$pipe->pipe($di->newInstance(NotFoundHandler::class, [
+$this->pipe($di->newInstance(NotFoundHandler::class, [
     'router' => $router,
     'responsePrototype' => $responsePrototype,
 ]));

@@ -1,14 +1,14 @@
 <?php
 namespace My\Web\Controller\General;
 
-use My\Web\Lib\View\ViewAwareInterface;
+use My\Web\Lib\View\ViewEngineAwareInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerAwareInterface;
 use Zend\EventManager\EventManagerAwareInterface;
 
-interface HtmlPageControllerInterface extends
-    LoggerAwareInterface, EventManagerAwareInterface, ViewAwareInterface
+interface HtmlPageControllerInterfaceEngine extends
+    LoggerAwareInterface, EventManagerAwareInterface, ViewEngineAwareInterface
 {
     /**
      */
