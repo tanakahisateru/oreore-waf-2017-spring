@@ -1,7 +1,7 @@
 <?php
 namespace My\Web\Lib\View;
 
-use My\Web\Lib\View\Asset\AssetCollection;
+use Lapaz\Amechan\AssetCollection;
 use Zend\EventManager\EventManagerAwareInterface;
 use Zend\EventManager\EventManagerAwareTrait;
 

@@ -1,9 +1,12 @@
 <?php
-use My\Web\Lib\View\Template\Template;
+use League\Plates\Template\Template;
+use My\Web\Lib\View\Template\EscaperExtension;
+use My\Web\Lib\View\Template\ViewAccessExtension;
 
 /**
- * @var Template $this
+ * @var Template|ViewAccessExtension|EscaperExtension $this
  */
+
 $this->layout('_shared/layout.php');
 
 ?>

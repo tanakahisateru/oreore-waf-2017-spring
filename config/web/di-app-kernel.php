@@ -6,6 +6,8 @@ use DebugBar\DebugBar;
 use DebugBar\StandardDebugBar;
 use Lapaz\Amechan\AssetManager;
 use Lapaz\Aura\Di\ContainerExtension;
+use League\Plates\Engine;
+use League\Plates\Extension\ExtensionInterface;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger;
 use My\Web\Lib\App\WebApp;
@@ -14,11 +16,12 @@ use My\Web\Lib\Http\HttpFactoryAwareInterface;
 use My\Web\Lib\Http\Middleware\WhoopsErrorResponseGenerator;
 use My\Web\Lib\Router\Router;
 use My\Web\Lib\View\Middleware\ErrorResponseGenerator;
-use My\Web\Lib\View\Template\TemplateEngine;
+use My\Web\Lib\View\Template\EscaperExtension;
 use My\Web\Lib\View\View;
 use My\Web\Lib\View\ViewEngine;
 use My\Web\Lib\View\ViewEngineAwareInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Zend\Escaper\Escaper;
 use Zend\EventManager\SharedEventManager;
 use Zend\Stratigility\Middleware\ErrorHandler;
 use Zend\Stratigility\MiddlewarePipe;
@@ -121,14 +124,17 @@ $di->set('routerContainer', $dix->lazyNew(RouterContainer::class, [
 /////////////////////////////////////////////////////////////////////
 // HTML rendering
 
-$di->set('templateEngine', $dix->lazyNew(TemplateEngine::class, [
+$di->set('templateEngine', $dix->lazyNew(Engine::class, [
     'directory' => __DIR__ . '/../../templates',
     'fileExtension' => null,
     'encoding' => 'utf-8',
-])->modifiedByScript(__DIR__ . '/template-functions.php', [
-    'di' => $di,
-    'params' => $params,
-]));
+])->modifiedBy(function (Engine $engine) use ($di) {
+    $extension = $di->newInstance(EscaperExtension::class, [
+        'escaper' => $di->newInstance(Escaper::class),
+    ]);
+    assert($extension instanceof ExtensionInterface);
+    $engine->loadExtension($extension);
+}));
 
 $di->set('assetManager', $dix->lazyNew(AssetManager::class)
     ->modifiedByScript(__DIR__ . '/assets.php', [

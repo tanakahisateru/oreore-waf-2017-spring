@@ -4,9 +4,9 @@ namespace My\Web\Lib\View;
 use Lapaz\Amechan\AssetCollection;
 use Lapaz\Amechan\AssetManager;
 use Lapaz\Odango\AdviceComposite;
+use League\Plates\Engine;
 use My\Web\Lib\Router\Router;
-use My\Web\Lib\View\Template\Template;
-use My\Web\Lib\View\Template\TemplateEngine;
+use My\Web\Lib\View\Template\ViewAccessExtension;
 use Ray\Aop\MethodInvocation;
 use Webmozart\PathUtil\Path;
 use Zend\EventManager\EventsCapableInterface;
@@ -19,7 +19,7 @@ class ViewEngine
     protected $router;
 
     /**
-     * @var TemplateEngine
+     * @var Engine
      */
     protected $templateEngine;
 
@@ -36,13 +36,13 @@ class ViewEngine
     /**
      * View constructor.
      * @param Router $router
-     * @param TemplateEngine $templateEngine
+     * @param Engine $templateEngine
      * @param AssetManager $assetManager
      * @param callable $viewFactory
      */
     public function __construct(
         Router $router,
-        TemplateEngine $templateEngine,
+        Engine $templateEngine,
         AssetManager $assetManager,
         callable $viewFactory
     )
@@ -103,8 +103,10 @@ class ViewEngine
     {
         // Plate engine is stateful
         $engine = clone $this->templateEngine;
-        $rootPath = $engine->getDirectory();
 
+        $engine->loadExtension(new ViewAccessExtension($view));
+
+        $rootPath = $engine->getDirectory();
         foreach ($view->getFolderMap() as $folder => $path) {
             if ($engine->getFolders()->exists($folder)) {
                 $engine->removeFolder($folder);
@@ -114,22 +116,14 @@ class ViewEngine
 
         $template = $engine->make($templateName);
 
-        $engine->registerFunction('view', function () use ($view) {
-            return $view;
-        });
-
-        $render = function (Template $template, array $data) {
+        $render = function (array $data) use ($template) {
             return $template->render($data);
         };
 
         $adviser = $this->eventTriggerAdviser($view, $template, $data);
         $render = $adviser->bind($render);
 
-        $content = $render($template, $data);
-
-        $engine->dropFunction('view');
-
-        return $content;
+        return $render($data);
     }
 
     /**
