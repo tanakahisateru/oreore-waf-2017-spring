@@ -4,7 +4,12 @@
         "aura/dispatcher": "^2.0",
         "aura/includer": "^2.0",
         "aura/router": "^3.1",
+        "http-interop/http-factory": "^0.3.0",
+        "http-interop/http-factory-diactoros": "^0.3.0",
         "josegonzalez/dotenv": "^2.1",
+        "lapaz/amechan": "^0.1.0",
+        "lapaz/odango": "^0.1.0",
+        "lapaz/aura-di-ext": "^0.1.0",
         "league/plates": "^3.3",
         "mobiledetect/mobiledetectlib": "^2.8",
         "monolog/monolog": "^1.22",
@@ -12,19 +17,14 @@
         "zendframework/zend-eventmanager": "^3.1",
         "zendframework/zend-diactoros": "^1.4",
         "zendframework/zend-stdlib": "^3.1",
-        "zendframework/zend-stratigility": "^2.0",
-        "lapaz/amechan": "^0.1.0",
-        "lapaz/odango": "^0.1.0",
-        "lapaz/aura-di-ext": "^0.1.0"
+        "zendframework/zend-stratigility": "^2.0"
     },
     "require-dev": {
         "codeception/codeception": "^2.2",
         "filp/whoops": "^2.1",
+        "lapaz/codeception-generic-middleware": "^0.1.0",
         "maximebf/debugbar": "^1.13",
-        "symfony/var-dumper": "^3.2",
-        "http-interop/http-factory": "^0.3.0",
-        "http-interop/http-factory-diactoros": "^0.3.0",
-        "lapaz/codeception-generic-middleware": "^0.1.0"
+        "symfony/var-dumper": "^3.2"
     },
     "autoload": {
         "psr-4": {

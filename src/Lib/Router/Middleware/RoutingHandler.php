@@ -1,31 +1,35 @@
 <?php
 namespace My\Web\Lib\Router\Middleware;
 
+use Interop\Http\Factory\ResponseFactoryInterface;
 use Interop\Http\ServerMiddleware\DelegateInterface;
 use Interop\Http\ServerMiddleware\MiddlewareInterface;
-use My\Web\Lib\Http\HttpFactoryAwareInterface;
-use My\Web\Lib\Http\HttpFactoryInjectionTrait;
 use My\Web\Lib\Router\Router;
 use My\Web\Lib\Router\RoutingException;
 use Psr\Http\Message\ServerRequestInterface;
 
-class RoutingHandler implements MiddlewareInterface, HttpFactoryAwareInterface
+class RoutingHandler implements MiddlewareInterface
 {
-    use HttpFactoryInjectionTrait;
-
     /**
      * @var Router
      */
     protected $router;
 
     /**
+     * @var ResponseFactoryInterface
+     */
+    protected $responseFactory;
+
+    /**
      * RoutingMiddleware constructor.
      *
      * @param Router $router
+     * @param ResponseFactoryInterface $responseFactory
      */
-    public function __construct(Router $router)
+    public function __construct(Router $router, ResponseFactoryInterface $responseFactory)
     {
         $this->router = $router;
+        $this->responseFactory = $responseFactory;
     }
 
     /**
@@ -33,7 +37,7 @@ class RoutingHandler implements MiddlewareInterface, HttpFactoryAwareInterface
      */
     public function process(ServerRequestInterface $request, DelegateInterface $delegate)
     {
-        $responsePrototype = $this->getHttpFactory()->createResponse();
+        $responsePrototype = $this->responseFactory->createResponse();
 
         try {
             $response = $this->router->handle($request, $responsePrototype);

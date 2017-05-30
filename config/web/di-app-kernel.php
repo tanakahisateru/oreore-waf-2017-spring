@@ -4,6 +4,11 @@ use Aura\Router\RouterContainer;
 use DebugBar\Bridge\MonologCollector;
 use DebugBar\DebugBar;
 use DebugBar\StandardDebugBar;
+use Http\Factory\Diactoros\ResponseFactory;
+use Http\Factory\Diactoros\ServerRequestFactory;
+use Http\Factory\Diactoros\StreamFactory;
+use Http\Factory\Diactoros\UploadedFileFactory;
+use Http\Factory\Diactoros\UriFactory;
 use Lapaz\Amechan\AssetManager;
 use Lapaz\Aura\Di\ContainerExtension;
 use League\Plates\Engine;
@@ -11,10 +16,8 @@ use League\Plates\Extension\ExtensionInterface;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger;
 use My\Web\Lib\App\WebApp;
-use My\Web\Lib\Http\DiactorosHttpFactory;
-use My\Web\Lib\Http\HttpFactoryAwareInterface;
-use My\Web\Lib\Http\Middleware\WhoopsErrorResponseGenerator;
 use My\Web\Lib\Router\Router;
+use My\Web\Lib\Util\Middleware\WhoopsErrorResponseGenerator;
 use My\Web\Lib\View\Middleware\ErrorResponseGenerator;
 use My\Web\Lib\View\Template\EscaperExtension;
 use My\Web\Lib\View\View;
@@ -30,10 +33,6 @@ use Zend\Stratigility\MiddlewarePipe;
 /** @var array $params */
 
 $dix = ContainerExtension::createFrom($di);
-
-$di->setters[HttpFactoryAwareInterface::class] = [
-    'setHttpFactory' => $di->lazyGet('httpFactory'),
-];
 
 $di->setters[ViewEngineAwareInterface::class] = [
     'setViewEngine' => $di->lazyGet('viewEngine'),
@@ -74,9 +73,16 @@ $di->set('sharedEventManager', $dix->lazyNew(SharedEventManager::class)
 );
 
 /////////////////////////////////////////////////////////////////////
-// PSR-15 pipeline
+// PSR-17 factories
 
-$di->set('httpFactory', $di->lazyNew(DiactorosHttpFactory::class));
+$di->set('http.requestFactory', $di->lazyNew(ServerRequestFactory::class));
+$di->set('http.responseFactory', $di->lazyNew(ResponseFactory::class));
+$di->set('http.uploadedFileFactory', $di->lazyNew(UploadedFileFactory::class));
+$di->set('http.uriFactory', $di->lazyNew(UriFactory::class));
+$di->set('http.streamFactory', $di->lazyNew(StreamFactory::class));
+
+/////////////////////////////////////////////////////////////////////
+// PSR-15 pipeline
 
 $di->set('middlewarePipe', $dix->lazyNew(MiddlewarePipe::class)
     ->modifiedByScript(__DIR__ . '/middleware.php', [
@@ -91,7 +97,7 @@ $di->set('errorResponseGenerator', $di->lazyNew(ErrorResponseGenerator::class, [
 ]));
 
 $di->set('errorHandlerMiddleware', $dix->lazyNew(ErrorHandler::class, [
-    'responsePrototype' => $di->lazyGetCall('httpFactory', 'createResponse'),
+    'responsePrototype' => $di->lazyGetCall('http.responseFactory', 'createResponse'),
     'responseGenerator' => $di->lazyGet('errorResponseGenerator'),
 ])->modifiedBy(function (ErrorHandler $errorHandler) use ($di) {
     $logger = $di->get('logger');
@@ -110,6 +116,8 @@ $di->set('errorHandlerMiddleware', $dix->lazyNew(ErrorHandler::class, [
 $di->set('router', $di->lazyNew(Router::class, [
     'routes' => $di->lazyGet('routerContainer'),
     'dispatcher' => $di->lazyGet('routerDispatcher'),
+    'responseFactory' => $di->lazyGet('http.responseFactory'),
+    'streamFactory' => $di->lazyGet('http.streamFactory'),
 ]));
 
 $di->set('routerContainer', $dix->lazyNew(RouterContainer::class, [

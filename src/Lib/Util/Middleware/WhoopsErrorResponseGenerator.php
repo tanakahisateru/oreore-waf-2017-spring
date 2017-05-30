@@ -1,5 +1,5 @@
 <?php
-namespace My\Web\Lib\Http\Middleware;
+namespace My\Web\Lib\Util\Middleware;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;

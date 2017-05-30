@@ -2,9 +2,14 @@
 use Aura\Di\Container;
 use Aura\Dispatcher\Dispatcher;
 use My\Web\Controller\ErrorController;
+use My\Web\Controller\General\HtmlPageControllerInterface;
 use My\Web\Controller\SiteController;
 
 /** @var Container $di */
+
+$di->setters[HtmlPageControllerInterface::class] = [
+    'setResponseFactory' => $di->lazyGet('http.responseFactory'),
+];
 
 $di->set('routerDispatcher', $di->lazyNew(Dispatcher::class, [
     'objects' => [

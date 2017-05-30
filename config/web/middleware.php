@@ -1,7 +1,6 @@
 <?php
 use Aura\Di\Container;
 use My\Web\Lib\App\Middleware\WebAppBootstrap;
-use My\Web\Lib\Http\HttpFactoryInterface;
 use My\Web\Lib\Router\Middleware\RoutingHandler;
 use My\Web\Lib\Router\Router;
 use My\Web\Lib\Util\DebugBarInsertion;
@@ -15,9 +14,7 @@ use Zend\Stratigility\MiddlewarePipe;
 /** @var Router $router */
 $router = $di->get('router');
 
-/** @var HttpFactoryInterface $httpFactory */
-$httpFactory = $di->get('httpFactory');
-$responsePrototype = $httpFactory->createResponse();
+$responsePrototype = $di->get('http.responseFactory')->createResponse();
 
 $this->pipe($di->get('errorHandlerMiddleware'));
 
@@ -44,6 +41,7 @@ $this->pipe($di->newInstance(WebAppBootstrap::class, [
 
 $this->pipe($di->newInstance(RoutingHandler::class, [
     'router' => $router,
+    'responseFactory' => $di->get('http.responseFactory'),
 ]));
 
 $this->pipe($di->newInstance(NotFoundHandler::class, [

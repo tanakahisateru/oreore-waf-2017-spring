@@ -7,9 +7,9 @@ use Aura\Router\Route;
 use Aura\Router\RouterContainer;
 use Aura\Router\Rule\Accepts;
 use Aura\Router\Rule\Allows;
+use Interop\Http\Factory\ResponseFactoryInterface;
+use Interop\Http\Factory\StreamFactoryInterface;
 use Lapaz\Odango\AdviceComposite;
-use My\Web\Lib\Http\HttpFactoryAwareInterface;
-use My\Web\Lib\Http\HttpFactoryInjectionTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerAwareInterface;
@@ -17,10 +17,9 @@ use Psr\Log\LoggerAwareTrait;
 use Ray\Aop\MethodInvocation;
 use Zend\EventManager\EventsCapableInterface;
 
-class Router implements LoggerAwareInterface, HttpFactoryAwareInterface
+class Router implements LoggerAwareInterface
 {
     use LoggerAwareTrait;
-    use HttpFactoryInjectionTrait;
 
     /**
      * @var RouterContainer
@@ -32,16 +31,35 @@ class Router implements LoggerAwareInterface, HttpFactoryAwareInterface
      */
     protected $dispatcher;
 
+    /**
+     * @var ResponseFactoryInterface
+     */
+    protected $responseFactory;
+
+    /**
+     * @var StreamFactoryInterface
+     */
+    protected $streamFactory;
+
     // TODO Option to throw exception instead of logging
 
     /**
      * Router constructor.
      * @param RouterContainer $routes
      * @param Dispatcher $dispatcher
+     * @param ResponseFactoryInterface $responseFactory
+     * @param StreamFactoryInterface $streamFactory
      */
-    public function __construct(RouterContainer $routes, Dispatcher $dispatcher) {
+    public function __construct(
+        RouterContainer $routes,
+        Dispatcher $dispatcher,
+        ResponseFactoryInterface $responseFactory,
+        StreamFactoryInterface $streamFactory
+    ) {
         $this->routes = $routes;
         $this->dispatcher = $dispatcher;
+        $this->responseFactory = $responseFactory;
+        $this->streamFactory = $streamFactory;
     }
 
     /**
@@ -122,7 +140,7 @@ class Router implements LoggerAwareInterface, HttpFactoryAwareInterface
     protected function eventTriggerAdviser($controller, ServerRequestInterface $request, ResponseInterface $responsePrototype)
     {
         return AdviceComposite::of(function (MethodInvocation $invocation) use ($controller, $request, $responsePrototype) {
-            if (!$controller instanceof EventsCapableInterface) {
+            if (!($controller instanceof EventsCapableInterface)) {
                 return $invocation->proceed();
             }
 
@@ -140,7 +158,7 @@ class Router implements LoggerAwareInterface, HttpFactoryAwareInterface
                 } elseif ($result->last()) {
                     return $result->last();
                 } else {
-                    return $this->getHttpFactory()->createEmptyResponse();
+                    return $this->responseFactory->createResponse();
                 }
             }
 
@@ -276,7 +294,7 @@ class Router implements LoggerAwareInterface, HttpFactoryAwareInterface
         if ($stream->isSeekable()) {
             $stream->rewind();
             $streamedContents = $stream->getContents();
-            $stream = $this->getHttpFactory()->createStream('php://temp', 'rw');
+            $stream = $this->streamFactory->createStream();
             $response = $response->withBody($stream);
             $stream->write($echo);
             $stream->write($streamedContents);

@@ -1,6 +1,7 @@
 <?php
 namespace My\Web\Controller\General;
 
+use Interop\Http\Factory\ResponseFactoryInterface;
 use My\Web\Lib\Util\Mobile;
 use My\Web\Lib\View\ViewEngineAwareTrait;
 use Psr\Http\Message\ResponseInterface;
@@ -23,6 +24,11 @@ trait HtmlPageControllerTrait
      * @var callable
      */
     protected $templateFolderModifier;
+
+    /**
+     * @var ResponseFactoryInterface
+     */
+    protected $responseFactory;
 
     /**
      *
@@ -73,15 +79,63 @@ trait HtmlPageControllerTrait
     }
 
     /**
+     * @param ResponseFactoryInterface $responseFactory
+     */
+    public function setResponseFactory(ResponseFactoryInterface $responseFactory)
+    {
+        $this->responseFactory = $responseFactory;
+    }
+
+    /**
      * @param string $template
      * @param array $data
      * @param int $status
      * @param array $headers
      * @return ResponseInterface
      */
-    public function htmlResponse($template, array $data = [], $status = 200, array $headers = [])
+    public function templatedHtmlResponse($template, array $data = [], $status = 200, array $headers = [])
     {
         $html = $this->render($template, $data);
-        return $this->getHttpFactory()->createHtmlResponse($html, $status, $headers);
+        return $this->htmlResponse($html, $status, $headers);
+    }
+
+    /**
+     * @param string $html
+     * @param int $status
+     * @param array $headers
+     * @return ResponseInterface
+     */
+    public function htmlResponse($html, $status = 200, array $headers = [])
+    {
+        $response = $this->responseFactory->createResponse($status)
+            ->withHeader('Content-Type', 'text/html; charset=utf-8');
+
+        foreach ($headers as $name => $header) {
+            $response = $response->withHeader($name, $header);
+        }
+
+        $response->getBody()->write($html);
+
+        return $response;
+    }
+
+    /**
+     * @param string $text
+     * @param int $status
+     * @param array $headers
+     * @return ResponseInterface
+     */
+    public function textResponse($text, $status = 200, array $headers = [])
+    {
+        $response = $this->responseFactory->createResponse($status)
+            ->withHeader('Content-Type', 'text/plain; charset=utf-8');
+
+        foreach ($headers as $name => $header) {
+            $response = $response->withHeader($name, $header);
+        }
+
+        $response->getBody()->write($text);
+
+        return $response;
     }
 }

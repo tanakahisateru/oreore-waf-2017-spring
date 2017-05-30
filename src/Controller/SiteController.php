@@ -1,19 +1,16 @@
 <?php
 namespace My\Web\Controller;
 
-use My\Web\Controller\General\HtmlPageControllerInterfaceEngine;
+use My\Web\Controller\General\HtmlPageControllerInterface;
 use My\Web\Controller\General\HtmlPageControllerTrait;
-use My\Web\Lib\Http\HttpFactoryAwareInterface;
-use My\Web\Lib\Http\HttpFactoryInjectionTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LogLevel;
 use Zend\EventManager\EventInterface;
 
-class SiteController implements HtmlPageControllerInterfaceEngine, HttpFactoryAwareInterface
+class SiteController implements HtmlPageControllerInterface
 {
     use HtmlPageControllerTrait;
-    use HttpFactoryInjectionTrait;
 
     // Category tag for system-wide event listener
     public $eventIdentifier = ['controller'];
@@ -51,7 +48,7 @@ class SiteController implements HtmlPageControllerInterfaceEngine, HttpFactoryAw
                 return;
             }
 
-            $response = $this->httpFactory->createTextResponse(
+            $response = $this->textResponse(
                 'The action stopped while afterAction because query param "stop" was specified.'
             );
             $event->setParam('response', $response);
@@ -70,7 +67,7 @@ class SiteController implements HtmlPageControllerInterfaceEngine, HttpFactoryAw
         $qp = $request->getQueryParams();
         $greeting = isset($qp['greeting']) ? $qp['greeting'] : 'Hello,';
 
-        return $this->htmlResponse('current::index.php', [
+        return $this->templatedHtmlResponse('current::index.php', [
             'greeting' => $greeting,
         ]);
     }
