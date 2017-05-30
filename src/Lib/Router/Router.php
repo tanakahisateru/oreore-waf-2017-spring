@@ -7,14 +7,15 @@ use Aura\Router\Route;
 use Aura\Router\RouterContainer;
 use Aura\Router\Rule\Accepts;
 use Aura\Router\Rule\Allows;
-use My\Web\Lib\Event\Interceptor;
-use My\Web\Lib\Event\InterceptorException;
+use Lapaz\Odango\AdviceComposite;
 use My\Web\Lib\Http\HttpFactoryAwareInterface;
 use My\Web\Lib\Http\HttpFactoryInjectionTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
+use Ray\Aop\MethodInvocation;
+use Zend\EventManager\EventsCapableInterface;
 
 class Router implements LoggerAwareInterface, HttpFactoryAwareInterface
 {
@@ -78,6 +79,7 @@ class Router implements LoggerAwareInterface, HttpFactoryAwareInterface
     public function dispatch(array $params, ServerRequestInterface $request, ResponseInterface $responsePrototype)
     {
         $dispatcher = $this->dispatcher;
+
         $dispatcher->setObjectParam('controller');
         $dispatcher->setMethodParam('action');
 
@@ -88,42 +90,71 @@ class Router implements LoggerAwareInterface, HttpFactoryAwareInterface
             $controller = $params['controller'];
         }
 
-        $interceptor = Interceptor::createForEventCapable($controller, function ($last, $argv) {
-            if (isset($argv['response'])) {
-                return $argv['response'];
-            } elseif ($last) {
-                return $last;
-            } else {
-                return $this->getHttpFactory()->createEmptyResponse();
-            }
-        });
-
         ob_start();
         try {
-            $interceptor->trigger('beforeAction', $controller, [
-                'request' => $request,
-                'responsePrototype' => $responsePrototype,
-            ]);
+            $dispatch = function () use ($params, $responsePrototype, $dispatcher) {
+                $response = call_user_func($dispatcher, $params);
+                $response = $this->fixUpReturnedValue($response, $responsePrototype);
 
-            $response = $dispatcher($params);
+                $echo = ob_get_contents();
+                if (!empty($echo)) {
+                    $response = $this->insertEchoIntoBody($echo, $response);
+                }
 
-            $response = $this->fixUpReturnedValue($response, $responsePrototype);
-            $echo = ob_get_contents();
-            if (!empty($echo)) {
-                $response = $this->insertEchoIntoBody($echo, $response);
-            }
+                return $response;
+            };
 
-            $interceptor->trigger('afterAction', $controller, [
-                'request' => $request,
-                'responsePrototype' => $response,
-            ]);
+            $adviser = $this->eventTriggerAdviser($controller, $request, $responsePrototype);
+            $dispatch = $adviser->bind($dispatch);
 
-            return $response;
-        } catch (InterceptorException $e) {
-            return $e->getLastResult();
+            return $dispatch();
         } finally {
             ob_end_clean();
         }
+    }
+
+    /**
+     * @param $controller
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $responsePrototype
+     * @return AdviceComposite
+     */
+    protected function eventTriggerAdviser($controller, ServerRequestInterface $request, ResponseInterface $responsePrototype)
+    {
+        return AdviceComposite::of(function (MethodInvocation $invocation) use ($controller, $request, $responsePrototype) {
+            if (!$controller instanceof EventsCapableInterface) {
+                return $invocation->proceed();
+            }
+
+            $events = $controller->getEventManager();
+
+            $argv = new \ArrayObject([
+                'request' => $request,
+                'responsePrototype' => $responsePrototype,
+            ]);
+            $result = $events->trigger('beforeAction', $controller, $argv);
+
+            if ($result->stopped()) {
+                if (isset($argv['response'])) {
+                    return $argv['response'];
+                } elseif ($result->last()) {
+                    return $result->last();
+                } else {
+                    return $this->getHttpFactory()->createEmptyResponse();
+                }
+            }
+
+            // invoke
+            $response = $invocation->proceed();
+
+            $argv = new \ArrayObject([
+                'request' => $request,
+                'response' => $response,
+            ]);
+            $events->trigger('afterAction', $controller, $argv);
+
+            return $response;
+        });
     }
 
     /**

@@ -53,7 +53,7 @@ gulp dist
 - View context to aggregate templates/routes/assets
 - [Plate](http://platesphp.com/) template engine enhanced by Zend Escaper
 - Minimal asset manager that works better with [Gulp](http://gulpjs.com/) tasks
-- [Zend EventManager](https://zendframework.github.io/zend-eventmanager/) ([PSR-14](https://github.com/php-fig/fig-standards/blob/master/proposed/event-manager.md) like) with exception based event chain interceptor
+- [Zend EventManager](https://zendframework.github.io/zend-eventmanager/) ([PSR-14](https://github.com/php-fig/fig-standards/blob/master/proposed/event-manager.md) like)
 - [Monolog](https://seldaek.github.io/monolog/) [PSR-3](http://www.php-fig.org/psr/psr-3/) compatible logger
 - [PHP Debug Bar](http://phpdebugbar.com/) to display logger result
 - [Whoops](https://filp.github.io/whoops/) error page

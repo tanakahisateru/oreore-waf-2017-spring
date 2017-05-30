@@ -14,6 +14,7 @@
         "zendframework/zend-stdlib": "^3.1",
         "zendframework/zend-stratigility": "^2.0",
         "lapaz/amechan": "^0.1.0",
+        "lapaz/odango": "^0.1.0",
         "lapaz/aura-di-ext": "^0.1.0"
     },
     "require-dev": {

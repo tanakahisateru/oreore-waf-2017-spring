@@ -3,11 +3,13 @@ namespace My\Web\Lib\View;
 
 use Lapaz\Amechan\AssetCollection;
 use Lapaz\Amechan\AssetManager;
-use My\Web\Lib\Event\Interceptor;
-use My\Web\Lib\Event\InterceptorException;
+use Lapaz\Odango\AdviceComposite;
 use My\Web\Lib\Router\Router;
+use My\Web\Lib\View\Template\Template;
 use My\Web\Lib\View\Template\TemplateEngine;
+use Ray\Aop\MethodInvocation;
 use Webmozart\PathUtil\Path;
+use Zend\EventManager\EventsCapableInterface;
 
 class ViewEngine
 {
@@ -103,10 +105,6 @@ class ViewEngine
         $engine = clone $this->templateEngine;
         $rootPath = $engine->getDirectory();
 
-        $engine->registerFunction('view', function () use ($view) {
-            return $view;
-        });
-
         foreach ($view->getFolderMap() as $folder => $path) {
             if ($engine->getFolders()->exists($folder)) {
                 $engine->removeFolder($folder);
@@ -116,34 +114,77 @@ class ViewEngine
 
         $template = $engine->make($templateName);
 
-        $interceptor = Interceptor::createForEventCapable($view, function ($last, $argv) {
-            if (isset($argv['content'])) {
-                return $argv['content'];
-            } elseif ($last) {
-                return $last;
-            } else {
-                return "";
-            }
+        $engine->registerFunction('view', function () use ($view) {
+            return $view;
         });
 
-        try {
-            $interceptor->trigger('beforeRender', $view, [
+        $render = function (Template $template, array $data) {
+            return $template->render($data);
+        };
+
+        $adviser = $this->eventTriggerAdviser($view, $template, $data);
+        $render = $adviser->bind($render);
+
+        $content = $render($template, $data);
+
+        $engine->dropFunction('view');
+
+        return $content;
+    }
+
+    /**
+     * @param View $view
+     * @param string $template
+     * @param array $data
+     * @return AdviceComposite
+     */
+    protected function eventTriggerAdviser($view, $template, array $data)
+    {
+        $interceptor = AdviceComposite::of(function (MethodInvocation $invocation) use ($view, $template, $data) {
+            if (!$view instanceof EventsCapableInterface) {
+                return $invocation->proceed();
+            }
+
+            $events = $view->getEventManager();
+
+            $argv = new \ArrayObject([
                 'template' => $template,
                 'data' => $data,
             ]);
+            $result = $events->trigger('beforeRender', $view, $argv);
 
-            $result = $template->render($data);
+            if ($result->stopped()) {
+                if (isset($argv['content'])) {
+                    return $argv['content'];
+                } elseif ($result->last()) {
+                    return $result->last();
+                } else {
+                    return "";
+                }
+            }
 
-            $interceptor->trigger('afterRender', $view, [
-                'content' => $result,
+            // invoke
+            $content = $invocation->proceed();
+
+            $argv = new \ArrayObject([
+                'content' => $content,
                 'data' => $data,
             ]);
+            $result = $events->trigger('afterRender', $view, $argv);
 
-            return $result;
-        } catch (InterceptorException $e) {
-            return $e->getLastResult();
-        } finally {
-            $engine->dropFunction('view');
-        }
+            if ($result->stopped()) {
+                if (isset($argv['content'])) {
+                    return $argv['content'];
+                } elseif ($result->last()) {
+                    return $result->last();
+                } else {
+                    return "";
+                }
+            }
+
+            return $content;
+        });
+
+        return $interceptor;
     }
 }
