@@ -114,8 +114,8 @@ $di->set('errorHandlerMiddleware', $dix->lazyNew(ErrorHandler::class, [
 // routing - dispatching
 
 $di->set('router', $di->lazyNew(Router::class, [
-    'routes' => $di->lazyGet('routerContainer'),
-    'dispatcher' => $di->lazyGet('routerDispatcher'),
+    'routerContainer' => $di->lazyGet('routerContainer'),
+    'controllerFactories' => $di->lazyValue('controllerFactories'),
     'responseFactory' => $di->lazyGet('http.responseFactory'),
     'streamFactory' => $di->lazyGet('http.streamFactory'),
 ]));

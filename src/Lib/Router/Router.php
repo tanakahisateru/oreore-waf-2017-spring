@@ -24,12 +24,12 @@ class Router implements LoggerAwareInterface
     /**
      * @var RouterContainer
      */
-    protected $routes;
+    protected $routerContainer;
 
     /**
-     * @var Dispatcher
+     * @var callable[]
      */
-    protected $dispatcher;
+    protected $controllerFactories;
 
     /**
      * @var ResponseFactoryInterface
@@ -45,19 +45,19 @@ class Router implements LoggerAwareInterface
 
     /**
      * Router constructor.
-     * @param RouterContainer $routes
-     * @param Dispatcher $dispatcher
+     * @param RouterContainer $routerContainer
+     * @param callable[] $controllerFactories
      * @param ResponseFactoryInterface $responseFactory
      * @param StreamFactoryInterface $streamFactory
      */
     public function __construct(
-        RouterContainer $routes,
-        Dispatcher $dispatcher,
+        RouterContainer $routerContainer,
+        array $controllerFactories,
         ResponseFactoryInterface $responseFactory,
         StreamFactoryInterface $streamFactory
     ) {
-        $this->routes = $routes;
-        $this->dispatcher = $dispatcher;
+        $this->routerContainer = $routerContainer;
+        $this->controllerFactories = $controllerFactories;
         $this->responseFactory = $responseFactory;
         $this->streamFactory = $streamFactory;
     }
@@ -70,7 +70,7 @@ class Router implements LoggerAwareInterface
      */
     public function handle(ServerRequestInterface $request, ResponseInterface $responsePrototype)
     {
-        $matcher = $this->routes->getMatcher();
+        $matcher = $this->routerContainer->getMatcher();
         $route = $matcher->match($request);
 
         if (!$route) {
@@ -96,22 +96,26 @@ class Router implements LoggerAwareInterface
      */
     public function dispatch(array $params, ServerRequestInterface $request, ResponseInterface $responsePrototype)
     {
-        $dispatcher = $this->dispatcher;
-
-        $dispatcher->setObjectParam('controller');
-        $dispatcher->setMethodParam('action');
-
         assert(isset($params['controller']));
+
         if (is_scalar($params['controller'])) {
-            $controller = $dispatcher->getObject($params['controller']);
+            if (!isset($this->controllerFactories[$params['controller']])) {
+                throw new \LogicException("Controller not defined for: " . $params['controller']);
+            }
+            $controllerFactory = $this->controllerFactories[$params['controller']];
+            $controller = $controllerFactory($params);
         } else {
             $controller = $params['controller'];
         }
 
+        $dispatcher = new Dispatcher(['__target' => $controller], 'controller', 'action');
+
         ob_start();
         try {
             $dispatch = function () use ($params, $responsePrototype, $dispatcher) {
-                $response = call_user_func($dispatcher, $params);
+
+                $response = call_user_func($dispatcher, $params, '__target');
+
                 $response = $this->fixUpReturnedValue($response, $responsePrototype);
 
                 $echo = ob_get_contents();
@@ -169,7 +173,17 @@ class Router implements LoggerAwareInterface
                 'request' => $request,
                 'response' => $response,
             ]);
-            $events->trigger('afterAction', $controller, $argv);
+            $result = $events->trigger('afterAction', $controller, $argv);
+
+            if ($result->stopped()) {
+                if (isset($argv['response'])) {
+                    return $argv['response'];
+                } elseif ($result->last()) {
+                    return $result->last();
+                } else {
+                    return $this->responseFactory->createResponse();
+                }
+            }
 
             return $response;
         });
@@ -183,7 +197,7 @@ class Router implements LoggerAwareInterface
     public function urlTo($name, $data = [])
     {
         try {
-            return $this->routes->getGenerator()->generate($name, $data);
+            return $this->routerContainer->getGenerator()->generate($name, $data);
         } catch (RouteNotFound $e) {
             $this->logger->warning('Route not found: '. $e->getMessage());
             return '#';
@@ -198,7 +212,7 @@ class Router implements LoggerAwareInterface
     public function rawUrlTo($name, $data = [])
     {
         try {
-            return $this->routes->getGenerator()->generateRaw($name, $data);
+            return $this->routerContainer->getGenerator()->generateRaw($name, $data);
         } catch (RouteNotFound $e) {
             $this->logger->warning('Route not found: '. $e->getMessage());
             return '#';
