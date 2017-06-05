@@ -10,7 +10,7 @@ class ViewAccessExtension implements ExtensionInterface
     /**
      * @var View
      */
-    public $view;
+    private $view;
 
     /**
      * ViewAccessExtension constructor.

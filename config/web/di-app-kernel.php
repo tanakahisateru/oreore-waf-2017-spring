@@ -106,8 +106,6 @@ $di->set('errorHandlerMiddleware', $dix->lazyNew(ErrorHandler::class, [
 $di->set('router', $di->lazyNew(Router::class, [
     'routerContainer' => $di->lazyGet('routerContainer'),
     'controllerFactories' => $di->lazyValue('controllerFactories'),
-    'responseFactory' => $di->lazyGet('http.responseFactory'),
-    'streamFactory' => $di->lazyGet('http.streamFactory'),
 ]));
 
 $di->set('routerContainer', $dix->lazyNew(RouterContainer::class, [
@@ -122,10 +120,10 @@ $di->set('routerContainer', $dix->lazyNew(RouterContainer::class, [
 /////////////////////////////////////////////////////////////////////
 // HTML rendering
 
-$di->set('templateEngine', $dix->lazyNew(Engine::class, [
+$di->set('templateEngineFactory', $dix->newFactory(Engine::class, [
     'directory' => __DIR__ . '/../../templates',
     'fileExtension' => null,
-    'encoding' => 'utf-8',
+    // 'encoding' => 'utf-8',
 ])->modifiedBy(function (Engine $engine) use ($di) {
     $extension = $di->newInstance(EscaperExtension::class, [
         'escaper' => $di->newInstance(Escaper::class),
@@ -142,7 +140,7 @@ $di->set('assetManager', $dix->lazyNew(AssetManager::class)
 );
 
 $di->set('viewFactory', $di->newFactory(View::class, [
-    'templateEngine' => $di->lazyGet('templateEngine'),
+    'templateEngineFactory' => $di->lazyGet('templateEngineFactory'),
     'routerContainer' => $di->lazyGet('routerContainer'),
     'assetManager' => $di->lazyGet('assetManager'),
 ]));

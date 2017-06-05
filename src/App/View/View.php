@@ -25,9 +25,9 @@ class View implements EventManagerAwareInterface, LoggerAwareInterface
     public $eventIdentifier = ['view'];
 
     /**
-     * @var Engine
+     * @var callable
      */
-    protected $templateEngine;
+    protected $templateEngineFactory;
 
     /**
      * @var RouterContainer
@@ -57,19 +57,18 @@ class View implements EventManagerAwareInterface, LoggerAwareInterface
     /**
      * View constructor.
      *
-     * @param Engine $templateEngine
+     * @param callable $templateEngineFactory
      * @param RouterContainer $routerContainer
      * @param AssetManager $assetManager
      * @internal param Router $router
      */
     public function __construct(
-        Engine $templateEngine,
+        callable $templateEngineFactory,
         RouterContainer $routerContainer,
         AssetManager $assetManager
     )
     {
-        // Plate engine is stateful
-        $this->templateEngine = clone $templateEngine;
+        $this->templateEngineFactory = $templateEngineFactory;
         $this->routerContainer = $routerContainer;
         $this->assetManager = $assetManager;
 
@@ -208,15 +207,14 @@ class View implements EventManagerAwareInterface, LoggerAwareInterface
      */
     public function render($templateName, array $data = [])
     {
-        $engine = clone $this->templateEngine;
+        // Plate engine is stateful
+        $engine = call_user_func($this->templateEngineFactory);
+        assert($engine instanceof Engine);
 
         $engine->loadExtension(new ViewAccessExtension($this));
 
         $rootPath = $engine->getDirectory();
         foreach ($this->getFolderMap() as $folder => $path) {
-            if ($engine->getFolders()->exists($folder)) {
-                $engine->removeFolder($folder);
-            }
             $engine->addFolder($folder, Path::join($rootPath, $path));
         }
 

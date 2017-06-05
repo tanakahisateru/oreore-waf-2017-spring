@@ -6,8 +6,6 @@ use Aura\Router\Route;
 use Aura\Router\RouterContainer;
 use Aura\Router\Rule\Accepts;
 use Aura\Router\Rule\Allows;
-use Interop\Http\Factory\ResponseFactoryInterface;
-use Interop\Http\Factory\StreamFactoryInterface;
 use Lapaz\Odango\AdviceComposite;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -30,35 +28,19 @@ class Router implements LoggerAwareInterface
      */
     protected $controllerFactories;
 
-    /**
-     * @var ResponseFactoryInterface
-     */
-    protected $responseFactory;
-
-    /**
-     * @var StreamFactoryInterface
-     */
-    protected $streamFactory;
-
     // TODO Option to throw exception instead of logging
 
     /**
      * Router constructor.
      * @param RouterContainer $routerContainer
      * @param callable[] $controllerFactories
-     * @param ResponseFactoryInterface $responseFactory
-     * @param StreamFactoryInterface $streamFactory
      */
     public function __construct(
         RouterContainer $routerContainer,
-        array $controllerFactories,
-        ResponseFactoryInterface $responseFactory,
-        StreamFactoryInterface $streamFactory
+        array $controllerFactories
     ) {
         $this->routerContainer = $routerContainer;
         $this->controllerFactories = $controllerFactories;
-        $this->responseFactory = $responseFactory;
-        $this->streamFactory = $streamFactory;
     }
 
     /**
@@ -78,14 +60,16 @@ class Router implements LoggerAwareInterface
         }
 
         $params = $this->guessDispatcherParams($route);
-        $params['request'] = $request->withAttribute('responsePrototype', $responsePrototype);
-        $params['response'] = $responsePrototype;
         foreach ($route->attributes as $k => $v) {
             $params[$k] = $v;
         }
+        $params['request'] = $request->withAttribute('responsePrototype', $responsePrototype);
+        $params['response'] = $responsePrototype;
 
         return $this->dispatch($params);
     }
+
+
 
     /**
      * @param array $params
@@ -105,7 +89,7 @@ class Router implements LoggerAwareInterface
             $controller = $params['controller'];
         }
 
-        $dispatcher = new Dispatcher(['__target' => $controller], 'controller', 'action');
+        $dispatcher = new Dispatcher(['__target' => $controller], null, 'action');
 
         ob_start();
         try {
@@ -114,7 +98,12 @@ class Router implements LoggerAwareInterface
                 $response = call_user_func($dispatcher, $params, '__target');
 
                 if (!($response instanceof ResponseInterface)) {
-                    $response = $this->fixUpReturnedValue($response, $params);
+                    if (!isset($params['response'])) {
+                        throw new \LogicException("Response prototype required for informal result value.");
+                    }
+
+                    $responsePrototype = $params['response'];
+                    $response = $this->fixUpReturnedValue($response, $responsePrototype, $params);
                 }
 
                 $echo = ob_get_contents();
@@ -163,7 +152,7 @@ class Router implements LoggerAwareInterface
                 } elseif ($result->last()) {
                     return $result->last();
                 } else {
-                    return $this->responseFactory->createResponse();
+                    return $responsePrototype;
                 }
             }
 
@@ -182,7 +171,7 @@ class Router implements LoggerAwareInterface
                 } elseif ($result->last()) {
                     return $result->last();
                 } else {
-                    return $this->responseFactory->createResponse();
+                    return $responsePrototype;
                 }
             }
 
@@ -243,14 +232,13 @@ class Router implements LoggerAwareInterface
     }
 
     /**
-     * @param mixed $response
+     * @param mixed $returnedValue
+     * @param ResponseInterface $responsePrototype
      * @param array $params
      * @return ResponseInterface
      */
-    private function fixUpReturnedValue($response, array $params)
+    private function fixUpReturnedValue($returnedValue, $responsePrototype, array $params)
     {
-        $responsePrototype = $this->responseFactory->createResponse();
-
         if (isset($params['response'])) {
             $responsePrototype = $params['response'];
         } elseif (isset($params['request'])) {
@@ -263,23 +251,23 @@ class Router implements LoggerAwareInterface
             throw new \LogicException('Invalid response prototype');
         }
 
-        if (empty($response)) {
-            $response = $responsePrototype;
-        } elseif (is_scalar($response)) {
-            $value = $response;
-            $response = $responsePrototype;
-            $response->getBody()->write($value);
-        } elseif (is_array($response)) {
-            $value = $response;
-            $response = $responsePrototype->withHeader('Content-Type', 'application/json');
-            $response->getBody()->write(json_encode($value));
+        if (empty($returnedValue)) {
+            $returnedValue = $responsePrototype;
+        } elseif (is_scalar($returnedValue)) {
+            $value = $returnedValue;
+            $returnedValue = $responsePrototype;
+            $returnedValue->getBody()->write($value);
+        } elseif (is_array($returnedValue)) {
+            $value = $returnedValue;
+            $returnedValue = $responsePrototype->withHeader('Content-Type', 'application/json');
+            $returnedValue->getBody()->write(json_encode($value));
         }
 
-        if (!($response instanceof ResponseInterface)) {
+        if (!($returnedValue instanceof ResponseInterface)) {
             throw new \LogicException('Unsupported response returned');
         }
 
-        return $response;
+        return $returnedValue;
     }
 
     /**
@@ -293,8 +281,6 @@ class Router implements LoggerAwareInterface
         if ($stream->isSeekable()) {
             $stream->rewind();
             $streamedContents = $stream->getContents();
-            $stream = $this->streamFactory->createStream();
-            $response = $response->withBody($stream);
             $stream->write($echo);
             $stream->write($streamedContents);
         } else {
