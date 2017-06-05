@@ -1,13 +1,13 @@
 <?php
 namespace Acme\Controller\General;
 
-use Acme\App\View\ViewEngineAwareInterface;
+use Acme\App\View\ViewFactoryAwareInterface;
 use Interop\Http\Factory\ResponseFactoryInterface;
 use Psr\Log\LoggerAwareInterface;
 use Zend\EventManager\EventManagerAwareInterface;
 
 interface HtmlPageControllerInterface extends
-    LoggerAwareInterface, EventManagerAwareInterface, ViewEngineAwareInterface
+    LoggerAwareInterface, EventManagerAwareInterface, ViewFactoryAwareInterface
 {
     /**
      */

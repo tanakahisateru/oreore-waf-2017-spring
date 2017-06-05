@@ -1,7 +1,7 @@
 <?php
 namespace Acme\Controller\General;
 
-use Acme\App\View\ViewEngineAwareTrait;
+use Acme\App\View\ViewFactoryAwareTrait;
 use Acme\Util\Mobile;
 use Interop\Http\Factory\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -13,7 +13,7 @@ trait HtmlPageControllerTrait
 {
     use LoggerAwareTrait;
     use EventManagerAwareTrait;
-    use ViewEngineAwareTrait;
+    use ViewFactoryAwareTrait;
 
     // Category tag for system-wide event listener
     public $eventIdentifier = ['controller'];
@@ -75,7 +75,7 @@ trait HtmlPageControllerTrait
             $path = call_user_func($this->templateFolderModifier, $path);
         }
 
-        $view = $this->viewEngine->createView();
+        $view = $this->createView();
         $view->setFolder('current', $path);
 
         return $view->render($template, $data);

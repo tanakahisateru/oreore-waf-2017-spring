@@ -18,7 +18,9 @@ $map->attach('site.', '', function (Map $map) use ($di) {
     $map->route('contact', '/contact');
 
     $map->get('privacy', '/privacy')->handler(function () use ($di) {
-        $view = $di->get('viewEngine')->createView();
+        $viewFactory = $di->get('viewFactory');
+        /** @var callable $viewFactory */
+        $view = $viewFactory();
         assert($view instanceof View);
         $view->setFolder('current', 'site');
         return new HtmlResponse($view->render('current::privacy.php'));

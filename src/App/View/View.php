@@ -1,21 +1,43 @@
 <?php
 namespace Acme\App\View;
 
+use Acme\App\View\Template\ViewAccessExtension;
+use Aura\Router\Exception\RouteNotFound;
+use Aura\Router\RouterContainer;
 use Lapaz\Amechan\AssetCollection;
+use Lapaz\Amechan\AssetManager;
+use Lapaz\Odango\AdviceComposite;
+use League\Plates\Engine;
+use League\Plates\Template\Template;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
+use Ray\Aop\MethodInvocation;
+use Webmozart\PathUtil\Path;
 use Zend\EventManager\EventManagerAwareInterface;
 use Zend\EventManager\EventManagerAwareTrait;
 
-class View implements EventManagerAwareInterface
+class View implements EventManagerAwareInterface, LoggerAwareInterface
 {
     use EventManagerAwareTrait;
+    use LoggerAwareTrait;
 
     // Category tag for system-wide event listener
     public $eventIdentifier = ['view'];
 
     /**
-     * @var ViewEngine
+     * @var Engine
      */
-    protected $engine;
+    protected $templateEngine;
+
+    /**
+     * @var RouterContainer
+     */
+    protected $routerContainer;
+
+    /**
+     * @var AssetManager
+     */
+    protected $assetManager;
 
     /**
      * @var array
@@ -35,15 +57,25 @@ class View implements EventManagerAwareInterface
     /**
      * View constructor.
      *
-     * @param ViewEngine $engine
+     * @param Engine $templateEngine
+     * @param RouterContainer $routerContainer
+     * @param AssetManager $assetManager
+     * @internal param Router $router
      */
-    public function __construct($engine)
+    public function __construct(
+        Engine $templateEngine,
+        RouterContainer $routerContainer,
+        AssetManager $assetManager
+    )
     {
-        $this->engine = $engine;
+        // Plate engine is stateful
+        $this->templateEngine = clone $templateEngine;
+        $this->routerContainer = $routerContainer;
+        $this->assetManager = $assetManager;
 
         $this->folderMap = [];
         $this->attributeCollection = [];
-        $this->requiredAssets = $engine->createAssetCollection();
+        $this->requiredAssets = $assetManager->newCollection();
     }
 
     /**
@@ -120,6 +152,7 @@ class View implements EventManagerAwareInterface
     {
         $this->attributeCollection[$name] = $value;
     }
+
     /**
      * @param string $name
      * @param array $data
@@ -128,7 +161,18 @@ class View implements EventManagerAwareInterface
      */
     public function routeUrlTo($name, $data=[], $raw = false)
     {
-        return $this->engine->routeUrlTo($name, $data, $raw);
+        try {
+            $generator = $this->routerContainer->getGenerator();
+
+            if ($raw) {
+                return $generator->generateRaw($name, $data);
+            } else {
+                return $generator->generateRaw($name, $data);
+            }
+        } catch (RouteNotFound $e) {
+            $this->logger->warning('Route not found: '. $e->getMessage());
+            return '#';
+        }
     }
 
     /**
@@ -137,7 +181,7 @@ class View implements EventManagerAwareInterface
      */
     public function resourceUrlTo($url)
     {
-        return $this->engine->resourceUrlTo($url);
+        return $this->assetManager->url($url);
     }
 
     /**
@@ -158,12 +202,84 @@ class View implements EventManagerAwareInterface
     }
 
     /**
-     * @param string $name
+     * @param string $templateName
      * @param array $data
      * @return string
      */
-    public function render($name, array $data = [])
+    public function render($templateName, array $data = [])
     {
-        return $this->engine->renderIn($this, $name, $data);
+        $engine = clone $this->templateEngine;
+
+        $engine->loadExtension(new ViewAccessExtension($this));
+
+        $rootPath = $engine->getDirectory();
+        foreach ($this->getFolderMap() as $folder => $path) {
+            if ($engine->getFolders()->exists($folder)) {
+                $engine->removeFolder($folder);
+            }
+            $engine->addFolder($folder, Path::join($rootPath, $path));
+        }
+
+        $template = $engine->make($templateName);
+
+        $render = function (array $data) use ($template) {
+            return $template->render($data);
+        };
+
+        $adviser = $this->eventTriggerAdviser($template, $data);
+        $render = $adviser->bind($render);
+
+        return $render($data);
+    }
+
+    /**
+     * @param Template $template
+     * @param array $data
+     * @return AdviceComposite
+     */
+    protected function eventTriggerAdviser(Template $template, array $data)
+    {
+        $interceptor = AdviceComposite::of(function (MethodInvocation $invocation) use ($template, $data) {
+            $events = $this->getEventManager();
+
+            $argv = new \ArrayObject([
+                'template' => $template,
+                'data' => $data,
+            ]);
+            $result = $events->trigger('beforeRender', $this, $argv);
+
+            if ($result->stopped()) {
+                if (isset($argv['content'])) {
+                    return $argv['content'];
+                } elseif ($result->last()) {
+                    return $result->last();
+                } else {
+                    return "";
+                }
+            }
+
+            // invoke
+            $content = $invocation->proceed();
+
+            $argv = new \ArrayObject([
+                'content' => $content,
+                'data' => $data,
+            ]);
+            $result = $events->trigger('afterRender', $this, $argv);
+
+            if ($result->stopped()) {
+                if (isset($argv['content'])) {
+                    return $argv['content'];
+                } elseif ($result->last()) {
+                    return $result->last();
+                } else {
+                    return "";
+                }
+            }
+
+            return $content;
+        });
+
+        return $interceptor;
     }
 }

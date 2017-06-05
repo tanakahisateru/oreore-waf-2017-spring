@@ -4,8 +4,7 @@ use Acme\App\Middleware\Generator\WhoopsErrorResponseGenerator;
 use Acme\App\Router\Router;
 use Acme\App\View\Template\EscaperExtension;
 use Acme\App\View\View;
-use Acme\App\View\ViewEngine;
-use Acme\App\View\ViewEngineAwareInterface;
+use Acme\App\View\ViewFactoryAwareInterface;
 use Aura\Di\Container;
 use Aura\Router\RouterContainer;
 use DebugBar\Bridge\MonologCollector;
@@ -32,10 +31,6 @@ use Zend\Stratigility\MiddlewarePipe;
 /** @var array $params */
 
 $dix = ContainerExtension::createFrom($di);
-
-$di->setters[ViewEngineAwareInterface::class] = [
-    'setViewEngine' => $di->lazyGet('viewEngine'),
-];
 
 /////////////////////////////////////////////////////////////////////
 // Application
@@ -146,16 +141,15 @@ $di->set('assetManager', $dix->lazyNew(AssetManager::class)
     ])
 );
 
-$di->set('viewEngine', $di->lazyNew(ViewEngine::class, [
-    'router' => $di->lazyGet('router'),
+$di->set('viewFactory', $di->newFactory(View::class, [
     'templateEngine' => $di->lazyGet('templateEngine'),
+    'routerContainer' => $di->lazyGet('routerContainer'),
     'assetManager' => $di->lazyGet('assetManager'),
-    'viewFactory' => function (ViewEngine $engine) use ($di) {
-        return $di->newInstance(View::class, [
-            'engine' => $engine,
-        ]);
-    },
 ]));
+
+$di->setters[ViewFactoryAwareInterface::class] = [
+    'setViewFactory' => $di->lazyGet('viewFactory'),
+];
 
 /////////////////////////////////////////////////////////////////////
 // DebugBar

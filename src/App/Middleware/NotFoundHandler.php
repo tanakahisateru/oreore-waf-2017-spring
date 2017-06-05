@@ -2,16 +2,16 @@
 namespace Acme\App\Middleware;
 
 use Acme\App\Router\Router;
-use Acme\App\View\ViewEngineAwareInterface;
-use Acme\App\View\ViewEngineAwareTrait;
+use Acme\App\View\ViewFactoryAwareInterface;
+use Acme\App\View\ViewFactoryAwareTrait;
 use Interop\Http\ServerMiddleware\DelegateInterface;
 use Interop\Http\ServerMiddleware\MiddlewareInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-class NotFoundHandler implements MiddlewareInterface, ViewEngineAwareInterface
+class NotFoundHandler implements MiddlewareInterface, ViewFactoryAwareInterface
 {
-    use ViewEngineAwareTrait;
+    use ViewFactoryAwareTrait;
 
     /**
      * @var Router
@@ -61,7 +61,7 @@ class NotFoundHandler implements MiddlewareInterface, ViewEngineAwareInterface
                 'reasonPhrase' => $response->getReasonPhrase(),
                 'request' => $request->withAttribute('responsePrototype', $response),
                 'response' => $response,
-            ], $request, $response);
+            ]);
         } /** @noinspection PhpUndefinedClassInspection */ catch (\Throwable $ee) {
             $response = $this->handleErrorViewError($request, $response);
         } catch (\Exception $ee) {

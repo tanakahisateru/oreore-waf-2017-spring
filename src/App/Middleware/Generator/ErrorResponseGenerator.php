@@ -63,7 +63,7 @@ class ErrorResponseGenerator
                 'response' => $response,
             ]);
 
-            $response = $this->router->dispatch($params, $request, $response);
+            $response = $this->router->dispatch($params);
         } /** @noinspection PhpUndefinedClassInspection */ catch (\Throwable $ee) {
             $response = $this->handleErrorViewError($response);
         } catch (\Exception $ee) {

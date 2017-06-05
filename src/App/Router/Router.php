@@ -2,7 +2,6 @@
 namespace Acme\App\Router;
 
 use Aura\Dispatcher\Dispatcher;
-use Aura\Router\Exception\RouteNotFound;
 use Aura\Router\Route;
 use Aura\Router\RouterContainer;
 use Aura\Router\Rule\Accepts;
@@ -85,16 +84,14 @@ class Router implements LoggerAwareInterface
             $params[$k] = $v;
         }
 
-        return $this->dispatch($params, $request, $responsePrototype);
+        return $this->dispatch($params);
     }
 
     /**
      * @param array $params
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $responsePrototype
      * @return ResponseInterface
      */
-    public function dispatch(array $params, ServerRequestInterface $request, ResponseInterface $responsePrototype)
+    public function dispatch(array $params)
     {
         assert(isset($params['controller']));
 
@@ -112,11 +109,13 @@ class Router implements LoggerAwareInterface
 
         ob_start();
         try {
-            $dispatch = function () use ($params, $responsePrototype, $dispatcher) {
+            $dispatch = function () use ($params, $dispatcher) {
 
                 $response = call_user_func($dispatcher, $params, '__target');
 
-                $response = $this->fixUpReturnedValue($response, $responsePrototype);
+                if (!($response instanceof ResponseInterface)) {
+                    $response = $this->fixUpReturnedValue($response, $params);
+                }
 
                 $echo = ob_get_contents();
                 if (!empty($echo)) {
@@ -126,7 +125,7 @@ class Router implements LoggerAwareInterface
                 return $response;
             };
 
-            $adviser = $this->eventTriggerAdviser($controller, $request, $responsePrototype);
+            $adviser = $this->eventTriggerAdviser($controller, $params);
             $dispatch = $adviser->bind($dispatch);
 
             return $dispatch();
@@ -137,12 +136,14 @@ class Router implements LoggerAwareInterface
 
     /**
      * @param $controller
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $responsePrototype
+     * @param array $params
      * @return AdviceComposite
      */
-    protected function eventTriggerAdviser($controller, ServerRequestInterface $request, ResponseInterface $responsePrototype)
+    protected function eventTriggerAdviser($controller, array $params)
     {
+        $request = $params['request'];
+        $responsePrototype = $params['response'];
+
         return AdviceComposite::of(function (MethodInvocation $invocation) use ($controller, $request, $responsePrototype) {
             if (!($controller instanceof EventsCapableInterface)) {
                 return $invocation->proceed();
@@ -187,36 +188,6 @@ class Router implements LoggerAwareInterface
 
             return $response;
         });
-    }
-
-    /**
-     * @param string $name
-     * @param array $data
-     * @return string
-     */
-    public function urlTo($name, $data = [])
-    {
-        try {
-            return $this->routerContainer->getGenerator()->generate($name, $data);
-        } catch (RouteNotFound $e) {
-            $this->logger->warning('Route not found: '. $e->getMessage());
-            return '#';
-        }
-    }
-
-    /**
-     * @param string $name
-     * @param array $data
-     * @return false|string
-     */
-    public function rawUrlTo($name, $data = [])
-    {
-        try {
-            return $this->routerContainer->getGenerator()->generateRaw($name, $data);
-        } catch (RouteNotFound $e) {
-            $this->logger->warning('Route not found: '. $e->getMessage());
-            return '#';
-        }
     }
 
     /**
@@ -273,11 +244,25 @@ class Router implements LoggerAwareInterface
 
     /**
      * @param mixed $response
-     * @param ResponseInterface $responsePrototype
+     * @param array $params
      * @return ResponseInterface
      */
-    private function fixUpReturnedValue($response, ResponseInterface $responsePrototype)
+    private function fixUpReturnedValue($response, array $params)
     {
+        $responsePrototype = $this->responseFactory->createResponse();
+
+        if (isset($params['response'])) {
+            $responsePrototype = $params['response'];
+        } elseif (isset($params['request'])) {
+            $request = $params['request'];
+            if ($request instanceof ServerRequestInterface) {
+                $responsePrototype = $request->getAttribute('responsePrototype');
+            }
+        }
+        if (!($responsePrototype instanceof ResponseInterface)) {
+            throw new \LogicException('Invalid response prototype');
+        }
+
         if (empty($response)) {
             $response = $responsePrototype;
         } elseif (is_scalar($response)) {

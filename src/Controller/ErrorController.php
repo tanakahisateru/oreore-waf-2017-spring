@@ -47,7 +47,7 @@ class ErrorController implements HtmlPageControllerInterface
         }
 
         $response = $response->withHeader('Content-Type', 'text/html');
-        $view = $this->viewEngine->createView();
+        $view = $this->createView();
         $response->getBody()->write($view->render($template, [
             'statusCode' => $statusCode,
             'reasonPhrase' => $reasonPhrase,
