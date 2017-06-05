@@ -12,7 +12,7 @@ $this->layout('current::_layout.php');
 $this->view()->setAttribute('title', 'Index - My App');
 ?>
 <div class="site-index">
-    <p><?= $this->escape($greeting) ?></p>
+    <p><?= $this->escapeHtml($greeting) ?></p>
 
     <p>jquery.js mapped to url: <?= $this->view()->resourceUrlTo('/assets/vendor/jquery/dist/jquery.js') ?></p>
 </div>

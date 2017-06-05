@@ -11,5 +11,5 @@ $this->layout('current::_layout.php');
 
 ?>
 <div class="site-index">
-    <p><?= $this->escape($greeting) ?> (SP)</p>
+    <p><?= $this->escapeHtml($greeting) ?> (SP)</p>
 </div>
