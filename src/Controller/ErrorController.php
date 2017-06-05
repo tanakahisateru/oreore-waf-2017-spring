@@ -1,8 +1,8 @@
 <?php
-namespace My\Web\Controller;
+namespace Acme\Controller;
 
-use My\Web\Controller\General\HtmlPageControllerInterface;
-use My\Web\Controller\General\HtmlPageControllerTrait;
+use Acme\Controller\General\HtmlPageControllerInterface;
+use Acme\Controller\General\HtmlPageControllerTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 

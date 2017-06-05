@@ -5,7 +5,6 @@ use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
-use My\Web\Lib\App\App;
 use Zend\EventManager\SharedEventManager;
 
 /** @var Container $di */
@@ -13,8 +12,6 @@ use Zend\EventManager\SharedEventManager;
 
 /////////////////////////////////////////////////////////////////////
 // Application
-
-$di->set('app', $di->lazyNew(App::class));
 
 $di->set('logger', $di->lazyNew(Logger::class, [
     'name' => 'default',

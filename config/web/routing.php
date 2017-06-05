@@ -1,8 +1,8 @@
 <?php
+use Acme\App\View\View;
 use Aura\Di\Container;
 use Aura\Router\Map;
 use Aura\Router\RouterContainer;
-use My\Web\Lib\View\View;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response\HtmlResponse;
 use Zend\Diactoros\Response\JsonResponse;

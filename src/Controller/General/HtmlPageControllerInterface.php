@@ -1,8 +1,8 @@
 <?php
-namespace My\Web\Controller\General;
+namespace Acme\Controller\General;
 
+use Acme\App\View\ViewEngineAwareInterface;
 use Interop\Http\Factory\ResponseFactoryInterface;
-use My\Web\Lib\View\ViewEngineAwareInterface;
 use Psr\Log\LoggerAwareInterface;
 use Zend\EventManager\EventManagerAwareInterface;
 

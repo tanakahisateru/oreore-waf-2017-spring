@@ -1,4 +1,11 @@
 <?php
+use Acme\App\Middleware\Generator\ErrorResponseGenerator;
+use Acme\App\Middleware\Generator\WhoopsErrorResponseGenerator;
+use Acme\App\Router\Router;
+use Acme\App\View\Template\EscaperExtension;
+use Acme\App\View\View;
+use Acme\App\View\ViewEngine;
+use Acme\App\View\ViewEngineAwareInterface;
 use Aura\Di\Container;
 use Aura\Router\RouterContainer;
 use DebugBar\Bridge\MonologCollector;
@@ -15,14 +22,6 @@ use League\Plates\Engine;
 use League\Plates\Extension\ExtensionInterface;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger;
-use My\Web\Lib\App\WebApp;
-use My\Web\Lib\Router\Router;
-use My\Web\Lib\Util\Middleware\WhoopsErrorResponseGenerator;
-use My\Web\Lib\View\Middleware\ErrorResponseGenerator;
-use My\Web\Lib\View\Template\EscaperExtension;
-use My\Web\Lib\View\View;
-use My\Web\Lib\View\ViewEngine;
-use My\Web\Lib\View\ViewEngineAwareInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Escaper\Escaper;
 use Zend\EventManager\SharedEventManager;
@@ -40,10 +39,6 @@ $di->setters[ViewEngineAwareInterface::class] = [
 
 /////////////////////////////////////////////////////////////////////
 // Application
-
-$di->set('app', $di->lazyNew(WebApp::class, [
-    'middlewarePipe' => $di->lazyGet('middlewarePipe'),
-]));
 
 $di->set('logger', $di->lazyNew(Logger::class, [
     'name' => 'default',

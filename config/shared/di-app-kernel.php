@@ -1,6 +1,6 @@
 <?php
+use Acme\App\App;
 use Aura\Di\Container;
-use My\Web\Lib\App\App;
 use Psr\Log\LoggerAwareInterface;
 use Zend\EventManager\EventManager;
 use Zend\EventManager\EventManagerAwareInterface;
@@ -21,3 +21,5 @@ $di->params[App::class] = [
     'container' => $di,
     'params' => $di->lazyRequire(__DIR__ . '/params.php'),
 ];
+
+$di->set('app', $di->lazyNew(App::class, ['container' => $di]));

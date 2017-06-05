@@ -10,7 +10,7 @@ const sourcemaps = require('gulp-sourcemaps');
 const rev = require('gulp-rev');
 const revReplace = require('gulp-rev-replace');
 
-const basedir = './web/assets';
+const basedir = './public/assets';
 
 gulp.task('default', ['vendor']);
 

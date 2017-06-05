@@ -1,7 +1,7 @@
 <?php
-use My\Web\Lib\App\WebApp;
+use Acme\App\App;
 
-$app = WebApp::configure([
+$app = App::configure([
     __DIR__ . '/../../config/shared',
     __DIR__ . '/../../config/web',
     __DIR__

@@ -1,7 +1,7 @@
 <?php
+use Acme\App\View\Template\EscaperExtension;
+use Acme\App\View\Template\ViewAccessExtension;
 use League\Plates\Template\Template;
-use My\Web\Lib\View\Template\EscaperExtension;
-use My\Web\Lib\View\Template\ViewAccessExtension;
 
 /**
  * @var Template|ViewAccessExtension|EscaperExtension $this

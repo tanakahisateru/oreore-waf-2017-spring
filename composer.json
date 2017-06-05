@@ -28,12 +28,12 @@
     },
     "autoload": {
         "psr-4": {
-            "My\\Web\\": "src"
+            "Acme\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "My\\Web\\": "tests/unit"
+            "Acme\\": "tests/unit"
         }
     }
 }

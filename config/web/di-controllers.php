@@ -1,8 +1,8 @@
 <?php
+use Acme\Controller\ErrorController;
+use Acme\Controller\General\HtmlPageControllerInterface;
+use Acme\Controller\SiteController;
 use Aura\Di\Container;
-use My\Web\Controller\ErrorController;
-use My\Web\Controller\General\HtmlPageControllerInterface;
-use My\Web\Controller\SiteController;
 
 /** @var Container $di */
 

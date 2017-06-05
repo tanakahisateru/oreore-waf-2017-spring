@@ -1,8 +1,8 @@
 <?php
-namespace My\Web\Controller;
+namespace Acme\Controller;
 
-use My\Web\Controller\General\HtmlPageControllerInterface;
-use My\Web\Controller\General\HtmlPageControllerTrait;
+use Acme\Controller\General\HtmlPageControllerInterface;
+use Acme\Controller\General\HtmlPageControllerTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LogLevel;
@@ -11,9 +11,6 @@ use Zend\EventManager\EventInterface;
 class SiteController implements HtmlPageControllerInterface
 {
     use HtmlPageControllerTrait;
-
-    // Category tag for system-wide event listener
-    public $eventIdentifier = ['controller'];
 
     /**
      * @var \PDO

@@ -1,9 +1,9 @@
 <?php
-namespace My\Web\Controller\General;
+namespace Acme\Controller\General;
 
+use Acme\App\View\ViewEngineAwareTrait;
+use Acme\Util\Mobile;
 use Interop\Http\Factory\ResponseFactoryInterface;
-use My\Web\Lib\Util\Mobile;
-use My\Web\Lib\View\ViewEngineAwareTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerAwareTrait;
@@ -14,6 +14,9 @@ trait HtmlPageControllerTrait
     use LoggerAwareTrait;
     use EventManagerAwareTrait;
     use ViewEngineAwareTrait;
+
+    // Category tag for system-wide event listener
+    public $eventIdentifier = ['controller'];
 
     /**
      * @var string

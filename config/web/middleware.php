@@ -1,10 +1,10 @@
 <?php
+use Acme\App\Middleware\DebugBarInsertion;
+use Acme\App\Middleware\NotFoundHandler;
+use Acme\App\Middleware\RoutingHandler;
+use Acme\App\Middleware\WebAppBootstrap;
+use Acme\App\Router\Router;
 use Aura\Di\Container;
-use My\Web\Lib\App\Middleware\WebAppBootstrap;
-use My\Web\Lib\Router\Middleware\RoutingHandler;
-use My\Web\Lib\Router\Router;
-use My\Web\Lib\Util\DebugBarInsertion;
-use My\Web\Lib\View\Middleware\NotFoundHandler;
 use Zend\Stratigility\MiddlewarePipe;
 
 /** @var MiddlewarePipe $this */

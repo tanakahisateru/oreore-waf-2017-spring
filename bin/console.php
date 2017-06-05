@@ -1,5 +1,6 @@
+#!/usr/bin/env php
 <?php
-use My\Web\Lib\App\App;
+use Acme\App\App;
 
 require __DIR__ . '/../config/bootstrap.php';
 

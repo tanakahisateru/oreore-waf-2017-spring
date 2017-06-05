@@ -1,5 +1,5 @@
 <?php
-namespace My\Web\Tests\Functional;
+namespace Acme\Tests\Functional;
 
 use FunctionalTester;
 

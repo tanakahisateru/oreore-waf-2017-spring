@@ -1,6 +1,6 @@
 <?php
+use Acme\App\Middleware\DebugBarInsertion;
 use Aura\Di\Container;
-use My\Web\Lib\Util\DebugBarInsertion;
 use Zend\EventManager\EventInterface;
 use Zend\EventManager\SharedEventManagerInterface;
 

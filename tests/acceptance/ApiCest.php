@@ -1,5 +1,5 @@
 <?php
-namespace My\Web\Tests\Acceptance;
+namespace Acme\Tests\Acceptance;
 
 use AcceptanceTester;
 
