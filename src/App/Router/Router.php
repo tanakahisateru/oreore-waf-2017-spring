@@ -114,6 +114,11 @@ class Router implements LoggerAwareInterface, StreamFactoryAwareInterface
 
                 $returnedValue = call_user_func($dispatcher, $params, '__target');
 
+                // Aura.Dispatcher returns object itself if not invokable.
+                if ($returnedValue === $dispatcher->getObject('__target')) {
+                    throw new \LogicException("Request was not dispatched to any handler.");
+                }
+
                 if ($returnedValue instanceof ResponseInterface) {
                     $response = $returnedValue;
                 } else {
