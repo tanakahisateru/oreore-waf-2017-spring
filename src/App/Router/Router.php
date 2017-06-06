@@ -1,13 +1,12 @@
 <?php
 namespace Acme\App\Router;
 
-use Acme\App\Http\StreamFactoryAwareInterface;
-use Acme\App\Http\StreamFactoryAwareTrait;
 use Aura\Dispatcher\Dispatcher;
 use Aura\Router\Route;
 use Aura\Router\RouterContainer;
 use Aura\Router\Rule\Accepts;
 use Aura\Router\Rule\Allows;
+use Interop\Http\Factory\StreamFactoryInterface;
 use Lapaz\Odango\AdviceComposite;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -16,13 +15,12 @@ use Psr\Log\LoggerAwareTrait;
 use Ray\Aop\MethodInvocation;
 use Zend\EventManager\EventsCapableInterface;
 
-class Router implements LoggerAwareInterface, StreamFactoryAwareInterface
+class Router implements LoggerAwareInterface
 {
     const EVENT_BEFORE_ACTION = 'beforeAction';
     const EVENT_AFTER_ACTION = 'afterAction';
 
     use LoggerAwareTrait;
-    use StreamFactoryAwareTrait;
 
     /**
      * @var RouterContainer
@@ -30,23 +28,31 @@ class Router implements LoggerAwareInterface, StreamFactoryAwareInterface
     protected $routerContainer;
 
     /**
-     * @var callable[]
+     * @var ControllerProviderInterface
      */
-    protected $controllerFactories;
+    protected $controllerProvider;
+
+    /**
+     * @var StreamFactoryInterface
+     */
+    protected $streamFactory;
 
     // TODO Option to throw exception instead of logging
 
     /**
      * Router constructor.
      * @param RouterContainer $routerContainer
-     * @param callable[] $controllerFactories
+     * @param ControllerProviderInterface $controllerProvider
+     * @param StreamFactoryInterface $streamFactory
      */
     public function __construct(
         RouterContainer $routerContainer,
-        array $controllerFactories
+        ControllerProviderInterface $controllerProvider,
+        StreamFactoryInterface $streamFactory
     ) {
         $this->routerContainer = $routerContainer;
-        $this->controllerFactories = $controllerFactories;
+        $this->controllerProvider = $controllerProvider;
+        $this->streamFactory = $streamFactory;
     }
 
     /**
@@ -86,11 +92,7 @@ class Router implements LoggerAwareInterface, StreamFactoryAwareInterface
         assert(isset($params['controller']));
 
         if (is_scalar($params['controller'])) {
-            if (!isset($this->controllerFactories[$params['controller']])) {
-                throw new \LogicException("Controller not defined for: " . $params['controller']);
-            }
-            $controllerFactory = $this->controllerFactories[$params['controller']];
-            $controller = $controllerFactory();
+            $controller = $this->controllerProvider->createController($params['controller']);
         } else {
             $controller = $params['controller'];
         }
@@ -293,12 +295,11 @@ class Router implements LoggerAwareInterface, StreamFactoryAwareInterface
         return $response->withBody($this->streamFactory->createStream($echo . strval($stream)));
     }
 
-
     /**
      * @param string $name
      * @param array $data
      * @param bool $raw
-     * @return bool
+     * @return string
      */
     public function urlTo($name, $data=[], $raw = false)
     {

@@ -2,8 +2,7 @@
 namespace Acme\App\View;
 
 use Acme\App\View\Template\ViewAccessExtension;
-use Aura\Router\Exception\RouteNotFound;
-use Aura\Router\RouterContainer;
+use Aura\Router\Generator;
 use Lapaz\Amechan\AssetCollection;
 use Lapaz\Amechan\AssetManager;
 use Lapaz\Odango\AdviceComposite;
@@ -18,6 +17,8 @@ use Zend\EventManager\EventManagerAwareTrait;
 
 class View implements EventManagerAwareInterface, LoggerAwareInterface
 {
+    const EVENT_TEMPLATE_ENGINE_CREATED = 'templateEngineCreated';
+    const EVENT_TEMPLATE_CREATED = 'templateCreated';
     const EVENT_BEFORE_RENDER = 'beforeRender';
     const EVENT_AFTER_RENDER = 'afterRender';
 
@@ -33,9 +34,9 @@ class View implements EventManagerAwareInterface, LoggerAwareInterface
     protected $templateEngineFactory;
 
     /**
-     * @var RouterContainer
+     * @var Generator
      */
-    protected $routerContainer;
+    protected $urlGenerator;
 
     /**
      * @var AssetManager
@@ -61,18 +62,18 @@ class View implements EventManagerAwareInterface, LoggerAwareInterface
      * View constructor.
      *
      * @param callable $templateEngineFactory
-     * @param RouterContainer $routerContainer
+     * @param Generator $urlGenerator
      * @param AssetManager $assetManager
      * @internal param Router $router
      */
     public function __construct(
         callable $templateEngineFactory,
-        RouterContainer $routerContainer,
+        Generator $urlGenerator,
         AssetManager $assetManager
     )
     {
         $this->templateEngineFactory = $templateEngineFactory;
-        $this->routerContainer = $routerContainer;
+        $this->urlGenerator = $urlGenerator;
         $this->assetManager = $assetManager;
 
         $this->folderMap = [];
@@ -164,14 +165,12 @@ class View implements EventManagerAwareInterface, LoggerAwareInterface
     public function routeUrlTo($name, $data=[], $raw = false)
     {
         try {
-            $generator = $this->routerContainer->getGenerator();
-
             if ($raw) {
-                return $generator->generateRaw($name, $data);
+                return $this->urlGenerator->generateRaw($name, $data);
             } else {
-                return $generator->generateRaw($name, $data);
+                return $this->urlGenerator->generate($name, $data);
             }
-        } catch (RouteNotFound $e) {
+        } catch (\Exception $e) {
             $this->logger->warning('Route not found: '. $e->getMessage());
             return '#';
         }
@@ -221,7 +220,11 @@ class View implements EventManagerAwareInterface, LoggerAwareInterface
             $engine->addFolder($folder, Path::join($rootPath, $path));
         }
 
+        $this->getEventManager()->trigger(static::EVENT_TEMPLATE_ENGINE_CREATED, $this, ['engine' => $engine]);
+
         $template = $engine->make($templateName);
+
+        $this->getEventManager()->trigger(static::EVENT_TEMPLATE_CREATED, $this, ['template' => $template]);
 
         $render = function (array $data) use ($template) {
             return $template->render($data);

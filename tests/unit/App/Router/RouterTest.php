@@ -14,6 +14,11 @@ use Psr\Http\Message\ServerRequestInterface;
 class RouterTest extends TestCase
 {
     /**
+     * @var ControllerProviderInterface
+     */
+    protected $controllerProvider;
+
+    /**
      * @var ServerRequestFactoryInterface
      */
     protected $requestFactory;
@@ -30,8 +35,7 @@ class RouterTest extends TestCase
 
     public function testDispatchToPsr7SinglePassCallable()
     {
-        $router = new Router(new RouterContainer(), []);
-        $router->setStreamFactory($this->streamFactory);
+        $router = new Router(new RouterContainer(), $this->controllerProvider, $this->streamFactory);
 
         $self = $this;
         $handler = function (ServerRequestInterface $request) use ($self) {
@@ -58,8 +62,7 @@ class RouterTest extends TestCase
 
     public function testDispatchToStringReturningCallable()
     {
-        $router = new Router(new RouterContainer(), []);
-        $router->setStreamFactory($this->streamFactory);
+        $router = new Router(new RouterContainer(), $this->controllerProvider, $this->streamFactory);
 
         $handler = function () {
             return 'callable handler response';
@@ -80,8 +83,7 @@ class RouterTest extends TestCase
 
     public function testDispatchToArrayReturningCallable()
     {
-        $router = new Router(new RouterContainer(), []);
-        $router->setStreamFactory($this->streamFactory);
+        $router = new Router(new RouterContainer(), $this->controllerProvider, $this->streamFactory);
 
         $handler = function () {
             return ['foo' => 'bar'];
@@ -102,8 +104,7 @@ class RouterTest extends TestCase
 
     public function testDispatchToStreamOutputCallable()
     {
-        $router = new Router(new RouterContainer(), []);
-        $router->setStreamFactory($this->streamFactory);
+        $router = new Router(new RouterContainer(), $this->controllerProvider, $this->streamFactory);
 
         $handler = function () {
             echo "callable handler response";
@@ -124,6 +125,7 @@ class RouterTest extends TestCase
 
     protected function setUp()
     {
+        $this->controllerProvider = $this->createMock(ControllerProviderInterface::class);
         $this->requestFactory = new ServerRequestFactory();
         $this->responseFactory = new ResponseFactory();
         $this->streamFactory = new StreamFactory();

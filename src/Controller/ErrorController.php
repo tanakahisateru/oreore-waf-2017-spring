@@ -1,14 +1,14 @@
 <?php
 namespace Acme\Controller;
 
-use Acme\Controller\General\HtmlPageControllerInterface;
-use Acme\Controller\General\HtmlPageControllerTrait;
+use Acme\App\Controller\ControllerInterface;
+use Acme\App\Controller\ControllerTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-class ErrorController implements HtmlPageControllerInterface
+class ErrorController implements ControllerInterface
 {
-    use HtmlPageControllerTrait;
+    use ControllerTrait;
 
     /**
      * @var array
@@ -46,14 +46,12 @@ class ErrorController implements HtmlPageControllerInterface
             $template = $this->defaultTemplate;
         }
 
-        $response = $response->withHeader('Content-Type', 'text/html');
-        $view = $this->createView();
-        $response->getBody()->write($view->render($template, [
+        $view = $this->responseAgent->createView();
+
+        return $this->responseAgent->htmlResponse($view->render($template, [
             'statusCode' => $statusCode,
             'reasonPhrase' => $reasonPhrase,
             'request' => $request,
         ]));
-
-        return $response;
     }
 }

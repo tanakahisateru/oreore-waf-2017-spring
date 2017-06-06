@@ -1,20 +1,21 @@
 <?php
+use Acme\App\Controller\ControllerInterface;
+use Acme\App\Controller\ControllerProvider;
 use Acme\Controller\ErrorController;
-use Acme\Controller\General\HtmlPageControllerInterface;
 use Acme\Controller\SiteController;
 use Aura\Di\Container;
 
 /** @var Container $di */
 
-$di->setters[HtmlPageControllerInterface::class] = [
-    'setResponsePrototype' => $di->lazyGetCall('http.responseFactory', 'createResponse'),
+$di->setters[ControllerInterface::class] = [
+    'setResponseAgent' => $di->lazyGet('responseAgent'),
 ];
 
-$di->values['controllerFactories'] = [
+$di->set('controllerProvider', $di->lazyNew(ControllerProvider::class, ['controllerFactories' => [
 
     'error' => $di->newFactory(ErrorController::class, [
         'statusToTemplate' => [
-             404 => '_error/404.php',
+            404 => '_error/404.php',
         ],
         'defaultTemplate' => '_error/default.php'
     ]),
@@ -30,4 +31,4 @@ $di->values['controllerFactories'] = [
     // ], [
     //     'setAuditTrailStamper' => $di->get('auditTrailStamper'),
     // ]),
-];
+]]));

@@ -1,18 +1,26 @@
 <?php
 namespace Acme\Controller;
 
-use Acme\Controller\General\HtmlPageControllerInterface;
-use Acme\Controller\General\HtmlPageControllerTrait;
+use Acme\App\Controller\ControllerInterface;
+use Acme\App\Controller\ControllerTrait;
+use Acme\App\Router\Router;
+use Acme\App\View\View;
+use Acme\Util\Mobile;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LogLevel;
 use Sumeko\Http\Exception\ForbiddenException;
 use Sumeko\Http\Exception\NotFoundException;
 use Zend\EventManager\EventInterface;
 
-class SiteController implements HtmlPageControllerInterface
+class SiteController implements ControllerInterface, LoggerAwareInterface
 {
-    use HtmlPageControllerTrait;
+    const TEMPLATE_FOLDER = 'site';
+
+    use ControllerTrait;
+    use LoggerAwareTrait;
 
     /**
      * @var \PDO
@@ -26,7 +34,6 @@ class SiteController implements HtmlPageControllerInterface
     public function __construct($db)
     {
         $this->db = $db;
-        $this->templateFolder('site');
     }
 
     /**
@@ -36,22 +43,15 @@ class SiteController implements HtmlPageControllerInterface
     {
         $events = $this->getEventManager();
 
-        $events->attach('beforeAction', function (EventInterface $event) {
-            $request = $event->getParam('request');
-            $this->modifyTemplateFolderForMobile($request);
-        });
-
-        $events->attach('afterAction', function (EventInterface $event) {
+        $events->attach(Router::EVENT_BEFORE_ACTION, function (EventInterface $event) {
             $queryParams = $event->getParam('request')->getQueryParams();
-            if (!isset($queryParams['stop'])) {
-                return;
+            if (isset($queryParams['stop'])) {
+                $response = $this->responseAgent->textResponse(
+                    'The action stopped while afterAction because query param "stop" was specified.'
+                );
+                $event->setParam('response', $response);
+                $event->stopPropagation();
             }
-
-            $response = $this->textResponse(
-                'The action stopped while afterAction because query param "stop" was specified.'
-            );
-            $event->setParam('response', $response);
-            $event->stopPropagation();
         });
     }
 
@@ -66,9 +66,11 @@ class SiteController implements HtmlPageControllerInterface
         $qp = $request->getQueryParams();
         $greeting = isset($qp['greeting']) ? $qp['greeting'] : 'Hello,';
 
-        return $this->templatedHtmlResponse('current::index.php', [
+        $view = $this->createView($request);
+
+        return $this->responseAgent->htmlResponse($view->render('current::index.php', [
             'greeting' => $greeting,
-        ]);
+        ]));
     }
 
     /**
@@ -96,7 +98,7 @@ class SiteController implements HtmlPageControllerInterface
             $to = 'site.index';
         }
 
-        return $this->redirectResponseToRoute($to);
+        return $this->responseAgent->redirectResponseToRoute($to);
     }
 
     /**
@@ -113,5 +115,23 @@ class SiteController implements HtmlPageControllerInterface
     public function actionForbidden()
     {
         throw new ForbiddenException();
+    }
+
+    /**
+     * @param ServerRequestInterface $request
+     * @return View
+     */
+    protected function createView(ServerRequestInterface $request)
+    {
+        $view = $this->responseAgent->createView();
+
+        $mobileDetect = Mobile::detect($request);
+        if ($mobileDetect->isMobile()) {
+            $view->setFolder('current', static::TEMPLATE_FOLDER . '/sp');
+        } else {
+            $view->setFolder('current', static::TEMPLATE_FOLDER);
+        }
+
+        return $view;
     }
 }

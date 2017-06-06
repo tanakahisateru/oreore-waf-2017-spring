@@ -1,12 +1,10 @@
 <?php
-use Acme\App\Http\StreamFactoryAwareTrait;
+use Acme\App\Controller\ResponseAgent;
 use Acme\App\Middleware\Generator\ErrorResponseGenerator;
 use Acme\App\Middleware\Generator\WhoopsErrorResponseGenerator;
 use Acme\App\Router\Router;
-use Acme\App\Router\RouterAwareInterface;
 use Acme\App\View\Template\EscaperExtension;
 use Acme\App\View\View;
-use Acme\App\View\ViewFactoryAwareInterface;
 use Aura\Di\Container;
 use Aura\Router\RouterContainer;
 use DebugBar\Bridge\MonologCollector;
@@ -73,10 +71,6 @@ $di->set('http.uploadedFileFactory', $di->lazyNew(UploadedFileFactory::class));
 $di->set('http.uriFactory', $di->lazyNew(UriFactory::class));
 $di->set('http.streamFactory', $di->lazyNew(StreamFactory::class));
 
-$di->setters[StreamFactoryAwareTrait::class] = [
-    'setStreamFactory' => $di->lazyGet('http.streamFactory'),
-];
-
 /////////////////////////////////////////////////////////////////////
 // PSR-15 pipeline
 
@@ -111,7 +105,8 @@ $di->set('errorHandlerMiddleware', $dix->lazyNew(ErrorHandler::class, [
 
 $di->set('router', $di->lazyNew(Router::class, [
     'routerContainer' => $di->lazyGet('routerContainer'),
-    'controllerFactories' => $di->lazyValue('controllerFactories'),
+    'controllerProvider' => $di->lazyGet('controllerProvider'),
+    'streamFactory' => $di->lazyGet('http.streamFactory'),
 ]));
 
 $di->set('routerContainer', $dix->lazyNew(RouterContainer::class, [
@@ -123,9 +118,14 @@ $di->set('routerContainer', $dix->lazyNew(RouterContainer::class, [
     'params' => $params,
 ]));
 
-$di->setters[RouterAwareInterface::class] = [
-    'setRouter' => $di->lazyGet('router'),
-];
+$di->set('responseAgent', $di->lazyNew(ResponseAgent::class, [
+    'viewFactory' => $di->lazyGet('viewFactory'),
+    'urlGenerator' => $di->lazyGet('urlGenerator'),
+    'responsePrototype' => $di->lazyGetCall('http.responseFactory', 'createResponse'),
+    'streamFactory' => $di->lazyGet('http.streamFactory'),
+]));
+
+$di->set('urlGenerator', $di->lazyGetCall('routerContainer', 'getGenerator'));
 
 /////////////////////////////////////////////////////////////////////
 // HTML rendering
@@ -151,13 +151,9 @@ $di->set('assetManager', $dix->lazyNew(AssetManager::class)
 
 $di->set('viewFactory', $di->newFactory(View::class, [
     'templateEngineFactory' => $di->lazyGet('templateEngineFactory'),
-    'routerContainer' => $di->lazyGet('routerContainer'),
+    'urlGenerator' => $di->lazyGet('urlGenerator'),
     'assetManager' => $di->lazyGet('assetManager'),
 ]));
-
-$di->setters[ViewFactoryAwareInterface::class] = [
-    'setViewFactory' => $di->lazyGet('viewFactory'),
-];
 
 /////////////////////////////////////////////////////////////////////
 // Debug
