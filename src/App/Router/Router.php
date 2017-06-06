@@ -18,6 +18,9 @@ use Zend\EventManager\EventsCapableInterface;
 
 class Router implements LoggerAwareInterface, StreamFactoryAwareInterface
 {
+    const EVENT_BEFORE_ACTION = 'beforeAction';
+    const EVENT_AFTER_ACTION = 'afterAction';
+
     use LoggerAwareTrait;
     use StreamFactoryAwareTrait;
 
@@ -166,7 +169,7 @@ class Router implements LoggerAwareInterface, StreamFactoryAwareInterface
                 'request' => $request,
                 'responsePrototype' => $responsePrototype,
             ]);
-            $result = $events->trigger('beforeAction', $controller, $argv);
+            $result = $events->trigger(static::EVENT_BEFORE_ACTION, $controller, $argv);
 
             if ($result->stopped()) {
                 if (isset($argv['response'])) {
@@ -185,7 +188,7 @@ class Router implements LoggerAwareInterface, StreamFactoryAwareInterface
                 'request' => $request,
                 'response' => $response,
             ]);
-            $result = $events->trigger('afterAction', $controller, $argv);
+            $result = $events->trigger(static::EVENT_AFTER_ACTION, $controller, $argv);
 
             if ($result->stopped()) {
                 if (isset($argv['response'])) {

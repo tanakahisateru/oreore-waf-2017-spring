@@ -18,6 +18,9 @@ use Zend\EventManager\EventManagerAwareTrait;
 
 class View implements EventManagerAwareInterface, LoggerAwareInterface
 {
+    const EVENT_BEFORE_RENDER = 'beforeRender';
+    const EVENT_AFTER_RENDER = 'afterRender';
+
     use EventManagerAwareTrait;
     use LoggerAwareTrait;
 
@@ -244,7 +247,7 @@ class View implements EventManagerAwareInterface, LoggerAwareInterface
                 'template' => $template,
                 'data' => $data,
             ]);
-            $result = $events->trigger('beforeRender', $this, $argv);
+            $result = $events->trigger(static::EVENT_BEFORE_RENDER, $this, $argv);
 
             if ($result->stopped()) {
                 if (isset($argv['content'])) {
@@ -263,7 +266,7 @@ class View implements EventManagerAwareInterface, LoggerAwareInterface
                 'content' => $content,
                 'data' => $data,
             ]);
-            $result = $events->trigger('afterRender', $this, $argv);
+            $result = $events->trigger(static::EVENT_AFTER_RENDER, $this, $argv);
 
             if ($result->stopped()) {
                 if (isset($argv['content'])) {
