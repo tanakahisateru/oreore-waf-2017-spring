@@ -4,8 +4,10 @@ namespace Acme\App\Router;
 use Aura\Router\RouterContainer;
 use Http\Factory\Diactoros\ResponseFactory;
 use Http\Factory\Diactoros\ServerRequestFactory;
+use Http\Factory\Diactoros\StreamFactory;
 use Interop\Http\Factory\ResponseFactoryInterface;
 use Interop\Http\Factory\ServerRequestFactoryInterface;
+use Interop\Http\Factory\StreamFactoryInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -21,9 +23,15 @@ class RouterTest extends TestCase
      */
     protected $responseFactory;
 
+    /**
+     * @var StreamFactoryInterface
+     */
+    protected $streamFactory;
+
     public function testDispatchToPsr7SinglePassCallable()
     {
         $router = new Router(new RouterContainer(), []);
+        $router->setStreamFactory($this->streamFactory);
 
         $self = $this;
         $handler = function (ServerRequestInterface $request) use ($self) {
@@ -51,6 +59,7 @@ class RouterTest extends TestCase
     public function testDispatchToStringReturningCallable()
     {
         $router = new Router(new RouterContainer(), []);
+        $router->setStreamFactory($this->streamFactory);
 
         $handler = function () {
             return 'callable handler response';
@@ -72,6 +81,7 @@ class RouterTest extends TestCase
     public function testDispatchToArrayReturningCallable()
     {
         $router = new Router(new RouterContainer(), []);
+        $router->setStreamFactory($this->streamFactory);
 
         $handler = function () {
             return ['foo' => 'bar'];
@@ -93,6 +103,7 @@ class RouterTest extends TestCase
     public function testDispatchToStreamOutputCallable()
     {
         $router = new Router(new RouterContainer(), []);
+        $router->setStreamFactory($this->streamFactory);
 
         $handler = function () {
             echo "callable handler response";
@@ -115,5 +126,6 @@ class RouterTest extends TestCase
     {
         $this->requestFactory = new ServerRequestFactory();
         $this->responseFactory = new ResponseFactory();
+        $this->streamFactory = new StreamFactory();
     }
 }

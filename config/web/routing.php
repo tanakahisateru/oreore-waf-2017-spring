@@ -25,6 +25,10 @@ $map->attach('site.', '', function (Map $map) use ($di) {
         $view->setFolder('current', 'site');
         return new HtmlResponse($view->render('current::privacy.php'));
     });
+
+    $map->route('redirect', '/redirect');
+    $map->route('notFound', '/not-found');
+    $map->route('forbidden', '/forbidden');
 });
 
 $map->attach('api.', '/api', function (Map $map) use ($di) {

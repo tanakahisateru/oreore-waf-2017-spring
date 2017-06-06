@@ -3,14 +3,29 @@ namespace Acme\App\Middleware\Generator;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Sumeko\Http\ClientException;
+use Sumeko\Http\Exception as HttpException;
 use Whoops\Handler\JsonResponseHandler;
 use Whoops\Handler\PrettyPageHandler;
 use Whoops\Run;
 use Whoops\Util\Misc;
-use Zend\Stratigility\Utils;
 
 class WhoopsErrorResponseGenerator
 {
+    /**
+     * @var ErrorResponseGenerator
+     */
+    protected $delegateGenerator;
+
+    /**
+     * WhoopsErrorResponseGenerator constructor.
+     * @param ErrorResponseGenerator $delegateGenerator
+     */
+    public function __construct(ErrorResponseGenerator $delegateGenerator)
+    {
+        $this->delegateGenerator = $delegateGenerator;
+    }
+
     /**
      * Create/update the response representing the error.
      *
@@ -21,6 +36,17 @@ class WhoopsErrorResponseGenerator
      */
     public function __invoke($e, ServerRequestInterface $request, ResponseInterface $response)
     {
+        if ($e instanceof ClientException) {
+            // Delegates default error handler if it raised from user operation.
+            return $this->delegateGenerator->__invoke($e, $request, $response);
+        }
+
+        if ($e instanceof HttpException) {
+            $response = $response->withStatus($e->getCode(), $e->getMessage());
+        } else {
+            $response = $response->withStatus(500);
+        }
+
         $run = new Run();
         $run->writeToOutput(false);
         $run->allowQuit(false);
@@ -37,7 +63,6 @@ class WhoopsErrorResponseGenerator
 
         $run->register();
 
-        $response = $response->withStatus(Utils::getStatusCode($e, $response));
         $response->getBody()->write($run->handleException($e));
 
         return $response;

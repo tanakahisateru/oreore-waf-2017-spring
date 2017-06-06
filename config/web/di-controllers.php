@@ -7,7 +7,7 @@ use Aura\Di\Container;
 /** @var Container $di */
 
 $di->setters[HtmlPageControllerInterface::class] = [
-    'setResponseFactory' => $di->lazyGet('http.responseFactory'),
+    'setResponsePrototype' => $di->lazyGetCall('http.responseFactory', 'createResponse'),
 ];
 
 $di->values['controllerFactories'] = [

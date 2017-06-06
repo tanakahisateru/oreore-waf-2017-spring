@@ -6,6 +6,8 @@ use Acme\Controller\General\HtmlPageControllerTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LogLevel;
+use Sumeko\Http\Exception\ForbiddenException;
+use Sumeko\Http\Exception\NotFoundException;
 use Zend\EventManager\EventInterface;
 
 class SiteController implements HtmlPageControllerInterface
@@ -76,8 +78,40 @@ class SiteController implements HtmlPageControllerInterface
     {
         $this->logger->debug('site.contact');
 
-        echo 'contact page';
-        $response->getBody()->write("");
-        // no response
+        echo 'echo contact page';
+        $response->getBody()->write("(not shown because this response not returned)");
+        // no response returned
+    }
+
+    /**
+     * @param ServerRequestInterface $request
+     * @return ResponseInterface
+     */
+    public function actionRedirect($request)
+    {
+        $params = $request->getQueryParams();
+        if (isset($params['route'])) {
+            $to = $params['route'];
+        } else {
+            $to = 'site.index';
+        }
+
+        return $this->redirectResponseToRoute($to);
+    }
+
+    /**
+     * @throws NotFoundException
+     */
+    public function actionNotFound()
+    {
+        throw new NotFoundException();
+    }
+
+    /**
+     * @throws ForbiddenException
+     */
+    public function actionForbidden()
+    {
+        throw new ForbiddenException();
     }
 }

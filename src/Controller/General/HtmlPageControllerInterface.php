@@ -1,25 +1,27 @@
 <?php
 namespace Acme\Controller\General;
 
+use Acme\App\Http\StreamFactoryAwareInterface;
+use Acme\App\Router\RouterAwareInterface;
 use Acme\App\View\ViewFactoryAwareInterface;
-use Interop\Http\Factory\ResponseFactoryInterface;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerAwareInterface;
 use Zend\EventManager\EventManagerAwareInterface;
 
 interface HtmlPageControllerInterface extends
-    LoggerAwareInterface, EventManagerAwareInterface, ViewFactoryAwareInterface
+    LoggerAwareInterface,
+    EventManagerAwareInterface,
+    StreamFactoryAwareInterface,
+    RouterAwareInterface,
+    ViewFactoryAwareInterface
 {
-    /**
-     */
-    public function attachDefaultListeners();
-
     /**
      * @param string $path
      */
     public function templateFolder($path);
 
     /**
-     * @param ResponseFactoryInterface $responseFactory
+     * @param ResponseInterface $responsePrototype
      */
-    public function setResponseFactory(ResponseFactoryInterface $responseFactory);
+    public function setResponsePrototype(ResponseInterface $responsePrototype);
 }

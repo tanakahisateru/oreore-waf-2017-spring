@@ -1,9 +1,10 @@
 <?php
 namespace Acme\Controller\General;
 
+use Acme\App\Http\StreamFactoryAwareTrait;
+use Acme\App\Router\RouterAwareTrait;
 use Acme\App\View\ViewFactoryAwareTrait;
 use Acme\Util\Mobile;
-use Interop\Http\Factory\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerAwareTrait;
@@ -13,6 +14,8 @@ trait HtmlPageControllerTrait
 {
     use LoggerAwareTrait;
     use EventManagerAwareTrait;
+    use StreamFactoryAwareTrait;
+    use RouterAwareTrait;
     use ViewFactoryAwareTrait;
 
     // Category tag for system-wide event listener
@@ -29,12 +32,12 @@ trait HtmlPageControllerTrait
     protected $templateFolderModifier;
 
     /**
-     * @var ResponseFactoryInterface
+     * @var ResponseInterface
      */
-    protected $responseFactory;
+    protected $responsePrototype;
 
     /**
-     *
+     * Implement default event listeners here.
      */
     public function attachDefaultListeners()
     {
@@ -46,6 +49,14 @@ trait HtmlPageControllerTrait
     public function templateFolder($path)
     {
         $this->currentTemplateFolder = $path;
+    }
+
+    /**
+     * @param ResponseInterface $responsePrototype
+     */
+    public function setResponsePrototype(ResponseInterface $responsePrototype)
+    {
+        $this->responsePrototype = $responsePrototype;
     }
 
     /**
@@ -82,14 +93,6 @@ trait HtmlPageControllerTrait
     }
 
     /**
-     * @param ResponseFactoryInterface $responseFactory
-     */
-    public function setResponseFactory(ResponseFactoryInterface $responseFactory)
-    {
-        $this->responseFactory = $responseFactory;
-    }
-
-    /**
      * @param string $template
      * @param array $data
      * @param int $status
@@ -110,14 +113,14 @@ trait HtmlPageControllerTrait
      */
     public function htmlResponse($html, $status = 200, array $headers = [])
     {
-        $response = $this->responseFactory->createResponse($status)
+        $response = $this->responsePrototype->withStatus($status)
             ->withHeader('Content-Type', 'text/html; charset=utf-8');
 
         foreach ($headers as $name => $header) {
             $response = $response->withHeader($name, $header);
         }
 
-        $response->getBody()->write($html);
+        $response = $response->withBody($this->streamFactory->createStream($html));
 
         return $response;
     }
@@ -130,15 +133,34 @@ trait HtmlPageControllerTrait
      */
     public function textResponse($text, $status = 200, array $headers = [])
     {
-        $response = $this->responseFactory->createResponse($status)
+        $response = $this->responsePrototype->withStatus($status)
             ->withHeader('Content-Type', 'text/plain; charset=utf-8');
 
         foreach ($headers as $name => $header) {
             $response = $response->withHeader($name, $header);
         }
 
-        $response->getBody()->write($text);
+        $response = $response->withBody($this->streamFactory->createStream($text));
 
         return $response;
+    }
+
+    /**
+     * @param string $url
+     * @return ResponseInterface
+     */
+    public function redirectResponse($url)
+    {
+        return $this->responsePrototype->withStatus(302)->withHeader('Location', $url);
+    }
+
+    /**
+     * @param string $route
+     * @param array $data
+     * @return ResponseInterface
+     */
+    public function redirectResponseToRoute($route, $data = [])
+    {
+        return $this->redirectResponse($this->router->urlTo($route, $data));
     }
 }

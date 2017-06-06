@@ -3,7 +3,6 @@ use Acme\App\Middleware\DebugBarInsertion;
 use Acme\App\Middleware\NotFoundHandler;
 use Acme\App\Middleware\RoutingHandler;
 use Acme\App\Middleware\WebAppBootstrap;
-use Acme\App\Router\Router;
 use Aura\Di\Container;
 use Zend\Stratigility\MiddlewarePipe;
 
@@ -11,17 +10,13 @@ use Zend\Stratigility\MiddlewarePipe;
 /** @var Container $di */
 /** @var array $params */
 
-/** @var Router $router */
-$router = $di->get('router');
-
-$responsePrototype = $di->get('http.responseFactory')->createResponse();
-
 $this->pipe($di->get('errorHandlerMiddleware'));
 
 if ($di->has('debugbar')) {
     $this->pipe($di->newInstance(DebugBarInsertion::class, [
         'debugbar' => $di->get('debugbar'),
         'baseUrl' => '/assets/debugbar',
+        'streamFactory' => $di->get('http.streamFactory'),
     ]));
 }
 
@@ -40,11 +35,8 @@ $this->pipe($di->newInstance(WebAppBootstrap::class, [
 // });
 
 $this->pipe($di->newInstance(RoutingHandler::class, [
-    'router' => $router,
-    'responseFactory' => $di->get('http.responseFactory'),
+    'router' => $di->get('router'),
+    'responsePrototype' => $di->get('http.responseFactory')->createResponse(),
 ]));
 
-$this->pipe($di->newInstance(NotFoundHandler::class, [
-    'router' => $router,
-    'responsePrototype' => $responsePrototype,
-]));
+$this->pipe($di->newInstance(NotFoundHandler::class));

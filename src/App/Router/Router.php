@@ -1,6 +1,8 @@
 <?php
 namespace Acme\App\Router;
 
+use Acme\App\Http\StreamFactoryAwareInterface;
+use Acme\App\Http\StreamFactoryAwareTrait;
 use Aura\Dispatcher\Dispatcher;
 use Aura\Router\Route;
 use Aura\Router\RouterContainer;
@@ -14,9 +16,10 @@ use Psr\Log\LoggerAwareTrait;
 use Ray\Aop\MethodInvocation;
 use Zend\EventManager\EventsCapableInterface;
 
-class Router implements LoggerAwareInterface
+class Router implements LoggerAwareInterface, StreamFactoryAwareInterface
 {
     use LoggerAwareTrait;
+    use StreamFactoryAwareTrait;
 
     /**
      * @var RouterContainer
@@ -84,26 +87,40 @@ class Router implements LoggerAwareInterface
                 throw new \LogicException("Controller not defined for: " . $params['controller']);
             }
             $controllerFactory = $this->controllerFactories[$params['controller']];
-            $controller = $controllerFactory($params);
+            $controller = $controllerFactory();
         } else {
             $controller = $params['controller'];
+        }
+
+        $responsePrototype = null;
+        if (isset($params['response'])) {
+            $responsePrototype = $params['response'];
+        } elseif (isset($params['request'])) {
+            $request = $params['request'];
+            if ($request instanceof ServerRequestInterface) {
+                $responsePrototype = $request->getAttribute('responsePrototype');
+            }
+        }
+        if ($responsePrototype) {
+            // cloned
+            $responsePrototype = $responsePrototype->withBody($this->streamFactory->createStream());
         }
 
         $dispatcher = new Dispatcher(['__target' => $controller], null, 'action');
 
         ob_start();
         try {
-            $dispatch = function () use ($params, $dispatcher) {
+            $dispatch = function () use ($params, $dispatcher, $responsePrototype) {
 
-                $response = call_user_func($dispatcher, $params, '__target');
+                $returnedValue = call_user_func($dispatcher, $params, '__target');
 
-                if (!($response instanceof ResponseInterface)) {
-                    if (!isset($params['response'])) {
+                if ($returnedValue instanceof ResponseInterface) {
+                    $response = $returnedValue;
+                } else {
+                    if ($responsePrototype === null) {
                         throw new \LogicException("Response prototype required for informal result value.");
                     }
-
-                    $responsePrototype = $params['response'];
-                    $response = $this->fixUpReturnedValue($response, $responsePrototype, $params);
+                    $response = $this->fixUpReturnedValue($returnedValue, $responsePrototype);
                 }
 
                 $echo = ob_get_contents();
@@ -234,23 +251,10 @@ class Router implements LoggerAwareInterface
     /**
      * @param mixed $returnedValue
      * @param ResponseInterface $responsePrototype
-     * @param array $params
      * @return ResponseInterface
      */
-    private function fixUpReturnedValue($returnedValue, $responsePrototype, array $params)
+    private function fixUpReturnedValue($returnedValue, ResponseInterface $responsePrototype)
     {
-        if (isset($params['response'])) {
-            $responsePrototype = $params['response'];
-        } elseif (isset($params['request'])) {
-            $request = $params['request'];
-            if ($request instanceof ServerRequestInterface) {
-                $responsePrototype = $request->getAttribute('responsePrototype');
-            }
-        }
-        if (!($responsePrototype instanceof ResponseInterface)) {
-            throw new \LogicException('Invalid response prototype');
-        }
-
         if (empty($returnedValue)) {
             $returnedValue = $responsePrototype;
         } elseif (is_scalar($returnedValue)) {
@@ -278,14 +282,23 @@ class Router implements LoggerAwareInterface
     private function insertEchoIntoBody($echo, ResponseInterface $response)
     {
         $stream = $response->getBody();
-        if ($stream->isSeekable()) {
-            $stream->rewind();
-            $streamedContents = $stream->getContents();
-            $stream->write($echo);
-            $stream->write($streamedContents);
+        return $response->withBody($this->streamFactory->createStream($echo . strval($stream)));
+    }
+
+
+    /**
+     * @param string $name
+     * @param array $data
+     * @param bool $raw
+     * @return bool
+     */
+    public function urlTo($name, $data=[], $raw = false)
+    {
+        $generator = $this->routerContainer->getGenerator();
+        if ($raw) {
+            return $generator->generateRaw($name, $data);
         } else {
-            $stream->write($echo);
+            return $generator->generateRaw($name, $data);
         }
-        return $response;
     }
 }

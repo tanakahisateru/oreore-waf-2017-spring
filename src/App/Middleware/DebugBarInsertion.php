@@ -2,6 +2,7 @@
 namespace Acme\App\Middleware;
 
 use DebugBar\DebugBar;
+use Interop\Http\Factory\StreamFactoryInterface;
 use Interop\Http\ServerMiddleware\DelegateInterface;
 use Interop\Http\ServerMiddleware\MiddlewareInterface;
 use League\Plates\Template\Template;
@@ -24,17 +25,24 @@ class DebugBarInsertion implements MiddlewareInterface
      */
     protected $baseUrl;
 
+    /**
+     * @var StreamFactoryInterface
+     */
+    protected $streamFactory;
+
     // TODO Filter by IP or some client identifier not to show internal info.
 
     /**
      * DebugBarInsertion constructor.
      * @param DebugBar $debugbar
      * @param string $baseUrl
+     * @param StreamFactoryInterface $streamFactory
      */
-    public function __construct(DebugBar $debugbar, $baseUrl)
+    public function __construct(DebugBar $debugbar, $baseUrl, StreamFactoryInterface $streamFactory)
     {
         $this->debugbar = $debugbar;
         $this->baseUrl = $baseUrl;
+        $this->streamFactory = $streamFactory;
     }
 
     /**
@@ -75,23 +83,17 @@ class DebugBarInsertion implements MiddlewareInterface
 
         if ($this->isHtmlResponse($response)) {
             $renderer = $this->debugbar->getJavascriptRenderer($this->baseUrl);
-            $body = $response->getBody();
+            $contents = strval($response->getBody());
             $jsbody = $renderer->render();
             $jshead = $renderer->renderHead();
-            if (!$body->eof() && $body->isSeekable()) {
-                $body->rewind();
-                $contents = $body->getContents();
-                $body->rewind();
-                $body->write(str_replace([
-                    static::PLACEHOLDER_HEAD,
-                    static::PLACEHOLDER_BODY,
-                ], [
-                    $jshead,
-                    $jsbody,
-                ], $contents));
-            } else {
-                $body->write($jshead . $jsbody);
-            }
+            $contents = str_replace([
+                static::PLACEHOLDER_HEAD,
+                static::PLACEHOLDER_BODY,
+            ], [
+                $jshead,
+                $jsbody,
+            ], $contents);
+            $response = $response->withBody($this->streamFactory->createStream($contents));
         } else {
             // TODO Wrap content with HTML if debug browser directly accessed.
         }

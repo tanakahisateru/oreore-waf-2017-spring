@@ -3,9 +3,9 @@ namespace Acme\App\Middleware;
 
 use Acme\App\Router\Router;
 use Acme\App\Router\RoutingException;
-use Interop\Http\Factory\ResponseFactoryInterface;
 use Interop\Http\ServerMiddleware\DelegateInterface;
 use Interop\Http\ServerMiddleware\MiddlewareInterface;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 class RoutingHandler implements MiddlewareInterface
@@ -16,20 +16,20 @@ class RoutingHandler implements MiddlewareInterface
     protected $router;
 
     /**
-     * @var ResponseFactoryInterface
+     * @var ResponseInterface
      */
-    protected $responseFactory;
+    protected $responsePrototype;
 
     /**
      * RoutingMiddleware constructor.
      *
      * @param Router $router
-     * @param ResponseFactoryInterface $responseFactory
+     * @param ResponseInterface $responsePrototype
      */
-    public function __construct(Router $router, ResponseFactoryInterface $responseFactory)
+    public function __construct(Router $router, ResponseInterface $responsePrototype)
     {
         $this->router = $router;
-        $this->responseFactory = $responseFactory;
+        $this->responsePrototype = $responsePrototype;
     }
 
     /**
@@ -37,10 +37,8 @@ class RoutingHandler implements MiddlewareInterface
      */
     public function process(ServerRequestInterface $request, DelegateInterface $delegate)
     {
-        $responsePrototype = $this->responseFactory->createResponse();
-
         try {
-            $response = $this->router->handle($request, $responsePrototype);
+            $response = $this->router->handle($request, $this->responsePrototype);
         } catch (RoutingException $e) {
             if ($e->getStatus() == 404) {
                 return $delegate->process($request);

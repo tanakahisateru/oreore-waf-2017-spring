@@ -1,7 +1,9 @@
 <?php
+use Acme\App\Http\StreamFactoryAwareTrait;
 use Acme\App\Middleware\Generator\ErrorResponseGenerator;
 use Acme\App\Middleware\Generator\WhoopsErrorResponseGenerator;
 use Acme\App\Router\Router;
+use Acme\App\Router\RouterAwareInterface;
 use Acme\App\View\Template\EscaperExtension;
 use Acme\App\View\View;
 use Acme\App\View\ViewFactoryAwareInterface;
@@ -71,6 +73,10 @@ $di->set('http.uploadedFileFactory', $di->lazyNew(UploadedFileFactory::class));
 $di->set('http.uriFactory', $di->lazyNew(UriFactory::class));
 $di->set('http.streamFactory', $di->lazyNew(StreamFactory::class));
 
+$di->setters[StreamFactoryAwareTrait::class] = [
+    'setStreamFactory' => $di->lazyGet('http.streamFactory'),
+];
+
 /////////////////////////////////////////////////////////////////////
 // PSR-15 pipeline
 
@@ -117,6 +123,10 @@ $di->set('routerContainer', $dix->lazyNew(RouterContainer::class, [
     'params' => $params,
 ]));
 
+$di->setters[RouterAwareInterface::class] = [
+    'setRouter' => $di->lazyGet('router'),
+];
+
 /////////////////////////////////////////////////////////////////////
 // HTML rendering
 
@@ -150,11 +160,16 @@ $di->setters[ViewFactoryAwareInterface::class] = [
 ];
 
 /////////////////////////////////////////////////////////////////////
-// DebugBar
+// Debug
 
 if ($params['env'] == 'dev') {
 
-    $di->set('errorResponseGenerator', $di->lazyNew(WhoopsErrorResponseGenerator::class));
+    $di->set('errorResponseGenerator', $di->lazyNew(WhoopsErrorResponseGenerator::class, [
+        'delegateGenerator' => $di->lazyNew(ErrorResponseGenerator::class, [
+            'router' => $di->lazyGet('router'),
+            'controller' => 'error',
+        ])
+    ]));
 
     $di->set('debugbar', $dix->lazyNew(StandardDebugBar::class)
         ->modifiedBy(function (DebugBar $debugBar) use ($di, $params) {

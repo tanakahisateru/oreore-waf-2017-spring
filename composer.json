@@ -13,6 +13,7 @@
         "league/plates": "^3.3",
         "mobiledetect/mobiledetectlib": "^2.8",
         "monolog/monolog": "^1.22",
+        "sumeko/http-exception": "^1.1",
         "webmozart/path-util": "^2.3",
         "zendframework/zend-escaper": "^2.5",
         "zendframework/zend-eventmanager": "^3.1",
