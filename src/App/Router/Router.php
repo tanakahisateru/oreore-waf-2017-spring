@@ -29,10 +29,8 @@ class Router
      * @param RouterContainer $routes
      * @param ActionDispatcher $dispatcher
      */
-    public function __construct(
-        RouterContainer $routes,
-        ActionDispatcher $dispatcher
-    ) {
+    public function __construct(RouterContainer $routes, ActionDispatcher $dispatcher)
+    {
         $this->routes = $routes;
         $this->dispatcher = $dispatcher;
     }
@@ -50,13 +48,11 @@ class Router
 
         if (!$route) {
             $failedRoute = $matcher->getFailedRoute();
-            throw static::guessHttpException($failedRoute);
+            throw static::createHttpExceptionFromFailedRoute($failedRoute);
         }
 
-        $params = $this->guessDispatcherParams($route);
-        foreach ($route->attributes as $k => $v) {
-            $params[$k] = $v;
-        }
+        $params = $this->dispatcherParams($route);
+
         $params['request'] = $request->withAttribute('responsePrototype', $responsePrototype);
         $params['response'] = $responsePrototype;
 
@@ -67,42 +63,56 @@ class Router
      * @param Route $route
      * @return array
      */
-    private function guessDispatcherParams(Route $route)
+    protected function dispatcherParams(Route $route)
     {
         if (is_callable($route->handler)) {
-            return [
+            $params = [
                 'controller' => $route->handler
+            ];
+        } else {
+            list($controller, $action) = $this->guessControllerAndActionFromName($route->handler);
+            $params = [
+                'controller' => $controller,
+                'action' => 'action' . ucfirst($action),
             ];
         }
 
-        $routeName = $route->handler;
-        if (($sep = strpos($routeName, ':')) !== false) {
-            $routeName = substr($routeName, 0, $sep);
+        foreach ($route->attributes as $k => $v) {
+            $params[$k] = $v;
         }
-        $elements = explode(".", $routeName);
+
+        return $params;
+    }
+
+    /**
+     * @param string $name
+     * @return array
+     */
+    protected function guessControllerAndActionFromName($name)
+    {
+        if (($sep = strpos($name, ':')) !== false) {
+            $name = substr($name, 0, $sep);
+        }
+        $elements = explode(".", $name);
         if (count($elements) < 2) {
-            throw new \UnexpectedValueException('Bad route name: ' . $routeName);
+            throw new \UnexpectedValueException('Bad route name: ' . $name);
         }
 
         $action = array_pop($elements);
         $controller = implode('.', $elements);
-
-        return [
-            'controller' => $controller,
-            'action' => 'action' . ucfirst($action),
-        ];
+        return [$controller, $action];
     }
 
     /**
-     * @param Route $failedRoute
+     * @param Route $route
      * @return HttpException
      */
-    private static function guessHttpException($failedRoute)
+    protected static function createHttpExceptionFromFailedRoute(Route $route)
     {
-        if (!$failedRoute) {
+        if (!$route) {
             return new NotFoundException();
         }
-        switch ($failedRoute->failedRule) {
+        switch ($route->failedRule) {
             case Allows::class:
                 // 405 METHOD NOT ALLOWED
                 return new MethodNotAllowedException();
