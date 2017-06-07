@@ -66,11 +66,7 @@ class View implements EventManagerAwareInterface, LoggerAwareInterface
      * @param AssetManager $assetManager
      * @internal param Router $router
      */
-    public function __construct(
-        callable $templateEngineFactory,
-        Generator $urlGenerator,
-        AssetManager $assetManager
-    )
+    public function __construct(callable $templateEngineFactory, Generator $urlGenerator, AssetManager $assetManager)
     {
         $this->templateEngineFactory = $templateEngineFactory;
         $this->urlGenerator = $urlGenerator;

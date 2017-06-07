@@ -24,10 +24,13 @@ class ActionDispatcher
      */
     protected $streamFactory;
 
-    public function __construct(
-        ControllerProvider $controllerProvider,
-        StreamFactoryInterface $streamFactory
-    ) {
+    /**
+     * ActionDispatcher constructor.
+     * @param ControllerProvider $controllerProvider
+     * @param StreamFactoryInterface $streamFactory
+     */
+    public function __construct(ControllerProvider $controllerProvider, StreamFactoryInterface $streamFactory)
+    {
         $this->controllerProvider = $controllerProvider;
         $this->streamFactory = $streamFactory;
     }
