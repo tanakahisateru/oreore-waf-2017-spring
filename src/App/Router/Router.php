@@ -7,17 +7,13 @@ use Aura\Router\Rule\Accepts;
 use Aura\Router\Rule\Allows;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Log\LoggerAwareInterface;
-use Psr\Log\LoggerAwareTrait;
 use Sumeko\Http\Exception as HttpException;
 use Sumeko\Http\Exception\MethodNotAllowedException;
 use Sumeko\Http\Exception\NotAcceptableException;
 use Sumeko\Http\Exception\NotFoundException;
 
-class Router implements LoggerAwareInterface
+class Router
 {
-    use LoggerAwareTrait;
-
     /**
      * @var RouterContainer
      */
