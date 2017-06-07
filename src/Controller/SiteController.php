@@ -1,8 +1,9 @@
 <?php
 namespace Acme\Controller;
 
-use Acme\App\Controller\ControllerInterface;
-use Acme\App\Controller\ControllerTrait;
+use Acme\App\Controller\ControllerEventManagerAwareTrait;
+use Acme\App\Controller\PresentationHelperAwareInterface;
+use Acme\App\Controller\PresentationHelperAwareTrait;
 use Acme\App\Router\Router;
 use Acme\App\View\View;
 use Acme\Util\Mobile;
@@ -14,13 +15,15 @@ use Psr\Log\LogLevel;
 use Sumeko\Http\Exception\ForbiddenException;
 use Sumeko\Http\Exception\NotFoundException;
 use Zend\EventManager\EventInterface;
+use Zend\EventManager\EventManagerAwareInterface;
 
-class SiteController implements ControllerInterface, LoggerAwareInterface
+class SiteController implements PresentationHelperAwareInterface, EventManagerAwareInterface, LoggerAwareInterface
 {
-    const TEMPLATE_FOLDER = 'site';
-
-    use ControllerTrait;
+    use PresentationHelperAwareTrait;
+    use ControllerEventManagerAwareTrait;
     use LoggerAwareTrait;
+
+    const TEMPLATE_FOLDER = 'site';
 
     /**
      * @var \PDO
@@ -46,7 +49,7 @@ class SiteController implements ControllerInterface, LoggerAwareInterface
         $events->attach(Router::EVENT_BEFORE_ACTION, function (EventInterface $event) {
             $queryParams = $event->getParam('request')->getQueryParams();
             if (isset($queryParams['stop'])) {
-                $response = $this->responseAgent->textResponse(
+                $response = $this->textResponse(
                     'The action stopped while afterAction because query param "stop" was specified.'
                 );
                 $event->setParam('response', $response);
@@ -68,7 +71,7 @@ class SiteController implements ControllerInterface, LoggerAwareInterface
 
         $view = $this->createView($request);
 
-        return $this->responseAgent->htmlResponse($view->render('current::index.php', [
+        return $this->htmlResponse($view->render('current::index.php', [
             'greeting' => $greeting,
         ]));
     }
@@ -98,7 +101,7 @@ class SiteController implements ControllerInterface, LoggerAwareInterface
             $to = 'site.index';
         }
 
-        return $this->responseAgent->redirectResponseToRoute($to);
+        return $this->redirectResponseToRoute($to);
     }
 
     /**
@@ -123,7 +126,7 @@ class SiteController implements ControllerInterface, LoggerAwareInterface
      */
     protected function createView(ServerRequestInterface $request)
     {
-        $view = $this->responseAgent->createView();
+        $view = $this->presentationHelper->createView();
 
         $mobileDetect = Mobile::detect($request);
         if ($mobileDetect->isMobile()) {

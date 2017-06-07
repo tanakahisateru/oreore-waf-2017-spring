@@ -34,4 +34,11 @@ class SiteCest
         $I->amOnPage('/privacy');
         $I->seeInTitle('Privacy Policy');
     }
+
+    public function notFound(FunctionalTester $I)
+    {
+        $I->amOnPage('/xxx');
+        $I->seePageNotFound();
+        $I->see('Sorry,');
+    }
 }

@@ -14,7 +14,7 @@ use Psr\Http\Message\ServerRequestInterface;
 class RouterTest extends TestCase
 {
     /**
-     * @var ControllerProviderInterface
+     * @var ControllerProvider
      */
     protected $controllerProvider;
 
@@ -125,7 +125,7 @@ class RouterTest extends TestCase
 
     protected function setUp()
     {
-        $this->controllerProvider = $this->createMock(ControllerProviderInterface::class);
+        $this->controllerProvider = $this->createMock(ControllerProvider::class);
         $this->requestFactory = new ServerRequestFactory();
         $this->responseFactory = new ResponseFactory();
         $this->streamFactory = new StreamFactory();

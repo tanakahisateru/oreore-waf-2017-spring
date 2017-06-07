@@ -1,15 +1,10 @@
 <?php
-use Acme\App\Controller\ControllerInterface;
-use Acme\App\Controller\ControllerProvider;
+use Acme\App\Router\ControllerProvider;
 use Acme\Controller\ErrorController;
 use Acme\Controller\SiteController;
 use Aura\Di\Container;
 
 /** @var Container $di */
-
-$di->setters[ControllerInterface::class] = [
-    'setResponseAgent' => $di->lazyGet('responseAgent'),
-];
 
 $di->set('controllerProvider', $di->lazyNew(ControllerProvider::class, ['controllerFactories' => [
 

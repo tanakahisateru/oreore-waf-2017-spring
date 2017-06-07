@@ -28,7 +28,7 @@ class Router implements LoggerAwareInterface
     protected $routerContainer;
 
     /**
-     * @var ControllerProviderInterface
+     * @var ControllerProvider
      */
     protected $controllerProvider;
 
@@ -42,12 +42,12 @@ class Router implements LoggerAwareInterface
     /**
      * Router constructor.
      * @param RouterContainer $routerContainer
-     * @param ControllerProviderInterface $controllerProvider
+     * @param ControllerProvider $controllerProvider
      * @param StreamFactoryInterface $streamFactory
      */
     public function __construct(
         RouterContainer $routerContainer,
-        ControllerProviderInterface $controllerProvider,
+        ControllerProvider $controllerProvider,
         StreamFactoryInterface $streamFactory
     ) {
         $this->routerContainer = $routerContainer;

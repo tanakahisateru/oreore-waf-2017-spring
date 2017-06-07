@@ -1,14 +1,15 @@
 <?php
 namespace Acme\Controller;
 
-use Acme\App\Controller\ControllerInterface;
-use Acme\App\Controller\ControllerTrait;
+use Acme\App\Controller\PresentationHelperAwareInterface;
+use Acme\App\Controller\PresentationHelperAwareTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Sumeko\Http\Exception as HttpException;
 
-class ErrorController implements ControllerInterface
+class ErrorController implements PresentationHelperAwareInterface
 {
-    use ControllerTrait;
+    use PresentationHelperAwareTrait;
 
     /**
      * @var array
@@ -32,26 +33,26 @@ class ErrorController implements ControllerInterface
     }
 
     /**
-     * @param $statusCode
-     * @param $reasonPhrase
-     * @param $request
-     * @param $response
+     * @param HttpException $error
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
      * @return ResponseInterface
      */
-    public function __invoke($statusCode, $reasonPhrase, ServerRequestInterface $request, ResponseInterface $response)
+    public function __invoke(HttpException $error, ServerRequestInterface $request, ResponseInterface $response)
     {
+        $statusCode = $error->getCode();
+
         if (isset($this->statusToTemplate[$statusCode])) {
             $template = $this->statusToTemplate[$statusCode];
         } else {
             $template = $this->defaultTemplate;
         }
 
-        $view = $this->responseAgent->createView();
+        $view = $this->createView();
 
-        return $this->responseAgent->htmlResponse($view->render($template, [
-            'statusCode' => $statusCode,
-            'reasonPhrase' => $reasonPhrase,
+        return $this->htmlResponse($view->render($template, [
+            'error' => $error,
             'request' => $request,
-        ]));
+        ]), $statusCode);
     }
 }

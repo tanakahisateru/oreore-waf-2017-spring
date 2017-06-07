@@ -7,7 +7,7 @@ use Interop\Http\Factory\StreamFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 
-class ResponseAgent
+class PresentationHelper
 {
     /**
      * @var Generator

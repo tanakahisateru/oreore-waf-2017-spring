@@ -1,9 +1,7 @@
 <?php
-namespace Acme\App\Controller;
+namespace Acme\App\Router;
 
-use Acme\App\Router\ControllerProviderInterface;
-
-class ControllerProvider implements ControllerProviderInterface
+class ControllerProvider
 {
     /**
      * @var array

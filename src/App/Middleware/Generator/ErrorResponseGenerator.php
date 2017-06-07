@@ -15,7 +15,7 @@ class ErrorResponseGenerator
     protected $router;
 
     /**
-     * @var object|callable
+     * @var object|callable|string
      */
     protected $controller;
 
@@ -27,7 +27,7 @@ class ErrorResponseGenerator
     /**
      * ErrorResponseGenerator constructor.
      * @param Router $router
-     * @param object|callable $controller
+     * @param object|callable|string $controller
      * @param string|null $action
      */
     public function __construct(Router $router, $controller, $action = null)
@@ -57,35 +57,20 @@ class ErrorResponseGenerator
             }
         }
 
-        $response = $response->withStatus($e->getCode(), $e->getMessage());
-
-        try{
-            $params = [
-                'controller' => $this->controller,
-            ];
-            if ($this->action) {
-                $params['action'] = $this->action;
-            }
-            $params = array_merge($params, [
-                'statusCode' => $response->getStatusCode(),
-                'reasonPhrase' => $response->getReasonPhrase(),
-                'request' => $request->withAttribute('responsePrototype', $response),
-                'response' => $response,
-            ]);
-
-            $response = $this->router->dispatch($params);
-        } /** @noinspection PhpUndefinedClassInspection */ catch (\Throwable $ee) {
-            $response = $this->handleErrorViewError($response);
-        } catch (\Exception $ee) {
-            $response = $this->handleErrorViewError($response);
+        $params = [
+            'controller' => $this->controller,
+        ];
+        if ($this->action) {
+            $params['action'] = $this->action;
         }
+        $params = array_merge($params, [
+            'error' => $e,
+            'request' => $request->withAttribute('responsePrototype', $response),
+            'response' => $response,
+        ]);
+
+        $response = $this->router->dispatch($params);
 
         return $response;
-    }
-
-    private function handleErrorViewError(ResponseInterface $response)
-    {
-        $response->getBody()->write($response->getReasonPhrase() ?: 'Unknown Error');
-        return $response->withHeader('Content-Type', 'text/html');
     }
 }

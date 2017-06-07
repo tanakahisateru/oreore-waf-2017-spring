@@ -3,25 +3,12 @@ namespace Acme\App\Controller;
 
 use Zend\EventManager\EventManagerAwareTrait;
 
-trait ControllerTrait
+trait ControllerEventManagerAwareTrait
 {
     use EventManagerAwareTrait;
 
     // Category tag for system-wide event listener
     public $eventIdentifier = ['controller'];
-
-    /**
-     * @var ResponseAgent
-     */
-    protected $responseAgent;
-
-    /**
-     * @param ResponseAgent $responseAgent
-     */
-    public function setResponseAgent(ResponseAgent $responseAgent)
-    {
-        $this->responseAgent = $responseAgent;
-    }
 
     /**
      * Implement default event listeners here.

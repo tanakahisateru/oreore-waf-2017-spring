@@ -1,5 +1,6 @@
 <?php
-use Acme\App\Controller\ResponseAgent;
+use Acme\App\Controller\PresentationHelper;
+use Acme\App\Controller\PresentationHelperAwareInterface;
 use Acme\App\Middleware\Generator\ErrorResponseGenerator;
 use Acme\App\Middleware\Generator\WhoopsErrorResponseGenerator;
 use Acme\App\Router\Router;
@@ -118,12 +119,16 @@ $di->set('routerContainer', $dix->lazyNew(RouterContainer::class, [
     'params' => $params,
 ]));
 
-$di->set('responseAgent', $di->lazyNew(ResponseAgent::class, [
+$di->set('presentationHelper', $di->lazyNew(PresentationHelper::class, [
     'viewFactory' => $di->lazyGet('viewFactory'),
     'urlGenerator' => $di->lazyGet('urlGenerator'),
     'responsePrototype' => $di->lazyGetCall('http.responseFactory', 'createResponse'),
     'streamFactory' => $di->lazyGet('http.streamFactory'),
 ]));
+
+$di->setters[PresentationHelperAwareInterface::class] = [
+    'setPresentationHelper' => $di->lazyGet('presentationHelper'),
+];
 
 $di->set('urlGenerator', $di->lazyGetCall('routerContainer', 'getGenerator'));
 

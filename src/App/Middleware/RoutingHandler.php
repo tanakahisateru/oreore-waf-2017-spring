@@ -39,6 +39,7 @@ class RoutingHandler implements MiddlewareInterface
     {
         try {
             $response = $this->router->handle($request, $this->responsePrototype);
+            return $response;
         } catch (RoutingException $e) {
             if ($e->getStatus() == 404) {
                 return $delegate->process($request);
@@ -46,7 +47,5 @@ class RoutingHandler implements MiddlewareInterface
                 throw $e;
             }
         }
-
-        return $response;
     }
 }
