@@ -1,7 +1,6 @@
 <?php
 namespace Acme\App\Router;
 
-use Aura\Router\RouterContainer;
 use Http\Factory\Diactoros\ResponseFactory;
 use Http\Factory\Diactoros\ServerRequestFactory;
 use Http\Factory\Diactoros\StreamFactory;
@@ -11,7 +10,7 @@ use Interop\Http\Factory\StreamFactoryInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 
-class RouterTest extends TestCase
+class ActionDispatcherTest extends TestCase
 {
     /**
      * @var ControllerProvider
@@ -35,7 +34,7 @@ class RouterTest extends TestCase
 
     public function testDispatchToPsr7SinglePassCallable()
     {
-        $router = new Router(new RouterContainer(), $this->controllerProvider, $this->streamFactory);
+        $dispatcher = new ActionDispatcher($this->controllerProvider, $this->streamFactory);
 
         $self = $this;
         $handler = function (ServerRequestInterface $request) use ($self) {
@@ -47,7 +46,7 @@ class RouterTest extends TestCase
             return $response;
         };
 
-        $response = $router->dispatch([
+        $response = $dispatcher->dispatch([
             'controller' => $handler,
             'request' => $this->requestFactory->createServerRequest('GET', '/'),
             'response' => $this->responseFactory->createResponse(),
@@ -62,13 +61,13 @@ class RouterTest extends TestCase
 
     public function testDispatchToStringReturningCallable()
     {
-        $router = new Router(new RouterContainer(), $this->controllerProvider, $this->streamFactory);
+        $dispatcher = new ActionDispatcher($this->controllerProvider, $this->streamFactory);
 
         $handler = function () {
             return 'callable handler response';
         };
 
-        $response = $router->dispatch([
+        $response = $dispatcher->dispatch([
             'controller' => $handler,
             'request' => $this->requestFactory->createServerRequest('GET', '/'),
             'response' => $this->responseFactory->createResponse(),
@@ -83,13 +82,13 @@ class RouterTest extends TestCase
 
     public function testDispatchToArrayReturningCallable()
     {
-        $router = new Router(new RouterContainer(), $this->controllerProvider, $this->streamFactory);
+        $dispatcher = new ActionDispatcher($this->controllerProvider, $this->streamFactory);
 
         $handler = function () {
             return ['foo' => 'bar'];
         };
 
-        $response = $router->dispatch([
+        $response = $dispatcher->dispatch([
             'controller' => $handler,
             'request' => $this->requestFactory->createServerRequest('GET', '/'),
             'response' => $this->responseFactory->createResponse(),
@@ -104,13 +103,13 @@ class RouterTest extends TestCase
 
     public function testDispatchToStreamOutputCallable()
     {
-        $router = new Router(new RouterContainer(), $this->controllerProvider, $this->streamFactory);
+        $dispatcher = new ActionDispatcher($this->controllerProvider, $this->streamFactory);
 
         $handler = function () {
             echo "callable handler response";
         };
 
-        $response = $router->dispatch([
+        $response = $dispatcher->dispatch([
             'controller' => $handler,
             'request' => $this->requestFactory->createServerRequest('GET', '/'),
             'response' => $this->responseFactory->createResponse(),

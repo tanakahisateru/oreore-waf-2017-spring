@@ -6,7 +6,7 @@ use Aura\Di\Container;
 
 /** @var Container $di */
 
-$di->set('controllerProvider', $di->lazyNew(ControllerProvider::class, ['controllerFactories' => [
+$di->set('controllerProvider', $di->lazyNew(ControllerProvider::class, ['factories' => [
 
     'error' => $di->newFactory(ErrorController::class, [
         'statusToTemplate' => [

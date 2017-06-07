@@ -2,11 +2,11 @@
 namespace Acme\App\Middleware;
 
 use Acme\App\Router\Router;
-use Acme\App\Router\RoutingException;
 use Interop\Http\ServerMiddleware\DelegateInterface;
 use Interop\Http\ServerMiddleware\MiddlewareInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Sumeko\Http\Exception\NotFoundException;
 
 class RoutingHandler implements MiddlewareInterface
 {
@@ -38,14 +38,9 @@ class RoutingHandler implements MiddlewareInterface
     public function process(ServerRequestInterface $request, DelegateInterface $delegate)
     {
         try {
-            $response = $this->router->handle($request, $this->responsePrototype);
-            return $response;
-        } catch (RoutingException $e) {
-            if ($e->getStatus() == 404) {
-                return $delegate->process($request);
-            } else {
-                throw $e;
-            }
+            return $this->router->handle($request, $this->responsePrototype);
+        } catch (NotFoundException $e) {
+            return $delegate->process($request);
         }
     }
 }

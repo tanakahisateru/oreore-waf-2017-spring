@@ -4,17 +4,17 @@ namespace Acme\App\Router;
 class ControllerProvider
 {
     /**
-     * @var array
+     * @var callable[]
      */
-    protected $controllerFactories;
+    protected $factories;
 
     /**
      * ControllerManager constructor.
-     * @param array $controllerFactories
+     * @param array $factories
      */
-    public function __construct(array $controllerFactories)
+    public function __construct(array $factories)
     {
-        $this->controllerFactories = $controllerFactories;
+        $this->factories = $factories;
     }
 
     /**
@@ -23,11 +23,11 @@ class ControllerProvider
      */
     public function createController($name)
     {
-        if (!isset($this->controllerFactories[$name])) {
+        if (!isset($this->factories[$name])) {
             throw new \LogicException("Controller not defined for: " . $name);
         }
 
-        $factory = $this->controllerFactories[$name];
+        $factory = $this->factories[$name];
         return call_user_func($factory);
     }
 }

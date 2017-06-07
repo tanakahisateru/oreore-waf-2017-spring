@@ -4,7 +4,7 @@ namespace Acme\Controller;
 use Acme\App\Controller\ControllerEventManagerAwareTrait;
 use Acme\App\Controller\PresentationHelperAwareInterface;
 use Acme\App\Controller\PresentationHelperAwareTrait;
-use Acme\App\Router\Router;
+use Acme\App\Router\ActionDispatcher;
 use Acme\App\View\View;
 use Acme\Util\Mobile;
 use Psr\Http\Message\ResponseInterface;
@@ -46,7 +46,7 @@ class SiteController implements PresentationHelperAwareInterface, EventManagerAw
     {
         $events = $this->getEventManager();
 
-        $events->attach(Router::EVENT_BEFORE_ACTION, function (EventInterface $event) {
+        $events->attach(ActionDispatcher::EVENT_BEFORE_ACTION, function (EventInterface $event) {
             $queryParams = $event->getParam('request')->getQueryParams();
             if (isset($queryParams['stop'])) {
                 $response = $this->textResponse(

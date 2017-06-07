@@ -3,6 +3,7 @@ use Acme\App\Controller\PresentationHelper;
 use Acme\App\Controller\PresentationHelperAwareInterface;
 use Acme\App\Middleware\Generator\ErrorResponseGenerator;
 use Acme\App\Middleware\Generator\WhoopsErrorResponseGenerator;
+use Acme\App\Router\ActionDispatcher;
 use Acme\App\Router\Router;
 use Acme\App\View\Template\EscaperExtension;
 use Acme\App\View\View;
@@ -83,7 +84,7 @@ $di->set('middlewarePipe', $dix->lazyNew(MiddlewarePipe::class)
 );
 
 $di->set('errorResponseGenerator', $di->lazyNew(ErrorResponseGenerator::class, [
-    'router' => $di->lazyGet('router'),
+    'dispatcher' => $di->lazyGet('dispatcher'),
     'controller' => 'error',
 ]));
 
@@ -105,12 +106,11 @@ $di->set('errorHandlerMiddleware', $dix->lazyNew(ErrorHandler::class, [
 // routing - dispatching
 
 $di->set('router', $di->lazyNew(Router::class, [
-    'routerContainer' => $di->lazyGet('routerContainer'),
-    'controllerProvider' => $di->lazyGet('controllerProvider'),
-    'streamFactory' => $di->lazyGet('http.streamFactory'),
+    'routes' => $di->lazyGet('routes'),
+    'dispatcher' => $di->lazyGet('dispatcher'),
 ]));
 
-$di->set('routerContainer', $dix->lazyNew(RouterContainer::class, [
+$di->set('routes', $dix->lazyNew(RouterContainer::class, [
     'basepath' => null,
 ], [
     'setLoggerFactory' => $dix->newLocator('logger'),
@@ -118,6 +118,16 @@ $di->set('routerContainer', $dix->lazyNew(RouterContainer::class, [
     'di' => $di,
     'params' => $params,
 ]));
+
+$di->set('dispatcher', $di->lazyNew(ActionDispatcher::class, [
+    'controllerProvider' => $di->lazyGet('controllerProvider'),
+    'streamFactory' => $di->lazyGet('http.streamFactory'),
+]));
+
+$di->set('urlGenerator', $di->lazyGetCall('routes', 'getGenerator'));
+
+/////////////////////////////////////////////////////////////////////
+// Controller helpers
 
 $di->set('presentationHelper', $di->lazyNew(PresentationHelper::class, [
     'viewFactory' => $di->lazyGet('viewFactory'),
@@ -129,8 +139,6 @@ $di->set('presentationHelper', $di->lazyNew(PresentationHelper::class, [
 $di->setters[PresentationHelperAwareInterface::class] = [
     'setPresentationHelper' => $di->lazyGet('presentationHelper'),
 ];
-
-$di->set('urlGenerator', $di->lazyGetCall('routerContainer', 'getGenerator'));
 
 /////////////////////////////////////////////////////////////////////
 // HTML rendering
@@ -167,7 +175,7 @@ if ($params['env'] == 'dev') {
 
     $di->set('errorResponseGenerator', $di->lazyNew(WhoopsErrorResponseGenerator::class, [
         'delegateGenerator' => $di->lazyNew(ErrorResponseGenerator::class, [
-            'router' => $di->lazyGet('router'),
+            'dispatcher' => $di->lazyGet('dispatcher'),
             'controller' => 'error',
         ])
     ]));

@@ -1,7 +1,7 @@
 <?php
 namespace Acme\App\Middleware\Generator;
 
-use Acme\App\Router\Router;
+use Acme\App\Router\ActionDispatcher;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Sumeko\Http\Exception as HttpException;
@@ -10,9 +10,9 @@ use Sumeko\Http\Exception\InternalServerErrorException;
 class ErrorResponseGenerator
 {
     /**
-     * @var Router
+     * @var ActionDispatcher
      */
-    protected $router;
+    protected $dispatcher;
 
     /**
      * @var object|callable|string
@@ -26,13 +26,13 @@ class ErrorResponseGenerator
 
     /**
      * ErrorResponseGenerator constructor.
-     * @param Router $router
+     * @param ActionDispatcher $dispatcher
      * @param object|callable|string $controller
      * @param string|null $action
      */
-    public function __construct(Router $router, $controller, $action = null)
+    public function __construct(ActionDispatcher $dispatcher, $controller, $action = null)
     {
-        $this->router = $router;
+        $this->dispatcher = $dispatcher;
         $this->controller = $controller;
         $this->action = $action;
     }
@@ -48,9 +48,7 @@ class ErrorResponseGenerator
     public function __invoke($e, ServerRequestInterface $request, ResponseInterface $response)
     {
         if (!($e instanceof HttpException)) {
-            if (interface_exists('\Throwable') && $e instanceof \Throwable) {
-                $e = new InternalServerErrorException("Internal Server Error", 500, $e);
-            } elseif ($e instanceof \Exception) {
+            if ($e instanceof \Exception) {
                 $e = new InternalServerErrorException("Internal Server Error", 500, $e);
             } else {
                 $e = new InternalServerErrorException();
@@ -69,7 +67,7 @@ class ErrorResponseGenerator
             'response' => $response,
         ]);
 
-        $response = $this->router->dispatch($params);
+        $response = $this->dispatcher->dispatch($params);
 
         return $response;
     }
