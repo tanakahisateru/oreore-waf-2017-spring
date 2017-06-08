@@ -27,12 +27,18 @@ class ControllerProvider
      */
     public function createController($name)
     {
-        if (!isset($this->factories[$name])) {
-            throw new \LogicException("Controller not defined for: " . $name);
-        }
+        $elements = explode('.', $name);
+        $node = $this->factories;
 
-        $factory = $this->factories[$name];
-        $controller = call_user_func($factory);
+        do {
+            $element = array_shift($elements);
+            if (!isset($node[$element])) {
+                throw new \LogicException("Controller not defined for: " . $name);
+            }
+            $node = $node[$element];
+        } while (!empty($elements));
+
+        $controller = call_user_func($node);
 
         if ($controller instanceof EventsCapableInterface) {
             $controller->getEventManager()->trigger(static::EVENT_INSTANCE_READY, $controller);

@@ -20,10 +20,12 @@ $di->set('controllerProvider', $di->lazyNew(ControllerProvider::class, ['factori
     ]),
 
     // Example:
-    // 'admin.news' => $di->lazyNew(Admin\NewsController::class, [
-    //     'db' => $di->lazyGet('db1'),
-    //     'backendDb' => $di->lazyGet('db2'),
-    // ], [
-    //     'setAuditTrailStamper' => $di->get('auditTrailStamper'),
-    // ]),
+    // 'admin' => [
+    //     'news' => $di->lazyNew(Admin\NewsController::class, [
+    //         'db' => $di->lazyGet('db1'),
+    //         'backendDb' => $di->lazyGet('db2'),
+    //     ], [
+    //         'setAuditTrailStamper' => $di->get('auditTrailStamper'),
+    //     ]),  // --- Matches to route: admin.news.*
+    // ],
 ]]));
