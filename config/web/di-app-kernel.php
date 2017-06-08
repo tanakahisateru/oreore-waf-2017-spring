@@ -94,10 +94,14 @@ $di->set('errorHandlerMiddleware', $dix->lazyNew(ErrorHandler::class, [
 ])->modifiedBy(function (ErrorHandler $errorHandler) use ($di) {
     $logger = $di->get('logger');
     $errorHandler->attachListener(function ($error, ServerRequestInterface $request) use ($logger) {
-        /** @var Exception|mixed $error */
-        $logger->error(sprintf("%s(\"%s\") - %s", get_class($error), $error->getMessage(), $request->getUri()));
-        foreach (explode("\n", $error->getTraceAsString()) as $trace) {
-            $logger->error($trace);
+        if ($error instanceof \Sumeko\Http\ClientException) {
+            $logger->info(sprintf("%s(\"%s\") - %s", get_class($error), $error->getMessage(), $request->getUri()));
+        } else {
+            /** @var Exception $error */
+            $logger->error(sprintf("%s(\"%s\") - %s", get_class($error), $error->getMessage(), $request->getUri()));
+            foreach (explode("\n", $error->getTraceAsString()) as $trace) {
+                $logger->error($trace);
+            }
         }
     });
 }));
