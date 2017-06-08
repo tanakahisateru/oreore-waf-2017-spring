@@ -62,7 +62,7 @@ class SiteController implements PresentationHelperAwareInterface, EventManagerAw
      * @param ServerRequestInterface $request
      * @return ResponseInterface
      */
-    public function actionIndex($request)
+    public function index($request)
     {
         $this->logger->log(LogLevel::DEBUG, 'site.index');
 
@@ -79,7 +79,7 @@ class SiteController implements PresentationHelperAwareInterface, EventManagerAw
     /**
      * @param ResponseInterface $response
      */
-    public function actionContact($response)
+    public function contact($response)
     {
         $this->logger->debug('site.contact');
 
@@ -92,7 +92,7 @@ class SiteController implements PresentationHelperAwareInterface, EventManagerAw
      * @param ServerRequestInterface $request
      * @return ResponseInterface
      */
-    public function actionRedirect($request)
+    public function redirect($request)
     {
         $params = $request->getQueryParams();
         if (isset($params['route'])) {
@@ -107,7 +107,7 @@ class SiteController implements PresentationHelperAwareInterface, EventManagerAw
     /**
      * @throws NotFoundException
      */
-    public function actionNotFound()
+    public function notFound()
     {
         throw new NotFoundException();
     }
@@ -115,7 +115,7 @@ class SiteController implements PresentationHelperAwareInterface, EventManagerAw
     /**
      * @throws ForbiddenException
      */
-    public function actionForbidden()
+    public function forbidden()
     {
         throw new ForbiddenException();
     }

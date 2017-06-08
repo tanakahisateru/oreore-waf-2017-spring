@@ -73,7 +73,7 @@ class Router
             list($controller, $action) = $this->guessControllerAndActionFromName($route->handler);
             $params = [
                 'controller' => $controller,
-                'action' => 'action' . ucfirst($action),
+                'action' => $action,
             ];
         }
 
