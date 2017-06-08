@@ -1,6 +1,7 @@
 <?php
-namespace Acme\App\Middleware\Generator;
+namespace Acme\App\Debug\Middleware\Generator;
 
+use Acme\App\Middleware\Generator\ErrorResponseGenerator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Sumeko\Http\ClientException;

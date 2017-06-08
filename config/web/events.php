@@ -1,5 +1,5 @@
 <?php
-use Acme\App\Middleware\DebugBarInsertion;
+use Acme\App\Debug\Middleware\DebugBarInsertion;
 use Aura\Di\Container;
 use Zend\EventManager\EventInterface;
 use Zend\EventManager\SharedEventManagerInterface;

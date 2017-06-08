@@ -1,5 +1,5 @@
 <?php
-namespace Acme\App\Middleware;
+namespace Acme\App\Debug\Middleware;
 
 use DebugBar\DebugBar;
 use Interop\Http\Factory\StreamFactoryInterface;

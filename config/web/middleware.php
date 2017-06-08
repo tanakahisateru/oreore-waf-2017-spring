@@ -1,5 +1,5 @@
 <?php
-use Acme\App\Middleware\DebugBarInsertion;
+use Acme\App\Debug\Middleware\DebugBarInsertion;
 use Acme\App\Middleware\NotFoundHandler;
 use Acme\App\Middleware\RoutingHandler;
 use Acme\App\Middleware\WebAppBootstrap;

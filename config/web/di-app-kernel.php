@@ -1,6 +1,6 @@
 <?php
+use Acme\App\Debug\Middleware\Generator\WhoopsErrorResponseGenerator;
 use Acme\App\Middleware\Generator\ErrorResponseGenerator;
-use Acme\App\Middleware\Generator\WhoopsErrorResponseGenerator;
 use Acme\App\Presentation\PresentationHelper;
 use Acme\App\Presentation\PresentationHelperAwareInterface;
 use Acme\App\Router\ActionDispatcher;
