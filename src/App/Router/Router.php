@@ -109,19 +109,18 @@ class Router
      */
     protected static function createHttpExceptionFromFailedRoute(Route $route)
     {
-        if (!$route) {
-            return new NotFoundException();
+        if ($route) {
+            switch ($route->failedRule) {
+                case Allows::class:
+                    // 405 METHOD NOT ALLOWED
+                    return new MethodNotAllowedException();
+                case Accepts::class:
+                    // 406 NOT ACCEPTABLE
+                    return new NotAcceptableException();
+            }
         }
-        switch ($route->failedRule) {
-            case Allows::class:
-                // 405 METHOD NOT ALLOWED
-                return new MethodNotAllowedException();
-            case Accepts::class:
-                // 406 NOT ACCEPTABLE
-                return new NotAcceptableException();
-            default:
-                // 404 NOT FOUND
-                return new NotFoundException();
-        }
+
+        // 404 NOT FOUND
+        return new NotFoundException();
     }
 }
