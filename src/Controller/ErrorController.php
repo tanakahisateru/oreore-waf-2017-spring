@@ -1,20 +1,12 @@
 <?php
 namespace Acme\Controller;
 
-use Acme\App\Presentation\PresentationHelperAwareInterface;
-use Acme\App\Presentation\PresentationHelperAwareTrait;
-use Acme\App\View\View;
-use Acme\Util\Mobile;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Sumeko\Http\Exception as HttpException;
 
-class ErrorController implements PresentationHelperAwareInterface
+class ErrorController extends AbstractDualHtmlController
 {
-    use PresentationHelperAwareTrait;
-
-    const TEMPLATE_FOLDER = '_error';
-
     /**
      * @var array
      */
@@ -37,20 +29,12 @@ class ErrorController implements PresentationHelperAwareInterface
     }
 
     /**
-     * @param ServerRequestInterface $request
-     * @return View
+     * @param bool $isMobile
+     * @return string
      */
-    protected function createView(ServerRequestInterface $request)
+    protected function defaultTemplateFolder($isMobile)
     {
-        $view = $this->createViewPrototype();
-        $view->setFolder('current', static::TEMPLATE_FOLDER);
-
-        $mobileDetect = Mobile::detect($request);
-        if ($mobileDetect->isMobile()) {
-            $view->setFolder('current', static::TEMPLATE_FOLDER . '/sp');
-        }
-
-        return $view;
+        return $isMobile ? '_error/sp' : '_error';
     }
 
     /**
