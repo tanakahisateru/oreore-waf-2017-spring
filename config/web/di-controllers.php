@@ -10,9 +10,9 @@ $di->set('controllerProvider', $di->lazyNew(ControllerProvider::class, ['factori
 
     'error' => $di->newFactory(ErrorController::class, [
         'statusToTemplate' => [
-            404 => '_error/404.php',
+            404 => 'current::404.php',
         ],
-        'defaultTemplate' => '_error/default.php'
+        'defaultTemplate' => 'current::default.php'
     ]),
 
     'site' => $di->newFactory(SiteController::class, [

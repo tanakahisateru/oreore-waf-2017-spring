@@ -1,8 +1,12 @@
 <?php
 namespace Acme\App\Router;
 
+use Zend\EventManager\EventsCapableInterface;
+
 class ControllerProvider
 {
+    const EVENT_INSTANCE_READY = 'instanceReady';
+
     /**
      * @var callable[]
      */
@@ -28,6 +32,12 @@ class ControllerProvider
         }
 
         $factory = $this->factories[$name];
-        return call_user_func($factory);
+        $controller = call_user_func($factory);
+
+        if ($controller instanceof EventsCapableInterface) {
+            $controller->getEventManager()->trigger(static::EVENT_INSTANCE_READY, $controller);
+        }
+
+        return $controller;
     }
 }

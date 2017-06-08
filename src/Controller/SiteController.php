@@ -1,10 +1,10 @@
 <?php
 namespace Acme\Controller;
 
-use Acme\App\Controller\ControllerEventManagerAwareTrait;
-use Acme\App\Controller\PresentationHelperAwareInterface;
-use Acme\App\Controller\PresentationHelperAwareTrait;
+use Acme\App\Presentation\PresentationHelperAwareInterface;
+use Acme\App\Presentation\PresentationHelperAwareTrait;
 use Acme\App\Router\ActionDispatcher;
+use Acme\App\Router\ControllerProvider;
 use Acme\App\View\View;
 use Acme\Util\Mobile;
 use Psr\Http\Message\ResponseInterface;
@@ -16,14 +16,18 @@ use Sumeko\Http\Exception\ForbiddenException;
 use Sumeko\Http\Exception\NotFoundException;
 use Zend\EventManager\EventInterface;
 use Zend\EventManager\EventManagerAwareInterface;
+use Zend\EventManager\EventManagerAwareTrait;
 
 class SiteController implements PresentationHelperAwareInterface, EventManagerAwareInterface, LoggerAwareInterface
 {
     use PresentationHelperAwareTrait;
-    use ControllerEventManagerAwareTrait;
+    use EventManagerAwareTrait;
     use LoggerAwareTrait;
 
     const TEMPLATE_FOLDER = 'site';
+
+    // Category tag for system-wide event listener
+    public $eventIdentifier = ['controller'];
 
     /**
      * @var \PDO
@@ -45,17 +49,48 @@ class SiteController implements PresentationHelperAwareInterface, EventManagerAw
     public function attachDefaultListeners()
     {
         $events = $this->getEventManager();
+        $events->attach(ControllerProvider::EVENT_INSTANCE_READY, [$this, 'ensureInitialized']);
+        $events->attach(ActionDispatcher::EVENT_BEFORE_ACTION, [$this, 'onBeforeAction']);
+    }
 
-        $events->attach(ActionDispatcher::EVENT_BEFORE_ACTION, function (EventInterface $event) {
-            $queryParams = $event->getParam('request')->getQueryParams();
-            if (isset($queryParams['stop'])) {
-                $response = $this->textResponse(
-                    'The action stopped while afterAction because query param "stop" was specified.'
-                );
-                $event->setParam('response', $response);
-                $event->stopPropagation();
-            }
-        });
+    /**
+     *
+     */
+    public function ensureInitialized()
+    {
+    }
+
+    /**
+     * @param EventInterface $event
+     */
+    public function onBeforeAction(EventInterface $event)
+    {
+        $queryParams = $event->getParam('request')->getQueryParams();
+
+        if (isset($queryParams['stop'])) {
+            $response = $this->textResponse(
+                'The action stopped while afterAction because query param "stop" was specified.'
+            );
+            $event->setParam('response', $response);
+            $event->stopPropagation();
+        }
+    }
+
+    /**
+     * @param ServerRequestInterface $request
+     * @return View
+     */
+    protected function createView(ServerRequestInterface $request)
+    {
+        $view = $this->createViewPrototype();
+        $view->setFolder('current', static::TEMPLATE_FOLDER);
+
+        $mobileDetect = Mobile::detect($request);
+        if ($mobileDetect->isMobile()) {
+            $view->setFolder('current', static::TEMPLATE_FOLDER . '/sp');
+        }
+
+        return $view;
     }
 
     /**
@@ -118,23 +153,5 @@ class SiteController implements PresentationHelperAwareInterface, EventManagerAw
     public function forbidden()
     {
         throw new ForbiddenException();
-    }
-
-    /**
-     * @param ServerRequestInterface $request
-     * @return View
-     */
-    protected function createView(ServerRequestInterface $request)
-    {
-        $view = $this->presentationHelper->createView();
-
-        $mobileDetect = Mobile::detect($request);
-        if ($mobileDetect->isMobile()) {
-            $view->setFolder('current', static::TEMPLATE_FOLDER . '/sp');
-        } else {
-            $view->setFolder('current', static::TEMPLATE_FOLDER);
-        }
-
-        return $view;
     }
 }

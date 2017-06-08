@@ -1,8 +1,8 @@
 <?php
-use Acme\App\Controller\PresentationHelper;
-use Acme\App\Controller\PresentationHelperAwareInterface;
 use Acme\App\Middleware\Generator\ErrorResponseGenerator;
 use Acme\App\Middleware\Generator\WhoopsErrorResponseGenerator;
+use Acme\App\Presentation\PresentationHelper;
+use Acme\App\Presentation\PresentationHelperAwareInterface;
 use Acme\App\Router\ActionDispatcher;
 use Acme\App\Router\Router;
 use Acme\App\View\Template\EscaperExtension;

@@ -1,5 +1,5 @@
 <?php
-namespace Acme\App\Controller;
+namespace Acme\App\Presentation;
 
 interface PresentationHelperAwareInterface
 {

@@ -1,8 +1,10 @@
 <?php
 namespace Acme\Controller;
 
-use Acme\App\Controller\PresentationHelperAwareInterface;
-use Acme\App\Controller\PresentationHelperAwareTrait;
+use Acme\App\Presentation\PresentationHelperAwareInterface;
+use Acme\App\Presentation\PresentationHelperAwareTrait;
+use Acme\App\View\View;
+use Acme\Util\Mobile;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Sumeko\Http\Exception as HttpException;
@@ -10,6 +12,8 @@ use Sumeko\Http\Exception as HttpException;
 class ErrorController implements PresentationHelperAwareInterface
 {
     use PresentationHelperAwareTrait;
+
+    const TEMPLATE_FOLDER = '_error';
 
     /**
      * @var array
@@ -33,6 +37,23 @@ class ErrorController implements PresentationHelperAwareInterface
     }
 
     /**
+     * @param ServerRequestInterface $request
+     * @return View
+     */
+    protected function createView(ServerRequestInterface $request)
+    {
+        $view = $this->createViewPrototype();
+        $view->setFolder('current', static::TEMPLATE_FOLDER);
+
+        $mobileDetect = Mobile::detect($request);
+        if ($mobileDetect->isMobile()) {
+            $view->setFolder('current', static::TEMPLATE_FOLDER . '/sp');
+        }
+
+        return $view;
+    }
+
+    /**
      * @param HttpException $error
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
@@ -48,7 +69,7 @@ class ErrorController implements PresentationHelperAwareInterface
             $template = $this->defaultTemplate;
         }
 
-        $view = $this->createView();
+        $view = $this->createView($request);
 
         return $this->htmlResponse($view->render($template, [
             'error' => $error,

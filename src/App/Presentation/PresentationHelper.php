@@ -1,5 +1,5 @@
 <?php
-namespace Acme\App\Controller;
+namespace Acme\App\Presentation;
 
 use Acme\App\View\View;
 use Aura\Router\Generator;
@@ -53,7 +53,7 @@ class PresentationHelper
     /**
      * @return View
      */
-    public function createView()
+    public function createViewPrototype()
     {
         $view = call_user_func($this->viewFactory);
         assert($view instanceof View);

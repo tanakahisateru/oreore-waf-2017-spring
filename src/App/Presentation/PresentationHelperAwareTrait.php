@@ -1,5 +1,5 @@
 <?php
-namespace Acme\App\Controller;
+namespace Acme\App\Presentation;
 
 use Acme\App\View\View;
 use Psr\Http\Message\ResponseInterface;
@@ -25,9 +25,9 @@ trait PresentationHelperAwareTrait
     /**
      * @return View
      */
-    protected function createView()
+    protected function createViewPrototype()
     {
-        return $this->presentationHelper->createView();
+        return $this->presentationHelper->createViewPrototype();
     }
 
     /**
