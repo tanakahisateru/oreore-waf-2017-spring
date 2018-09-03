@@ -46,12 +46,12 @@ $this->asset('app', [
 //////////////////////////////////////////////////////////
 $pathMapping = [
     'dist/css/all.min.css' =>
-        __DIR__ . '/../../web/assets/dist/css/all.min.css.map',
+        __DIR__ . '/../../public/assets/dist/css/all.min.css.map',
     'dist/js/all.min.js' =>
-        __DIR__ . '/../../web/assets/dist/js/all.min.js.map',
+        __DIR__ . '/../../public/assets/dist/js/all.min.js.map',
 ];
 
-$revManifestPath = __DIR__ . '/../../web/assets/dist/rev-manifest.json';
+$revManifestPath = __DIR__ . '/../../public/assets/dist/rev-manifest.json';
 
 $mapping = array_combine(
     array_keys($pathMapping),
