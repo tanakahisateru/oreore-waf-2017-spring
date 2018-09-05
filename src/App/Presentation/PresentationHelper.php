@@ -3,8 +3,8 @@ namespace Acme\App\Presentation;
 
 use Acme\App\View\View;
 use Aura\Router\Generator;
-use Interop\Http\Factory\StreamFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\StreamInterface;
 
 class PresentationHelper
@@ -81,7 +81,7 @@ class PresentationHelper
         if ($raw) {
             return $this->urlGenerator->generateRaw($route, $data);
         } else {
-            return $this->urlGenerator->generateRaw($route, $data);
+            return $this->urlGenerator->generate($route, $data);
         }
     }
 

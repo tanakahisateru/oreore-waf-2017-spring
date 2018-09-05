@@ -2,10 +2,10 @@
 namespace Acme\App\Router;
 
 use Aura\Dispatcher\Dispatcher;
-use Interop\Http\Factory\StreamFactoryInterface;
 use Lapaz\Odango\AdviceComposite;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 use Ray\Aop\MethodInvocation;
 use Zend\EventManager\EventsCapableInterface;
 

@@ -1,4 +1,5 @@
 <?php
+
 use Aura\Di\Container;
 use Lapaz\PlainPhp\ScriptRunner;
 use Monolog\Formatter\LineFormatter;
@@ -17,7 +18,7 @@ $di->set('logger', $di->lazyNew(Logger::class, [
     'name' => 'default',
     'handlers' => $di->lazyArray([
         $di->lazyNew(RotatingFileHandler::class, [
-            'filename' => __DIR__ . '/../../log/cli.log',
+            'filename' => __DIR__ . '/../../var/log/cli.log',
             'level' => Logger::getLevels()[$params['defaultLogLevel']],
         ]),
         $di->lazyNew(StreamHandler::class, [

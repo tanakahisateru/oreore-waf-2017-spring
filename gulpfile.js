@@ -1,5 +1,4 @@
 const gulp = require('gulp');
-const pump = require('pump');
 const del = require('del');
 const concat = require('gulp-concat');
 // const urlAdjuster = require('gulp-css-url-adjuster');
@@ -12,104 +11,88 @@ const revReplace = require('gulp-rev-replace');
 
 const basedir = './public/assets';
 
-gulp.task('default', ['vendor']);
-
-gulp.task('build', ['fonts', 'css', 'js']);
-gulp.task('dist', ['rev-replace']);
-
-gulp.task('clean', () => {
+function clean() {
     return del([
         basedir + '/dist',
         basedir + '/vendor'
     ]);
-});
+}
 
-gulp.task('vendor', ['clean'], (cb) => {
-    pump([
-        gulp.src('./node_modules/+(jquery|bootstrap)/dist/**/*', { base: './node_modules/' }),
-        gulp.dest(basedir + '/vendor')
-    ], cb);
-});
+function vendor () {
+    return gulp.src('./node_modules/+(jquery|bootstrap)/dist/**/*', { base: './node_modules/' })
+        .pipe(gulp.dest(basedir + '/vendor'));
+}
 
-gulp.task('clean-debugbar', () => {
+gulp.task('default', gulp.series(clean, vendor));
+
+function cleanDebugbar() {
     return del([
         basedir + '/debugbar'
     ]);
-});
+}
 
-gulp.task('vendor-debugbar', ['clean-debugbar'], (cb) => {
-    pump([
-        gulp.src('./vendor/maximebf/debugbar/src/DebugBar/Resources/**/*', { base: './vendor/maximebf/debugbar/src/DebugBar/Resources/' }),
-        gulp.dest(basedir + '/debugbar')
-    ], cb);
-});
+function vendorDebugbar() {
+    return gulp.src('./vendor/maximebf/debugbar/src/DebugBar/Resources/**/*', {base: './vendor/maximebf/debugbar/src/DebugBar/Resources/'})
+        .pipe(gulp.dest(basedir + '/debugbar'));
+}
 
-gulp.task('fonts', ['vendor'], (cb) => {
-    pump([
-        gulp.src(basedir + '/vendor/bootstrap/dist/fonts/*'),
-        gulp.dest(basedir + '/dist/fonts')
-    ], cb);
-});
+gulp.task('debugbar', gulp.series(cleanDebugbar, vendorDebugbar));
 
-gulp.task('css', ['vendor'], (cb) => {
-    pump([
-        gulp.src([
-            basedir + '/vendor/bootstrap/dist/css/bootstrap.css',
-            basedir + '/vendor/bootstrap/dist/css/bootstrap-theme.css',
-            basedir + '/local/app.css'
-        ], { base: basedir }),
-        sourcemaps.init(),
+function fonts() {
+    return gulp.src(basedir + '/vendor/bootstrap/dist/fonts/*')
+        .pipe(gulp.dest(basedir + '/dist/fonts'));
+}
 
-        concat('all.css'),
-        // urlAdjuster({
+function css() {
+    return gulp.src([
+        basedir + '/vendor/bootstrap/dist/css/bootstrap.css',
+        basedir + '/vendor/bootstrap/dist/css/bootstrap-theme.css',
+        basedir + '/local/app.css'
+    ], { base: basedir })
+        .pipe(sourcemaps.init())
+        .pipe(concat('all.css'))
+        // .pipe(urlAdjuster({
         //     replace:  ['../', '../vendor/bootstrap/dist/']
-        // }),
-        // gulp.dest(basedir + '/dist/css'),
+        // }))
+        .pipe(uglifycss())
+        .pipe(rename({ extname: '.min.css'}))
+        .pipe(sourcemaps.write('.', {includeContent: false, sourceRoot: '../../'}))
+        .pipe(gulp.dest(basedir + '/dist/css'));
+}
 
-        uglifycss(),
-        rename({ extname: '.min.css'}),
-        //gulp.dest(basedir + '/dist/css'),
-        sourcemaps.write('.', {includeContent: false, sourceRoot: '../../'}),
-        gulp.dest(basedir + '/dist/css')
-    ], cb);
-});
+function js() {
+    return gulp.src([
+        basedir + '/vendor/jquery/dist/jquery.js',
+        basedir + '/vendor/bootstrap/dist/js/bootstrap.js',
+        basedir + '/local/app.js'
+    ], {base: basedir})
+        .pipe(sourcemaps.init())
+        .pipe(concat('all.js'))
+        .pipe(uglify())
+        .pipe(rename({extname: '.min.js'}))
+        .pipe(sourcemaps.write('.', {includeContent: false, sourceRoot: '../../'}))
+        .pipe(gulp.dest(basedir + '/dist/js'));
+}
 
-gulp.task('js', ['vendor'], (cb) => {
-    pump([
-        gulp.src([
-            basedir + '/vendor/jquery/dist/jquery.js',
-            basedir + '/vendor/bootstrap/dist/js/bootstrap.js',
-            basedir + '/local/app.js'
-        ], { base: basedir }),
-        sourcemaps.init(),
+gulp.task('build', gulp.series(
+    clean,
+    vendor,
+    gulp.parallel(fonts, css, js)
+));
 
-        concat('all.js'),
-        // gulp.dest(basedir + '/dist/js'),
+function revisoning() {
+    // gulp.src(basedir + '/dist/**/*.+(js|css|png|gif|jpg|jpeg|svg|woff|woff2|ttf|eot|ico)')
+    return gulp.src(basedir + '/dist/**/*')
+        .pipe(rev())
+        .pipe(gulp.dest(basedir + '/dist'))
+        .pipe(rev.manifest())
+        .pipe(gulp.dest(basedir + '/dist'))
+}
 
-        uglify(),
-        rename({ extname: '.min.js'}),
-        sourcemaps.write('.', {includeContent: false, sourceRoot: '../../'}),
-        gulp.dest(basedir + '/dist/js')
-    ], cb);
-});
+function revisonReplace() {
+    return gulp.src(basedir + '/dist/**/*.+(js|css)')
+        .pipe(revReplace({manifest: gulp.src(basedir + '/dist/rev-manifest.json')}))
+        .pipe(gulp.dest(basedir + '/dist'))
+}
 
-gulp.task('rev', ['build'], (cb) => {
-    pump([
-        // gulp.src(basedir + '/dist/**/*.+(js|css|png|gif|jpg|jpeg|svg|woff|woff2|ttf|eot|ico)'),
-        gulp.src(basedir + '/dist/**/*'),
-
-        rev(),
-        gulp.dest(basedir + '/dist'),
-
-        rev.manifest(),
-        gulp.dest(basedir + '/dist')
-    ], cb);
-});
-
-gulp.task('rev-replace', ['rev'], (cb) => {
-    pump([
-        gulp.src(basedir + '/dist/**/*.+(js|css)'),
-        revReplace({manifest: gulp.src(basedir + '/dist/rev-manifest.json')}),
-        gulp.dest(basedir + '/dist')
-    ], cb);
-});
+gulp.task('dist', gulp.series('build', revisoning, revisonReplace));

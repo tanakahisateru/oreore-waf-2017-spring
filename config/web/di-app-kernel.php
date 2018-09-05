@@ -1,4 +1,5 @@
 <?php
+
 use Acme\App\Debug\Middleware\Generator\WhoopsErrorResponseGenerator;
 use Acme\App\Middleware\Generator\ErrorResponseGenerator;
 use Acme\App\Presentation\PresentationHelper;
@@ -41,7 +42,7 @@ $di->set('logger', $di->lazyNew(Logger::class, [
     'name' => 'default',
     'handlers' => $di->lazyArray([
         $di->lazyNew(RotatingFileHandler::class, [
-            'filename' => __DIR__ . '/../../log/web.log',
+            'filename' => __DIR__ . '/../../var/log/web.log',
             'level' => Logger::getLevels()[$params['defaultLogLevel']],
         ]),
     ]),
@@ -89,7 +90,9 @@ $di->set('errorResponseGenerator', $di->lazyNew(ErrorResponseGenerator::class, [
 ]));
 
 $di->set('errorHandlerMiddleware', $dix->lazyNew(ErrorHandler::class, [
-    'responsePrototype' => $di->lazyGetCall('http.responseFactory', 'createResponse'),
+    'responseFactory' => function () use ($di) {
+        return $di->get('http.responseFactory')->createResponse();
+    },
     'responseGenerator' => $di->lazyGet('errorResponseGenerator'),
 ])->modifiedBy(function (ErrorHandler $errorHandler) use ($di) {
     $logger = $di->get('logger');

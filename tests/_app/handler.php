@@ -1,4 +1,5 @@
 <?php
+
 use Acme\App\App;
 
 $app = App::configure([
@@ -13,4 +14,4 @@ $app = App::configure([
     ]
 ));
 
-return $app->getContainer();
+return $app->getContainer()->get('middlewarePipe');

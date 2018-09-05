@@ -18,9 +18,6 @@ class SiteCest
     {
         $I->amOnPage('/');
         $I->seeInTitle('Index');
-
-        $logger = $I->getMiddlewareContainer()->get('logger');
-        $I->assertInstanceOf(\Psr\Log\LoggerInterface::class, $logger);
     }
 
     public function contact(FunctionalTester $I)

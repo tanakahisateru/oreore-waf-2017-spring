@@ -2,15 +2,11 @@
 require __DIR__ . '/../vendor/autoload.php';
 
 // dotenv
-if (!getenv('MY_APP_NAME')) {
-    \josegonzalez\Dotenv\Loader::load([
-        'filepaths' => [
-            __DIR__ . '/../.env',
-        ],
-        'putenv' => true,
-        'toEnv' => true,
-    ]);
+$dotenv = new \Symfony\Component\Dotenv\Dotenv();
+if (is_file(__DIR__ . '/../.env')) {
+    $dotenv->load(__DIR__ . '/../.env');
 }
+$dotenv->load(__DIR__ . '/default.env');
 // ini
 // error handler
 // polyfills

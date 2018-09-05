@@ -6,18 +6,18 @@
 ### Composer
 composer.phar
 /vendor/
-
 /composer.lock
 
 ### NPM
 /node_modules/
+/package-lock.json
 
 ### Codeception
 /tests/_output/*
 /tests/_support/_generated/*
 
-/log/*
-!/log/.gitkeep
+/var/log/*
+!/var/log/.gitkeep
 
 /public/assets/dist/
 /public/assets/vendor/

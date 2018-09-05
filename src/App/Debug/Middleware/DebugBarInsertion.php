@@ -2,13 +2,13 @@
 namespace Acme\App\Debug\Middleware;
 
 use DebugBar\DebugBar;
-use Interop\Http\Factory\StreamFactoryInterface;
-use Interop\Http\ServerMiddleware\DelegateInterface;
-use Interop\Http\ServerMiddleware\MiddlewareInterface;
 use League\Plates\Template\Template;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\StreamFactoryInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
 class DebugBarInsertion implements MiddlewareInterface
 {
@@ -69,13 +69,13 @@ class DebugBarInsertion implements MiddlewareInterface
      * to the next middleware component to create the response.
      *
      * @param ServerRequestInterface $request
-     * @param DelegateInterface $delegate
+     * @param RequestHandlerInterface $handler
      *
      * @return ResponseInterface
      */
-    public function process(ServerRequestInterface $request, DelegateInterface $delegate)
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $response = $delegate->process($request);
+        $response = $handler->handle($request);
 
         if (!$this->isHtmlAccepted($request)) {
             return $response;
@@ -94,9 +94,8 @@ class DebugBarInsertion implements MiddlewareInterface
                 $jsbody,
             ], $contents);
             $response = $response->withBody($this->streamFactory->createStream($contents));
-        } else {
-            // TODO Wrap content with HTML if debug browser directly accessed.
         }
+        // TODO Wrap content with HTML if debug browser directly accessed.
 
         return $response;
     }

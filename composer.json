@@ -1,32 +1,37 @@
 {
+    "config": {
+        "sort-packages": true
+    },
     "require": {
-        "aura/di": "^3.2",
+        "php": "^7.1",
+        "aura/di": "^3.4",
         "aura/dispatcher": "^2.0",
         "aura/includer": "^2.0",
         "aura/router": "^3.1",
-        "http-interop/http-factory": "^0.3.0",
-        "http-interop/http-factory-diactoros": "^0.3.0",
-        "josegonzalez/dotenv": "^2.1",
+        "http-interop/http-factory-diactoros": "^1.0",
         "lapaz/amechan": "^0.1.0",
-        "lapaz/odango": "^0.1.0",
         "lapaz/aura-di-ext": "^0.1.0",
+        "lapaz/odango": "^0.2.0",
         "league/plates": "^3.3",
         "mobiledetect/mobiledetectlib": "^2.8",
-        "monolog/monolog": "^1.22",
+        "monolog/monolog": "^1.23",
+        "psr/http-factory": "^1.0",
         "sumeko/http-exception": "^1.1",
+        "symfony/dotenv": "^4.1",
         "webmozart/path-util": "^2.3",
-        "zendframework/zend-escaper": "^2.5",
-        "zendframework/zend-eventmanager": "^3.1",
-        "zendframework/zend-diactoros": "^1.4",
-        "zendframework/zend-stdlib": "^3.1",
-        "zendframework/zend-stratigility": "^2.0"
+        "zendframework/zend-diactoros": "^1.8",
+        "zendframework/zend-escaper": "^2.6",
+        "zendframework/zend-eventmanager": "^3.2",
+        "zendframework/zend-httphandlerrunner": "^1.0",
+        "zendframework/zend-stdlib": "^3.2",
+        "zendframework/zend-stratigility": "^3.0"
     },
     "require-dev": {
-        "codeception/codeception": "^2.2",
-        "filp/whoops": "^2.1",
-        "lapaz/codeception-generic-middleware": "^0.1.0",
-        "maximebf/debugbar": "^1.13",
-        "symfony/var-dumper": "^3.2"
+        "codeception/codeception": "^2.4",
+        "filp/whoops": "^2.2",
+        "lapaz/codeception-psr15": "^0.3.1",
+        "maximebf/debugbar": "^1.9",
+        "symfony/var-dumper": "^4.1"
     },
     "autoload": {
         "psr-4": {
