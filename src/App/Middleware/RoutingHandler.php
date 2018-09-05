@@ -6,7 +6,6 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Sumeko\Http\Exception\NotFoundException;
 
 class RoutingHandler implements MiddlewareInterface
 {
@@ -37,10 +36,6 @@ class RoutingHandler implements MiddlewareInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        try {
-            return $this->router->handle($request, $this->responsePrototype);
-        } catch (NotFoundException $e) {
-            return $handler->handle($request);
-        }
+        return $this->router->handle($request, $this->responsePrototype);
     }
 }
