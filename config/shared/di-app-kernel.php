@@ -1,9 +1,11 @@
 <?php
+
 use Acme\App\App;
 use Aura\Di\Container;
 use Psr\Log\LoggerAwareInterface;
 use Zend\EventManager\EventManager;
 use Zend\EventManager\EventManagerAwareInterface;
+use Zend\EventManager\SharedEventManagerInterface;
 
 /** @var Container $di */
 
@@ -13,7 +15,7 @@ $di->setters[LoggerAwareInterface::class] = [
 
 $di->setters[EventManagerAwareInterface::class] = [
     'setEventManager' => $di->lazyNew(EventManager::class, [
-        'sharedEventManager' => $di->lazyGet('sharedEventManager'),
+        'sharedEventManager' => $di->lazyGet(SharedEventManagerInterface::class),
     ]),
 ];
 

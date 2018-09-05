@@ -1,4 +1,5 @@
 <?php
+
 use Acme\App\Router\ControllerProvider;
 use Acme\Controller\ErrorController;
 use Acme\Controller\SiteController;
@@ -6,7 +7,7 @@ use Aura\Di\Container;
 
 /** @var Container $di */
 
-$di->set('controllerProvider', $di->lazyNew(ControllerProvider::class, ['factories' => [
+$di->set(ControllerProvider::class, $di->lazyNew(ControllerProvider::class, ['factories' => [
 
     'error' => $di->newFactory(ErrorController::class, [
         'statusToTemplate' => [

@@ -7,6 +7,7 @@ use Monolog\Handler\RotatingFileHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Zend\EventManager\SharedEventManager;
+use Zend\EventManager\SharedEventManagerInterface;
 
 /** @var Container $di */
 /** @var array $params */
@@ -34,7 +35,7 @@ $di->set('logger', $di->lazyNew(Logger::class, [
 ]));
 
 
-$di->set('sharedEventManager', $di->lazy(function () use ($di) {
+$di->set(SharedEventManagerInterface::class, $di->lazy(function () use ($di) {
     $events = $di->newInstance(SharedEventManager::class);
     ScriptRunner::which()->requires(__DIR__ . '/events.php')->with([
         'di' => $di,

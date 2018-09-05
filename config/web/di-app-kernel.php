@@ -1,14 +1,19 @@
 <?php
 
+use Acme\App\Debug\Middleware\DebugBarInsertion;
 use Acme\App\Debug\Middleware\Generator\WhoopsErrorResponseGenerator;
 use Acme\App\Middleware\Generator\ErrorResponseGenerator;
+use Acme\App\Middleware\RoutingHandler;
+use Acme\App\Middleware\WebAppBootstrap;
 use Acme\App\Presentation\PresentationHelper;
 use Acme\App\Presentation\PresentationHelperAwareInterface;
 use Acme\App\Router\ActionDispatcher;
+use Acme\App\Router\ControllerProvider;
 use Acme\App\Router\Router;
 use Acme\App\View\Template\EscaperExtension;
 use Acme\App\View\View;
 use Aura\Di\Container;
+use Aura\Router\Generator as RouterUrlGenerator;
 use Aura\Router\RouterContainer;
 use DebugBar\Bridge\MonologCollector;
 use DebugBar\DebugBar;
@@ -20,13 +25,19 @@ use Http\Factory\Diactoros\UploadedFileFactory;
 use Http\Factory\Diactoros\UriFactory;
 use Lapaz\Amechan\AssetManager;
 use Lapaz\Aura\Di\ContainerExtension;
-use League\Plates\Engine;
+use League\Plates\Engine as TemplateEngine;
 use League\Plates\Extension\ExtensionInterface;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger;
+use Psr\Http\Message\ResponseFactoryInterface;
+use Psr\Http\Message\ServerRequestFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\StreamFactoryInterface;
+use Psr\Http\Message\UploadedFileFactoryInterface;
+use Psr\Http\Message\UriFactoryInterface;
 use Zend\Escaper\Escaper;
 use Zend\EventManager\SharedEventManager;
+use Zend\EventManager\SharedEventManagerInterface;
 use Zend\Stratigility\Middleware\ErrorHandler;
 use Zend\Stratigility\MiddlewarePipe;
 
@@ -49,7 +60,7 @@ $di->set('logger', $di->lazyNew(Logger::class, [
     'processors' => [],
 ]));
 
-//$di->set('sharedEventManager', $di->lazy(function () use ($di) {
+//$di->set(SharedEventManagerInterface::class, $di->lazy(function () use ($di) {
 //    $events = $di->newInstance(SharedEventManager::class);
 //    ScriptRunner::which()->requires(__DIR__ . '/events.php')->with([
 //        'di' => $di,
@@ -58,7 +69,7 @@ $di->set('logger', $di->lazyNew(Logger::class, [
 //    return $events;
 //}));
 
-$di->set('sharedEventManager', $dix->lazyNew(SharedEventManager::class)
+$di->set(SharedEventManagerInterface::class, $dix->lazyNew(SharedEventManager::class)
     ->modifiedByScript(__DIR__ . '/events.php', [
         'di' => $di,
         'params' => $params,
@@ -68,30 +79,29 @@ $di->set('sharedEventManager', $dix->lazyNew(SharedEventManager::class)
 /////////////////////////////////////////////////////////////////////
 // PSR-17 factories
 
-$di->set('http.requestFactory', $di->lazyNew(ServerRequestFactory::class));
-$di->set('http.responseFactory', $di->lazyNew(ResponseFactory::class));
-$di->set('http.uploadedFileFactory', $di->lazyNew(UploadedFileFactory::class));
-$di->set('http.uriFactory', $di->lazyNew(UriFactory::class));
-$di->set('http.streamFactory', $di->lazyNew(StreamFactory::class));
+$di->set(ServerRequestFactoryInterface::class, $di->lazyNew(ServerRequestFactory::class));
+$di->set(ResponseFactoryInterface::class, $di->lazyNew(ResponseFactory::class));
+$di->set(UploadedFileFactoryInterface::class, $di->lazyNew(UploadedFileFactory::class));
+$di->set(UriFactoryInterface::class, $di->lazyNew(UriFactory::class));
+$di->set(StreamFactoryInterface::class, $di->lazyNew(StreamFactory::class));
 
 /////////////////////////////////////////////////////////////////////
 // PSR-15 pipeline
 
 $di->set('middlewarePipe', $dix->lazyNew(MiddlewarePipe::class)
-    ->modifiedByScript(__DIR__ . '/middleware.php', [
-        'di' => $di,
-        'params' => $params,
-    ])
+    ->modifiedBy(function (MiddlewarePipe $middlewarePipe) use ($di) {
+        $middlewarePipe->pipe($di->get(ErrorHandler::class));
+        if ($di->has('debugbar')) {
+            $middlewarePipe->pipe($di->get(DebugBarInsertion::class));
+        }
+        $middlewarePipe->pipe($di->get(WebAppBootstrap::class));
+        $middlewarePipe->pipe($di->get(RoutingHandler::class));
+    })
 );
 
-$di->set('errorResponseGenerator', $di->lazyNew(ErrorResponseGenerator::class, [
-    'dispatcher' => $di->lazyGet('dispatcher'),
-    'controller' => 'error',
-]));
-
-$di->set('errorHandlerMiddleware', $dix->lazyNew(ErrorHandler::class, [
+$di->set(ErrorHandler::class, $dix->lazyNew(ErrorHandler::class, [
     'responseFactory' => function () use ($di) {
-        return $di->get('http.responseFactory')->createResponse();
+        return $di->get(ResponseFactoryInterface::class)->createResponse();
     },
     'responseGenerator' => $di->lazyGet('errorResponseGenerator'),
 ])->modifiedBy(function (ErrorHandler $errorHandler) use ($di) {
@@ -109,15 +119,37 @@ $di->set('errorHandlerMiddleware', $dix->lazyNew(ErrorHandler::class, [
     });
 }));
 
+// Maybe overridden
+$di->set('errorResponseGenerator', $di->lazyNew(ErrorResponseGenerator::class, [
+    'dispatcher' => $di->lazyGet(ActionDispatcher::class),
+    'controller' => 'error',
+]));
+
+$di->set(DebugBarInsertion::class, $di->lazyNew(DebugBarInsertion::class, [
+    'debugbar' => $di->lazyGet('debugbar'),
+    'baseUrl' => '/assets/debugbar',
+    'streamFactory' => $di->lazyGet(StreamFactoryInterface::class),
+]));
+
+$di->set(WebAppBootstrap::class, $di->lazyNew(WebAppBootstrap::class, [
+    'container' => $di,
+    'appName' => 'app',
+]));
+
+$di->set(RoutingHandler::class, $di->lazyNew(RoutingHandler::class, [
+    'router' => $di->lazyGet(Router::class),
+    'responsePrototype' => $di->lazyGetCall(ResponseFactoryInterface::class, 'createResponse'),
+]));
+
 /////////////////////////////////////////////////////////////////////
 // routing - dispatching
 
-$di->set('router', $di->lazyNew(Router::class, [
-    'routes' => $di->lazyGet('routes'),
-    'dispatcher' => $di->lazyGet('dispatcher'),
+$di->set(Router::class, $di->lazyNew(Router::class, [
+    'routes' => $di->lazyGet(RouterContainer::class),
+    'dispatcher' => $di->lazyGet(ActionDispatcher::class),
 ]));
 
-$di->set('routes', $dix->lazyNew(RouterContainer::class, [
+$di->set(RouterContainer::class, $dix->lazyNew(RouterContainer::class, [
     'basepath' => null,
 ], [
     'setLoggerFactory' => $dix->newLocator('logger'),
@@ -126,35 +158,37 @@ $di->set('routes', $dix->lazyNew(RouterContainer::class, [
     'params' => $params,
 ]));
 
-$di->set('dispatcher', $di->lazyNew(ActionDispatcher::class, [
-    'controllerProvider' => $di->lazyGet('controllerProvider'),
-    'streamFactory' => $di->lazyGet('http.streamFactory'),
+$di->set(ActionDispatcher::class, $di->lazyNew(ActionDispatcher::class, [
+    'controllerProvider' => $di->lazyGet(ControllerProvider::class),
+    'streamFactory' => $di->lazyGet(StreamFactoryInterface::class),
 ]));
 
-$di->set('urlGenerator', $di->lazyGetCall('routes', 'getGenerator'));
+$di->set(RouterUrlGenerator::class, $di->lazyGetCall(RouterContainer::class, 'getGenerator'));
 
 /////////////////////////////////////////////////////////////////////
 // Controller helpers
 
-$di->set('presentationHelper', $di->lazyNew(PresentationHelper::class, [
+$di->set(PresentationHelper::class, $di->lazyNew(PresentationHelper::class, [
     'viewFactory' => $di->lazyGet('viewFactory'),
-    'urlGenerator' => $di->lazyGet('urlGenerator'),
-    'responsePrototype' => $di->lazyGetCall('http.responseFactory', 'createResponse'),
-    'streamFactory' => $di->lazyGet('http.streamFactory'),
+    'urlGenerator' => $di->lazyGet(RouterUrlGenerator::class),
+    'responsePrototype' => $di->lazyGetCall(ResponseFactoryInterface::class, 'createResponse'),
+    'streamFactory' => $di->lazyGet(StreamFactoryInterface::class),
 ]));
 
 $di->setters[PresentationHelperAwareInterface::class] = [
-    'setPresentationHelper' => $di->lazyGet('presentationHelper'),
+    'setPresentationHelper' => $di->lazyGet(PresentationHelper::class),
 ];
 
 /////////////////////////////////////////////////////////////////////
 // HTML rendering
+// Template engine and view instances are modified often while request handling,
+// so stable instances are their factories.
 
-$di->set('templateEngineFactory', $dix->newFactory(Engine::class, [
+$di->set('templateEngineFactory', $dix->newFactory(TemplateEngine::class, [
     'directory' => __DIR__ . '/../../templates',
     'fileExtension' => null,
     // 'encoding' => 'utf-8',
-])->modifiedBy(function (Engine $engine) use ($di) {
+])->modifiedBy(function (TemplateEngine $engine) use ($di) {
     $extension = $di->newInstance(EscaperExtension::class, [
         'escaper' => $di->newInstance(Escaper::class),
     ]);
@@ -162,7 +196,7 @@ $di->set('templateEngineFactory', $dix->newFactory(Engine::class, [
     $engine->loadExtension($extension);
 }));
 
-$di->set('assetManager', $dix->lazyNew(AssetManager::class)
+$di->set(AssetManager::class, $dix->lazyNew(AssetManager::class)
     ->modifiedByScript(__DIR__ . '/assets.php', [
         'di' => $di,
         'params' => $params,
@@ -171,8 +205,8 @@ $di->set('assetManager', $dix->lazyNew(AssetManager::class)
 
 $di->set('viewFactory', $di->newFactory(View::class, [
     'templateEngineFactory' => $di->lazyGet('templateEngineFactory'),
-    'urlGenerator' => $di->lazyGet('urlGenerator'),
-    'assetManager' => $di->lazyGet('assetManager'),
+    'urlGenerator' => $di->lazyGet(RouterUrlGenerator::class),
+    'assetManager' => $di->lazyGet(AssetManager::class),
 ]));
 
 /////////////////////////////////////////////////////////////////////
@@ -180,9 +214,10 @@ $di->set('viewFactory', $di->newFactory(View::class, [
 
 if ($params['env'] == 'dev') {
 
+    // override error screen
     $di->set('errorResponseGenerator', $di->lazyNew(WhoopsErrorResponseGenerator::class, [
         'delegateGenerator' => $di->lazyNew(ErrorResponseGenerator::class, [
-            'dispatcher' => $di->lazyGet('dispatcher'),
+            'dispatcher' => $di->lazyGet(ActionDispatcher::class),
             'controller' => 'error',
         ])
     ]));
