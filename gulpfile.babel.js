@@ -1,49 +1,74 @@
-const gulp = require('gulp');
-const del = require('del');
-const concat = require('gulp-concat');
-// const urlAdjuster = require('gulp-css-url-adjuster');
-const uglifycss = require('gulp-uglifycss');
-const uglify = require('gulp-uglify');
-const rename = require("gulp-rename");
-const sourcemaps = require('gulp-sourcemaps');
-const rev = require('gulp-rev');
-const revReplace = require('gulp-rev-replace');
+import gulp from 'gulp';
+import del from 'del';
+import concat from 'gulp-concat';
+// import urlAdjuster from 'gulp-css-url-adjuster';
+import uglifycss from 'gulp-uglifycss';
+import uglify from 'gulp-uglify';
+import rename from "gulp-rename";
+import sourcemaps from 'gulp-sourcemaps';
+import rev from 'gulp-rev';
+import revReplace from 'gulp-rev-replace';
 
 const basedir = './public/assets';
 
-function clean() {
+// noinspection JSUnusedGlobalSymbols
+export default gulp.series(
+    cleanVendorPackages,
+    deployVendorPackages
+);
+
+export const debugbar = gulp.series(
+    cleanDebugBar,
+    deployDebugBar
+);
+
+export const build = gulp.series(
+    cleanVendorPackages,
+    deployVendorPackages,
+    gulp.parallel(
+        copyFontsToDist,
+        buildCSSesAndCopyToDist,
+        buildJSesAndCopyToDist
+    )
+);
+
+export const dist = gulp.series(
+    build,
+    appendRevisionCodeToPublishedAssets,
+    replaceLinksToRevisionAppendedAssets
+);
+
+function cleanVendorPackages() {
     return del([
         basedir + '/dist',
         basedir + '/vendor'
     ]);
 }
 
-function vendor () {
+function deployVendorPackages () {
     return gulp.src('./node_modules/+(jquery|bootstrap)/dist/**/*', { base: './node_modules/' })
         .pipe(gulp.dest(basedir + '/vendor'));
 }
 
-gulp.task('default', gulp.series(clean, vendor));
-
-function cleanDebugbar() {
+function cleanDebugBar() {
     return del([
         basedir + '/debugbar'
     ]);
 }
 
-function vendorDebugbar() {
-    return gulp.src('./vendor/maximebf/debugbar/src/DebugBar/Resources/**/*', {base: './vendor/maximebf/debugbar/src/DebugBar/Resources/'})
+function deployDebugBar() {
+    return gulp.src([
+        './vendor/maximebf/debugbar/src/DebugBar/Resources/**/*'
+    ], {base: './vendor/maximebf/debugbar/src/DebugBar/Resources/'})
         .pipe(gulp.dest(basedir + '/debugbar'));
 }
 
-gulp.task('debugbar', gulp.series(cleanDebugbar, vendorDebugbar));
-
-function fonts() {
+function copyFontsToDist() {
     return gulp.src(basedir + '/vendor/bootstrap/dist/fonts/*')
         .pipe(gulp.dest(basedir + '/dist/fonts'));
 }
 
-function css() {
+function buildCSSesAndCopyToDist() {
     return gulp.src([
         basedir + '/vendor/bootstrap/dist/css/bootstrap.css',
         basedir + '/vendor/bootstrap/dist/css/bootstrap-theme.css',
@@ -60,7 +85,7 @@ function css() {
         .pipe(gulp.dest(basedir + '/dist/css'));
 }
 
-function js() {
+function buildJSesAndCopyToDist() {
     return gulp.src([
         basedir + '/vendor/jquery/dist/jquery.js',
         basedir + '/vendor/bootstrap/dist/js/bootstrap.js',
@@ -74,13 +99,7 @@ function js() {
         .pipe(gulp.dest(basedir + '/dist/js'));
 }
 
-gulp.task('build', gulp.series(
-    clean,
-    vendor,
-    gulp.parallel(fonts, css, js)
-));
-
-function revisoning() {
+function appendRevisionCodeToPublishedAssets() {
     // gulp.src(basedir + '/dist/**/*.+(js|css|png|gif|jpg|jpeg|svg|woff|woff2|ttf|eot|ico)')
     return gulp.src(basedir + '/dist/**/*')
         .pipe(rev())
@@ -89,10 +108,8 @@ function revisoning() {
         .pipe(gulp.dest(basedir + '/dist'))
 }
 
-function revisonReplace() {
+function replaceLinksToRevisionAppendedAssets() {
     return gulp.src(basedir + '/dist/**/*.+(js|css)')
         .pipe(revReplace({manifest: gulp.src(basedir + '/dist/rev-manifest.json')}))
         .pipe(gulp.dest(basedir + '/dist'))
 }
-
-gulp.task('dist', gulp.series('build', revisoning, revisonReplace));
