@@ -81,7 +81,7 @@ class View implements EventManagerAwareInterface, LoggerAwareInterface
     /**
      * @return array
      */
-    public function getFolderMap()
+    public function getFolderMap(): array
     {
         return $this->folderMap;
     }
@@ -90,7 +90,7 @@ class View implements EventManagerAwareInterface, LoggerAwareInterface
      * @param string $folderName
      * @return bool
      */
-    public function hasFolder($folderName)
+    public function hasFolder(string $folderName): bool
     {
         return isset($this->folderMap[$folderName]);
     }
@@ -99,7 +99,7 @@ class View implements EventManagerAwareInterface, LoggerAwareInterface
      * @param string $folderName
      * @return string
      */
-    public function getFolder($folderName)
+    public function getFolder(string $folderName): string
     {
         if ($this->hasFolder($folderName)) {
             return $this->folderMap[$folderName];
@@ -112,7 +112,7 @@ class View implements EventManagerAwareInterface, LoggerAwareInterface
      * @param string $folderName
      * @param string $subPath
      */
-    public function setFolder($folderName, $subPath)
+    public function setFolder(string $folderName, string $subPath): void
     {
         $this->folderMap[$folderName] = $subPath;
     }
@@ -120,7 +120,7 @@ class View implements EventManagerAwareInterface, LoggerAwareInterface
     /**
      * @return array
      */
-    public function getAttributeCollection()
+    public function getAttributeCollection(): array
     {
         return $this->attributeCollection;
     }
@@ -129,7 +129,7 @@ class View implements EventManagerAwareInterface, LoggerAwareInterface
      * @param string $name
      * @return bool
      */
-    public function hasAttribute($name)
+    public function hasAttribute(string $name): bool
     {
         return isset($this->attributeCollection[$name]);
     }
@@ -139,7 +139,7 @@ class View implements EventManagerAwareInterface, LoggerAwareInterface
      * @param mixed $default
      * @return mixed
      */
-    public function getAttribute($name, $default = null)
+    public function getAttribute(string $name, $default = null)
     {
         return $this->hasAttribute($name) ? $this->attributeCollection[$name] : $default;
     }
@@ -148,7 +148,7 @@ class View implements EventManagerAwareInterface, LoggerAwareInterface
      * @param string $name
      * @param mixed $value
      */
-    public function setAttribute($name, $value)
+    public function setAttribute(string $name, $value)
     {
         $this->attributeCollection[$name] = $value;
     }
@@ -157,9 +157,9 @@ class View implements EventManagerAwareInterface, LoggerAwareInterface
      * @param string $name
      * @param array $data
      * @param bool $raw
-     * @return bool
+     * @return string
      */
-    public function routeUrlTo($name, $data=[], $raw = false)
+    public function routeUrlTo(string $name, array $data = [], $raw = false): string
     {
         try {
             return $this->router->uriTo($name, $data, $raw);
@@ -173,7 +173,7 @@ class View implements EventManagerAwareInterface, LoggerAwareInterface
      * @param string $url
      * @return string
      */
-    public function resourceUrlTo($url)
+    public function resourceUrlTo(string $url): string
     {
         return $this->assetManager->url($url);
     }
@@ -181,7 +181,7 @@ class View implements EventManagerAwareInterface, LoggerAwareInterface
     /**
      * @param string $name
      */
-    public function requireAsset($name)
+    public function requireAsset(string $name): void
     {
         $this->requiredAssets->add($name);
     }
@@ -190,7 +190,7 @@ class View implements EventManagerAwareInterface, LoggerAwareInterface
      * @param string $section
      * @return array
      */
-    public function assetUrls($section = null)
+    public function assetUrls(?string $section = null): array
     {
         return $this->requiredAssets->collectUrls($section);
     }
@@ -200,7 +200,7 @@ class View implements EventManagerAwareInterface, LoggerAwareInterface
      * @param array $data
      * @return string
      */
-    public function render($templateName, array $data = [])
+    public function render(string $templateName, array $data = []): string
     {
         // Plate engine is stateful
         $engine = call_user_func($this->templateEngineFactory);
@@ -229,12 +229,7 @@ class View implements EventManagerAwareInterface, LoggerAwareInterface
         return $render($data);
     }
 
-    /**
-     * @param Template $template
-     * @param array $data
-     * @return AdviceComposite
-     */
-    protected function eventTriggerAdviser(Template $template, array $data)
+    private function eventTriggerAdviser(Template $template, array $data): AdviceComposite
     {
         $interceptor = AdviceComposite::of(function (MethodInvocation $invocation) use ($template, $data) {
             $events = $this->getEventManager();

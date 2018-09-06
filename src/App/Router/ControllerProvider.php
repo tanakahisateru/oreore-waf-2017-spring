@@ -25,7 +25,7 @@ class ControllerProvider
      * @param string $name
      * @return object
      */
-    public function createController($name)
+    public function createController(string $name)
     {
         $elements = explode('.', $name);
         $node = $this->factories;

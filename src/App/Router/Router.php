@@ -37,12 +37,12 @@ class Router implements RequestHandlerInterface, LoggerAwareInterface
      *
      * @param callable[] $controllerFactories
      * @param ResponseFactoryInterface $responseFactory
-     * @param null $pathPrefix
+     * @param string|null $pathPrefix
      */
     public function __construct(
         array $controllerFactories,
         ResponseFactoryInterface $responseFactory,
-        $pathPrefix = null
+        ?string $pathPrefix = null
     )
     {
         $this->routes = new RouterContainer($pathPrefix);
@@ -83,7 +83,7 @@ class Router implements RequestHandlerInterface, LoggerAwareInterface
 
         if (!$route) {
             $failedRoute = $matcher->getFailedRoute();
-            throw static::createHttpExceptionFromFailedRoute($failedRoute);
+            throw $this->createHttpExceptionFromFailedRoute($failedRoute);
         }
 
         $params = $this->dispatcherParams($route);
@@ -100,7 +100,7 @@ class Router implements RequestHandlerInterface, LoggerAwareInterface
      * @return string
      * @throws NoSuchRouteException
      */
-    public function uriTo($name, $data=[], $raw = false)
+    public function uriTo(string $name, array $data = [], $raw = false): string
     {
         $generator = $this->routes->getGenerator();
         try {
@@ -118,11 +118,7 @@ class Router implements RequestHandlerInterface, LoggerAwareInterface
         }
     }
 
-    /**
-     * @param Route $route
-     * @return array
-     */
-    protected function dispatcherParams(Route $route)
+    private function dispatcherParams(Route $route)
     {
         if (is_callable($route->handler)) {
             $params = [
@@ -143,11 +139,7 @@ class Router implements RequestHandlerInterface, LoggerAwareInterface
         return $params;
     }
 
-    /**
-     * @param string $name
-     * @return array
-     */
-    protected function guessControllerAndActionFromName($name)
+    private function guessControllerAndActionFromName(string $name): array
     {
         if (($sep = strpos($name, ':')) !== false) {
             $name = substr($name, 0, $sep);
@@ -162,11 +154,7 @@ class Router implements RequestHandlerInterface, LoggerAwareInterface
         return [$controller, $action];
     }
 
-    /**
-     * @param Route $route
-     * @return HttpException
-     */
-    protected static function createHttpExceptionFromFailedRoute(Route $route)
+    private function createHttpExceptionFromFailedRoute(Route $route)
     {
         if ($route) {
             switch ($route->failedRule) {

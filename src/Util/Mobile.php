@@ -6,7 +6,11 @@ use Psr\Http\Message\RequestInterface;
 
 class Mobile
 {
-    public static function detect(RequestInterface $request)
+    /**
+     * @param RequestInterface $request
+     * @return MobileDetect
+     */
+    public static function detect(RequestInterface $request): MobileDetect
     {
         $phpStyledHeaders = [];
 

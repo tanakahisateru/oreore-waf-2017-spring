@@ -20,7 +20,7 @@ class SiteController extends AbstractDualHtmlController
      * SiteController constructor.
      * @param \PDO $db
      */
-    public function __construct($db)
+    public function __construct(\PDO $db)
     {
         $this->db = $db;
     }
@@ -29,7 +29,7 @@ class SiteController extends AbstractDualHtmlController
      * @param bool $isMobile
      * @return string
      */
-    protected function defaultTemplateFolder($isMobile)
+    protected function defaultTemplateFolder(bool $isMobile): string
     {
         return $isMobile ? 'site/sp' : 'site';
     }

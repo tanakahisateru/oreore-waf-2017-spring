@@ -32,7 +32,7 @@ class ViewAccessExtension implements ExtensionInterface
     /**
      * @return View
      */
-    public function view()
+    public function view(): View
     {
         return $this->view;
     }

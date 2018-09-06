@@ -27,7 +27,7 @@ abstract class AbstractDualHtmlController implements
      * @param bool $isMobile
      * @return string
      */
-    abstract protected function defaultTemplateFolder($isMobile);
+    abstract protected function defaultTemplateFolder(bool $isMobile): string;
 
     /**
      *
@@ -41,7 +41,7 @@ abstract class AbstractDualHtmlController implements
      * @param ServerRequestInterface $request
      * @return View
      */
-    protected function createView(ServerRequestInterface $request)
+    protected function createView(ServerRequestInterface $request): View
     {
         $view = $this->createViewPrototype();
 
@@ -50,5 +50,4 @@ abstract class AbstractDualHtmlController implements
 
         return $view;
     }
-
 }

@@ -6,5 +6,5 @@ interface ResponderAwareInterface
     /**
      * @param Responder $agent
      */
-    public function setResponder(Responder $agent);
+    public function setResponder(Responder $agent): void;
 }

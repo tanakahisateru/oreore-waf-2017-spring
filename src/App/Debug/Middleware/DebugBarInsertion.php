@@ -38,7 +38,7 @@ class DebugBarInsertion implements MiddlewareInterface
      * @param string $baseUrl
      * @param StreamFactoryInterface $streamFactory
      */
-    public function __construct(DebugBar $debugbar, $baseUrl, StreamFactoryInterface $streamFactory)
+    public function __construct(DebugBar $debugbar, string $baseUrl, StreamFactoryInterface $streamFactory)
     {
         $this->debugbar = $debugbar;
         $this->baseUrl = $baseUrl;
@@ -51,7 +51,7 @@ class DebugBarInsertion implements MiddlewareInterface
      * @param string $bodySlot
      * @param bool $push
      */
-    public static function placeholder($template, $headerSlot, $bodySlot, $push = true)
+    public static function placeholder(Template $template, string $headerSlot, string $bodySlot, bool $push = true): void
     {
         $method = $push ? 'push' : 'start';
 
@@ -100,33 +100,18 @@ class DebugBarInsertion implements MiddlewareInterface
         return $response;
     }
 
-    /**
-     * @param ServerRequestInterface $request
-     * @return bool
-     */
-    private function isHtmlAccepted(ServerRequestInterface $request)
+    private function isHtmlAccepted(ServerRequestInterface $request): bool
     {
         // FIXME Consider X-Requested-With
         return $this->hasHeaderContains($request, 'Accept', 'text/html');
     }
 
-    /**
-     * @param ResponseInterface $response
-     * @return bool
-     */
-    private function isHtmlResponse(ResponseInterface $response)
+    private function isHtmlResponse(ResponseInterface $response): bool
     {
         return $this->hasHeaderContains($response, 'Content-Type', 'text/html');
     }
 
-    /**
-     * @param MessageInterface $message
-     * @param string $headerName
-     * @param string $value
-     *
-     * @return bool
-     */
-    private function hasHeaderContains(MessageInterface $message, $headerName, $value)
+    private function hasHeaderContains(MessageInterface $message, string $headerName, string $value): bool
     {
         return strpos($message->getHeaderLine($headerName), $value) !== false;
     }

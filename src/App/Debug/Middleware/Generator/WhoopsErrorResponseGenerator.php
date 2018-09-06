@@ -41,11 +41,11 @@ class WhoopsErrorResponseGenerator
     /**
      * Create/update the response representing the error.
      *
-     * @param \Exception|mixed $e
+     * @param \Throwable $e
      * @param ServerRequestInterface $request
      * @return ResponseInterface
      */
-    public function __invoke($e, ServerRequestInterface $request)
+    public function __invoke(\Throwable $e, ServerRequestInterface $request): ResponseInterface
     {
         if ($e instanceof ClientException) {
             // Delegates default error handler if it raised from user operation.

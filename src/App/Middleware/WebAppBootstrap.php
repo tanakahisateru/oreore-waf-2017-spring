@@ -31,7 +31,7 @@ class WebAppBootstrap implements MiddlewareInterface, LoggerAwareInterface
      * @param ContainerInterface $container
      * @param string $appName
      */
-    public function __construct(ContainerInterface $container, $appName)
+    public function __construct(ContainerInterface $container, string $appName)
     {
         $this->container = $container;
         $this->appName = $appName;

@@ -22,17 +22,16 @@ class ErrorController extends AbstractDualHtmlController
      * @param array $statusToTemplate
      * @param string $defaultTemplate
      */
-    public function __construct(array $statusToTemplate, $defaultTemplate)
+    public function __construct(array $statusToTemplate, string $defaultTemplate)
     {
         $this->statusToTemplate = $statusToTemplate;
         $this->defaultTemplate = $defaultTemplate;
     }
 
     /**
-     * @param bool $isMobile
-     * @return string
+     * @inheritdoc
      */
-    protected function defaultTemplateFolder($isMobile)
+    protected function defaultTemplateFolder(bool $isMobile): string
     {
         return $isMobile ? '_error/sp' : '_error';
     }

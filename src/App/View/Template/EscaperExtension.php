@@ -39,7 +39,7 @@ class EscaperExtension implements ExtensionInterface
      * @param string $string
      * @return string
      */
-    public function escapeHtml($string)
+    public function escapeHtml(string $string): string
     {
         return $this->escaper->escapeHtml($string);
     }
@@ -48,7 +48,7 @@ class EscaperExtension implements ExtensionInterface
      * @param string $string
      * @return string
      */
-    public function escapeHtmlAttr($string)
+    public function escapeHtmlAttr(string $string): string
     {
         return $this->escaper->escapeHtmlAttr($string);
     }
@@ -57,7 +57,7 @@ class EscaperExtension implements ExtensionInterface
      * @param string $string
      * @return string
      */
-    public function escapeJs($string)
+    public function escapeJs(string $string): string
     {
         return $this->escaper->escapeJs($string);
     }
@@ -66,7 +66,7 @@ class EscaperExtension implements ExtensionInterface
      * @param string $string
      * @return string
      */
-    public function escapeCss($string)
+    public function escapeCss(string $string): string
     {
         return $this->escaper->escapeCss($string);
     }
@@ -75,7 +75,7 @@ class EscaperExtension implements ExtensionInterface
      * @param string $string
      * @return string
      */
-    public function escapeUrl($string)
+    public function escapeUrl(string $string): string
     {
         return $this->escaper->escapeUrl($string);
     }

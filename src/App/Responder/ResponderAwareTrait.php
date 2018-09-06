@@ -15,7 +15,7 @@ trait ResponderAwareTrait
     /**
      * @param Responder $responder
      */
-    public function setResponder(Responder $responder)
+    public function setResponder(Responder $responder): void
     {
         $this->responder = $responder;
     }
@@ -25,7 +25,7 @@ trait ResponderAwareTrait
     /**
      * @return View
      */
-    protected function createViewPrototype()
+    protected function createViewPrototype(): View
     {
         return $this->responder->createViewPrototype();
     }
@@ -36,7 +36,7 @@ trait ResponderAwareTrait
      * @param bool $raw
      * @return string
      */
-    protected function routeUrlTo($route, $data = [], $raw = false)
+    protected function routeUrlTo(string $route, array $data = [], $raw = false): string
     {
         return $this->responder->routeUrlTo($route, $data, $raw);
     }
@@ -48,7 +48,7 @@ trait ResponderAwareTrait
      * @param array $headers
      * @return ResponseInterface
      */
-    protected function contentResponse($content, $contentType, $status = 200, array $headers = [])
+    protected function contentResponse(string $content, string $contentType, int $status = 200, array $headers = []): ResponseInterface
     {
         return $this->responder->contentResponse($content, $contentType, $status, $headers);
     }
@@ -59,7 +59,7 @@ trait ResponderAwareTrait
      * @param array $headers
      * @return ResponseInterface
      */
-    protected function htmlResponse($html, $status = 200, array $headers = [])
+    protected function htmlResponse(string $html, int $status = 200, array $headers = []): ResponseInterface
     {
         return $this->responder->htmlResponse($html, $status, $headers);
     }
@@ -70,7 +70,7 @@ trait ResponderAwareTrait
      * @param array $headers
      * @return ResponseInterface
      */
-    protected function textResponse($text, $status = 200, array $headers = [])
+    protected function textResponse(string $text, int $status = 200, array $headers = []): ResponseInterface
     {
         return $this->responder->textResponse($text, $status, $headers);
     }
@@ -81,7 +81,7 @@ trait ResponderAwareTrait
      * @param array $headers
      * @return ResponseInterface
      */
-    protected function jsonResponse($json, $status = 200, array $headers = [])
+    protected function jsonResponse(array $json, int $status = 200, array $headers = []): ResponseInterface
     {
         return $this->responder->jsonResponse($json, $status, $headers);
     }
@@ -90,7 +90,7 @@ trait ResponderAwareTrait
      * @param string $url
      * @return ResponseInterface
      */
-    protected function redirectResponse($url)
+    protected function redirectResponse(string $url): ResponseInterface
     {
         return $this->responder->redirectResponse($url);
     }
@@ -100,7 +100,7 @@ trait ResponderAwareTrait
      * @param array $data
      * @return ResponseInterface
      */
-    protected function redirectResponseToRoute($route, $data = [])
+    protected function redirectResponseToRoute(string $route, array $data = []): ResponseInterface
     {
         return $this->responder->redirectResponseToRoute($route, $data);
     }

@@ -38,7 +38,7 @@ class ActionDispatcher
      * @param array $params
      * @return ResponseInterface
      */
-    public function dispatch(array $params)
+    public function dispatch(array $params): ResponseInterface
     {
         assert(isset($params['controller']));
 
@@ -80,12 +80,7 @@ class ActionDispatcher
         }
     }
 
-    /**
-     * @param object $controller
-     * @param array $params
-     * @return AdviceComposite
-     */
-    protected function eventTriggerAdviser($controller, array $params)
+    private function eventTriggerAdviser($controller, array $params): AdviceComposite
     {
         assert(is_object($controller));
 
@@ -136,12 +131,7 @@ class ActionDispatcher
         });
     }
 
-    /**
-     * @param mixed $returnedValue
-     * @param string $echoContent
-     * @return ResponseInterface
-     */
-    private function createFallbackResponse($returnedValue, $echoContent)
+    private function createFallbackResponse($returnedValue, ?string $echoContent): ResponseInterface
     {
         $response = $this->responseFactory->createResponse();
 

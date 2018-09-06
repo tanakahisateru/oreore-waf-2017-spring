@@ -30,7 +30,7 @@ class ErrorResponseGenerator
      * @param object|callable|string $controller
      * @param string|null $action
      */
-    public function __construct(ActionDispatcher $dispatcher, $controller, $action = null)
+    public function __construct(ActionDispatcher $dispatcher, $controller, ?string $action = null)
     {
         $this->dispatcher = $dispatcher;
         $this->controller = $controller;
@@ -40,11 +40,11 @@ class ErrorResponseGenerator
     /**
      * Create/update the response representing the error.
      *
-     * @param \Exception|mixed $e
+     * @param \Throwable $e
      * @param ServerRequestInterface $request
      * @return ResponseInterface
      */
-    public function __invoke($e, ServerRequestInterface $request)
+    public function __invoke(\Throwable $e, ServerRequestInterface $request): ResponseInterface
     {
         if (!($e instanceof HttpException)) {
             if ($e instanceof \Exception) {

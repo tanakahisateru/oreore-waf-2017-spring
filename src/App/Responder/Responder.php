@@ -45,7 +45,7 @@ class Responder
     /**
      * @return View
      */
-    public function createViewPrototype()
+    public function createViewPrototype(): View
     {
         return $this->viewFactory->createView($this->router);
     }
@@ -57,7 +57,7 @@ class Responder
      * @return string
      * @throws NoSuchRouteException
      */
-    public function routeUrlTo($route, $data = [], $raw = false)
+    public function routeUrlTo(string $route, array $data = [], bool $raw = false): string
     {
         return $this->router->uriTo($route, $data, $raw);
     }
@@ -69,7 +69,7 @@ class Responder
      * @param array $headers
      * @return ResponseInterface
      */
-    public function contentResponse($content, $contentType, $status = 200, array $headers = [])
+    public function contentResponse(string $content, string $contentType, int $status = 200, array $headers = []): ResponseInterface
     {
         $response = $this->responseFactory->createResponse($status)
             ->withHeader('Content-Type', $contentType);
@@ -89,7 +89,7 @@ class Responder
      * @param array $headers
      * @return ResponseInterface
      */
-    public function htmlResponse($html, $status = 200, array $headers = [])
+    public function htmlResponse(string $html, int $status = 200, array $headers = []): ResponseInterface
     {
         return $this->contentResponse($html, 'text/html; charset=utf-8', $status, $headers);
     }
@@ -100,7 +100,7 @@ class Responder
      * @param array $headers
      * @return ResponseInterface
      */
-    public function textResponse($text, $status = 200, array $headers = [])
+    public function textResponse(string $text, int $status = 200, array $headers = []): ResponseInterface
     {
         return $this->contentResponse($text, 'text/plain; charset=utf-8', $status, $headers);
     }
@@ -111,7 +111,7 @@ class Responder
      * @param array $headers
      * @return ResponseInterface
      */
-    public function jsonResponse($json, $status = 200, array $headers = [])
+    public function jsonResponse(array $json, int $status = 200, array $headers = []): ResponseInterface
     {
         $jsonText = json_encode($json);
         return $this->contentResponse($jsonText, 'application/json; charset=utf-8', $status, $headers);
@@ -121,7 +121,7 @@ class Responder
      * @param string $url
      * @return ResponseInterface
      */
-    public function redirectResponse($url)
+    public function redirectResponse(string $url): ResponseInterface
     {
         return $this->responseFactory->createResponse(302)->withHeader('Location', $url);
     }
@@ -131,7 +131,7 @@ class Responder
      * @param array $data
      * @return ResponseInterface
      */
-    public function redirectResponseToRoute($route, $data = [])
+    public function redirectResponseToRoute(string $route, array $data = []): ResponseInterface
     {
         return $this->redirectResponse($this->routeUrlTo($route, $data));
     }

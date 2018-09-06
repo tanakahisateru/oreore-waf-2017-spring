@@ -43,9 +43,9 @@ class App implements LoggerAwareInterface, EventManagerAwareInterface
      * @param string|array $dirs
      * @param string|array $files
      * @param array $params
-     * @return static
+     * @return self
      */
-    public static function configure($dirs, $files, array $params = [])
+    public static function configure($dirs, $files, array $params = []): self
     {
         $builder = new ContainerBuilder();
         $container = $builder->newInstance();
@@ -83,9 +83,9 @@ class App implements LoggerAwareInterface, EventManagerAwareInterface
     }
 
     /**
-     * @return static
+     * @return self
      */
-    public static function getInstance()
+    public static function getInstance(): self
     {
         if (empty(static::$_instance)) {
             throw new \UnexpectedValueException('The app was uninitialized');
@@ -97,7 +97,7 @@ class App implements LoggerAwareInterface, EventManagerAwareInterface
     /**
      * @return ContainerInterface
      */
-    public function getContainer()
+    public function getContainer(): ContainerInterface
     {
         return $this->container;
     }
@@ -107,7 +107,7 @@ class App implements LoggerAwareInterface, EventManagerAwareInterface
      * @param string $class
      * @return mixed
      */
-    public function getService($name, $class = null)
+    public function getService(string $name, ?string $class = null)
     {
         $container = $this->getContainer();
         if (!$container->has($name)) {
