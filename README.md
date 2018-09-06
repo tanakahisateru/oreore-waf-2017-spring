@@ -1,19 +1,19 @@
 [![Build Status](https://travis-ci.org/tanakahisateru/oreore-waf-2017-spring.svg?branch=master)](https://travis-ci.org/tanakahisateru/oreore-waf-2017-spring)
 
-# OREORE-WAF 2017 Spring
+# OREORE-WAF 201<del>7</del>8 S<del>pring</del>ummer
 
-This is experimental project using modern (2017 spring) PHP standards/technologies.
+This is experimental project using <del>modern</del> regular (2018 the last year of 5.6/7.0) PHP standards/technologies.
 
 "OREORE" means personally designed and self maintained techs in Japanese web developers culture. In the past,
 a certain number of PHP users had their own easy and fragile layers to avoid the difficulty of learning
 mature framework APIs.
 
 Though early PHP didn't have enough features to design good framework especially for not matured programmers.
-But after 5.x to choose popular framework product is one of best practice for PHP. Furthermore PHP is changing
+But after 5.x to choose popular framework product is one of best practice for PHP. Furthermore PHP has been changed
 by new PSRs:
-[PSR-11](https://github.com/container-interop/fig-standards/blob/master/proposed/container.md),
-[PSR-15](https://github.com/php-fig/fig-standards/tree/master/proposed/http-middleware),
-[PSR-17](https://github.com/php-fig/fig-standards/tree/master/proposed/http-factory)
+[PSR-11](https://www.php-fig.org/psr/psr-11/),
+[PSR-15](https://www.php-fig.org/psr/psr-15/),
+[PSR-17](https://www.php-fig.org/psr/psr-17/)
 which focus covering whole of application.
 
 This "OREORE" framework describes how library interoperability realized by PSRs and suggests some ideas
