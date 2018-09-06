@@ -31,15 +31,6 @@ trait PresentationHelperAwareTrait
     }
 
     /**
-     * @param string $content
-     * @return StreamInterface
-     */
-    protected function createStream($content = "")
-    {
-        return $this->presentationHelper->createStream($content);
-    }
-
-    /**
      * @param string $route
      * @param array $data
      * @param bool $raw

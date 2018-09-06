@@ -81,15 +81,14 @@ class SiteController extends AbstractDualHtmlController
     }
 
     /**
-     * @param ResponseInterface $response
+     * @return string
      */
-    public function contact($response)
+    public function contact()
     {
         $this->logger->debug('site.contact');
 
         echo 'echo contact page';
-        $response->getBody()->write("(not shown because this response not returned)");
-        // no response returned
+        return "(not shown because this response not returned)";
     }
 
     /**

@@ -40,10 +40,9 @@ class ErrorController extends AbstractDualHtmlController
     /**
      * @param HttpException $error
      * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
      * @return ResponseInterface
      */
-    public function __invoke(HttpException $error, ServerRequestInterface $request, ResponseInterface $response)
+    public function __invoke(HttpException $error, ServerRequestInterface $request)
     {
         $statusCode = $error->getCode();
 

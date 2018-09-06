@@ -15,20 +15,13 @@ class RoutingHandler implements MiddlewareInterface
     protected $router;
 
     /**
-     * @var ResponseInterface
-     */
-    protected $responsePrototype;
-
-    /**
      * RoutingMiddleware constructor.
      *
      * @param Router $router
-     * @param ResponseInterface $responsePrototype
      */
-    public function __construct(Router $router, ResponseInterface $responsePrototype)
+    public function __construct(Router $router)
     {
         $this->router = $router;
-        $this->responsePrototype = $responsePrototype;
     }
 
     /**
@@ -36,6 +29,6 @@ class RoutingHandler implements MiddlewareInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        return $this->router->handle($request, $this->responsePrototype);
+        return $this->router->handle($request);
     }
 }

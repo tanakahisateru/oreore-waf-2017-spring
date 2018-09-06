@@ -3,12 +3,10 @@ namespace Acme\App\Router;
 
 use Http\Factory\Diactoros\ResponseFactory;
 use Http\Factory\Diactoros\ServerRequestFactory;
-use Http\Factory\Diactoros\StreamFactory;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ServerRequestFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\StreamFactoryInterface;
 
 class ActionDispatcherTest extends TestCase
 {
@@ -27,14 +25,9 @@ class ActionDispatcherTest extends TestCase
      */
     protected $responseFactory;
 
-    /**
-     * @var StreamFactoryInterface
-     */
-    protected $streamFactory;
-
     public function testDispatchToPsr7SinglePassCallable()
     {
-        $dispatcher = new ActionDispatcher($this->controllerProvider, $this->streamFactory);
+        $dispatcher = new ActionDispatcher($this->controllerProvider, $this->responseFactory);
 
         $self = $this;
         $handler = function (ServerRequestInterface $request) use ($self) {
@@ -61,7 +54,7 @@ class ActionDispatcherTest extends TestCase
 
     public function testDispatchToStringReturningCallable()
     {
-        $dispatcher = new ActionDispatcher($this->controllerProvider, $this->streamFactory);
+        $dispatcher = new ActionDispatcher($this->controllerProvider, $this->responseFactory);
 
         $handler = function () {
             return 'callable handler response';
@@ -82,7 +75,7 @@ class ActionDispatcherTest extends TestCase
 
     public function testDispatchToArrayReturningCallable()
     {
-        $dispatcher = new ActionDispatcher($this->controllerProvider, $this->streamFactory);
+        $dispatcher = new ActionDispatcher($this->controllerProvider, $this->responseFactory);
 
         $handler = function () {
             return ['foo' => 'bar'];
@@ -91,7 +84,6 @@ class ActionDispatcherTest extends TestCase
         $response = $dispatcher->dispatch([
             'controller' => $handler,
             'request' => $this->requestFactory->createServerRequest('GET', '/'),
-            'response' => $this->responseFactory->createResponse(),
         ]);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -103,7 +95,7 @@ class ActionDispatcherTest extends TestCase
 
     public function testDispatchToStreamOutputCallable()
     {
-        $dispatcher = new ActionDispatcher($this->controllerProvider, $this->streamFactory);
+        $dispatcher = new ActionDispatcher($this->controllerProvider, $this->responseFactory);
 
         $handler = function () {
             echo "callable handler response";
@@ -127,6 +119,5 @@ class ActionDispatcherTest extends TestCase
         $this->controllerProvider = $this->createMock(ControllerProvider::class);
         $this->requestFactory = new ServerRequestFactory();
         $this->responseFactory = new ResponseFactory();
-        $this->streamFactory = new StreamFactory();
     }
 }

@@ -3,9 +3,8 @@ namespace Acme\App\Router;
 
 use Aura\Dispatcher\Dispatcher;
 use Lapaz\Odango\AdviceComposite;
+use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\StreamFactoryInterface;
 use Ray\Aop\MethodInvocation;
 use Zend\EventManager\EventsCapableInterface;
 
@@ -20,19 +19,19 @@ class ActionDispatcher
     protected $controllerProvider;
 
     /**
-     * @var StreamFactoryInterface
+     * @var ResponseFactoryInterface
      */
-    protected $streamFactory;
+    protected $responseFactory;
 
     /**
      * ActionDispatcher constructor.
      * @param ControllerProvider $controllerProvider
-     * @param StreamFactoryInterface $streamFactory
+     * @param ResponseFactoryInterface $responseFactory
      */
-    public function __construct(ControllerProvider $controllerProvider, StreamFactoryInterface $streamFactory)
+    public function __construct(ControllerProvider $controllerProvider, ResponseFactoryInterface $responseFactory)
     {
         $this->controllerProvider = $controllerProvider;
-        $this->streamFactory = $streamFactory;
+        $this->responseFactory = $responseFactory;
     }
 
     /**
@@ -49,45 +48,24 @@ class ActionDispatcher
             $controller = $params['controller'];
         }
 
-        $responsePrototype = null;
-        if (isset($params['response'])) {
-            $responsePrototype = $params['response'];
-        } elseif (isset($params['request'])) {
-            $request = $params['request'];
-            if ($request instanceof ServerRequestInterface) {
-                $responsePrototype = $request->getAttribute('responsePrototype');
-            }
-        }
-        if ($responsePrototype) {
-            // cloned
-            $responsePrototype = $responsePrototype->withBody($this->streamFactory->createStream());
-        }
-
         $dispatcher = new Dispatcher(['__target' => $controller], null, 'action');
 
         ob_start();
         try {
-            $dispatch = function () use ($params, $dispatcher, $responsePrototype) {
+            $dispatch = function () use ($params, $dispatcher) {
 
                 $returnedValue = call_user_func($dispatcher, $params, '__target');
 
                 // Aura.Dispatcher returns object itself if not invokable.
                 if ($returnedValue === $dispatcher->getObject('__target')) {
-                    throw new \LogicException("Request was not dispatched to any handler.");
+                    throw new \UnexpectedValueException("Request was not dispatched to any handler.");
                 }
 
                 if ($returnedValue instanceof ResponseInterface) {
                     $response = $returnedValue;
                 } else {
-                    if ($responsePrototype === null) {
-                        throw new \LogicException("Response prototype required for informal result value.");
-                    }
-                    $response = $this->fixUpReturnedValue($returnedValue, $responsePrototype);
-                }
-
-                $echo = ob_get_contents();
-                if (!empty($echo)) {
-                    $response = $this->insertEchoIntoBody($echo, $response);
+                    $echoContent = ob_get_contents();
+                    $response = $this->createFallbackResponse($returnedValue, $echoContent);
                 }
 
                 return $response;
@@ -103,16 +81,17 @@ class ActionDispatcher
     }
 
     /**
-     * @param $controller
+     * @param object $controller
      * @param array $params
      * @return AdviceComposite
      */
     protected function eventTriggerAdviser($controller, array $params)
     {
-        $request = $params['request'];
-        $responsePrototype = $params['response'];
+        assert(is_object($controller));
 
-        return AdviceComposite::of(function (MethodInvocation $invocation) use ($controller, $request, $responsePrototype) {
+        $request = $params['request'];
+
+        return AdviceComposite::of(function (MethodInvocation $invocation) use ($controller, $request) {
             if (!($controller instanceof EventsCapableInterface)) {
                 return $invocation->proceed();
             }
@@ -121,7 +100,6 @@ class ActionDispatcher
 
             $argv = new \ArrayObject([
                 'request' => $request,
-                'responsePrototype' => $responsePrototype,
             ]);
             $result = $events->trigger(static::EVENT_BEFORE_ACTION, $controller, $argv);
 
@@ -131,7 +109,7 @@ class ActionDispatcher
                 } elseif ($result->last()) {
                     return $result->last();
                 } else {
-                    return $responsePrototype;
+                    return $this->responseFactory->createResponse();
                 }
             }
 
@@ -150,7 +128,7 @@ class ActionDispatcher
                 } elseif ($result->last()) {
                     return $result->last();
                 } else {
-                    return $responsePrototype;
+                    return $this->responseFactory->createResponse();
                 }
             }
 
@@ -160,38 +138,28 @@ class ActionDispatcher
 
     /**
      * @param mixed $returnedValue
-     * @param ResponseInterface $responsePrototype
+     * @param string $echoContent
      * @return ResponseInterface
      */
-    private function fixUpReturnedValue($returnedValue, ResponseInterface $responsePrototype)
+    private function createFallbackResponse($returnedValue, $echoContent)
     {
+        $response = $this->responseFactory->createResponse();
+
+        if (!empty($echoContent)) {
+            $response->getBody()->write($echoContent);
+        }
+
         if (empty($returnedValue)) {
-            $returnedValue = $responsePrototype;
+            return $response;
         } elseif (is_scalar($returnedValue)) {
-            $value = $returnedValue;
-            $returnedValue = $responsePrototype;
-            $returnedValue->getBody()->write($value);
-        } elseif (is_array($returnedValue)) {
-            $value = $returnedValue;
-            $returnedValue = $responsePrototype->withHeader('Content-Type', 'application/json');
-            $returnedValue->getBody()->write(json_encode($value));
+            $response->getBody()->write($returnedValue);
+            return $response;
+        } elseif (is_array($returnedValue) || is_object($returnedValue)) {
+            $response = $response->withHeader('Content-Type', 'application/json');
+            $response->getBody()->write(json_encode($returnedValue, JSON_PRETTY_PRINT));
+            return $response;
+        } else {
+            throw new \UnexpectedValueException('Unsupported returned value');
         }
-
-        if (!($returnedValue instanceof ResponseInterface)) {
-            throw new \LogicException('Unsupported response returned');
-        }
-
-        return $returnedValue;
-    }
-
-    /**
-     * @param string $echo
-     * @param ResponseInterface $response
-     * @return mixed
-     */
-    private function insertEchoIntoBody($echo, ResponseInterface $response)
-    {
-        $stream = $response->getBody();
-        return $response->withBody($this->streamFactory->createStream($echo . strval($stream)));
     }
 }

@@ -2,6 +2,7 @@
 namespace Acme\App\Debug\Middleware\Generator;
 
 use Acme\App\Middleware\Generator\ErrorResponseGenerator;
+use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Sumeko\Http\ClientException;
@@ -19,12 +20,22 @@ class WhoopsErrorResponseGenerator
     protected $delegateGenerator;
 
     /**
+     * @var ResponseFactoryInterface
+     */
+    private $responseFactory;
+
+    /**
      * WhoopsErrorResponseGenerator constructor.
      * @param ErrorResponseGenerator $delegateGenerator
+     * @param ResponseFactoryInterface $responseFactory
      */
-    public function __construct(ErrorResponseGenerator $delegateGenerator)
+    public function __construct(
+        ErrorResponseGenerator $delegateGenerator,
+        ResponseFactoryInterface $responseFactory
+    )
     {
         $this->delegateGenerator = $delegateGenerator;
+        $this->responseFactory = $responseFactory;
     }
 
     /**
@@ -32,16 +43,16 @@ class WhoopsErrorResponseGenerator
      *
      * @param \Exception|mixed $e
      * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
      * @return ResponseInterface
      */
-    public function __invoke($e, ServerRequestInterface $request, ResponseInterface $response)
+    public function __invoke($e, ServerRequestInterface $request)
     {
         if ($e instanceof ClientException) {
             // Delegates default error handler if it raised from user operation.
-            return $this->delegateGenerator->__invoke($e, $request, $response);
+            return $this->delegateGenerator->__invoke($e, $request);
         }
 
+        $response = $this->responseFactory->createResponse();
         if ($e instanceof HttpException) {
             $response = $response->withStatus($e->getCode(), $e->getMessage());
         } else {

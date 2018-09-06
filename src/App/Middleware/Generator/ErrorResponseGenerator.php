@@ -42,10 +42,9 @@ class ErrorResponseGenerator
      *
      * @param \Exception|mixed $e
      * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
      * @return ResponseInterface
      */
-    public function __invoke($e, ServerRequestInterface $request, ResponseInterface $response)
+    public function __invoke($e, ServerRequestInterface $request)
     {
         if (!($e instanceof HttpException)) {
             if ($e instanceof \Exception) {
@@ -63,8 +62,7 @@ class ErrorResponseGenerator
         }
         $params = array_merge($params, [
             'error' => $e,
-            'request' => $request->withAttribute('responsePrototype', $response),
-            'response' => $response,
+            'request' => $request,
         ]);
 
         $response = $this->dispatcher->dispatch($params);

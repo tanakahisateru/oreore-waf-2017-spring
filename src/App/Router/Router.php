@@ -7,12 +7,13 @@ use Aura\Router\Rule\Accepts;
 use Aura\Router\Rule\Allows;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use Sumeko\Http\Exception as HttpException;
 use Sumeko\Http\Exception\MethodNotAllowedException;
 use Sumeko\Http\Exception\NotAcceptableException;
 use Sumeko\Http\Exception\NotFoundException;
 
-class Router
+class Router implements RequestHandlerInterface
 {
     /**
      * @var RouterContainer
@@ -36,12 +37,10 @@ class Router
     }
 
     /**
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $responsePrototype
-     * @return ResponseInterface
+     * @inheritdoc
      * @throws HttpException
      */
-    public function handle(ServerRequestInterface $request, ResponseInterface $responsePrototype)
+    public function handle(ServerRequestInterface $request): ResponseInterface
     {
         $matcher = $this->routes->getMatcher();
         $route = $matcher->match($request);
@@ -53,8 +52,7 @@ class Router
 
         $params = $this->dispatcherParams($route);
 
-        $params['request'] = $request->withAttribute('responsePrototype', $responsePrototype);
-        $params['response'] = $responsePrototype;
+        $params['request'] = $request;
 
         return $this->dispatcher->dispatch($params);
     }

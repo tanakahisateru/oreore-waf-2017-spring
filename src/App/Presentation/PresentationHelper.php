@@ -3,9 +3,8 @@ namespace Acme\App\Presentation;
 
 use Acme\App\View\View;
 use Aura\Router\Generator;
+use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\StreamFactoryInterface;
-use Psr\Http\Message\StreamInterface;
 
 class PresentationHelper
 {
@@ -20,34 +19,25 @@ class PresentationHelper
     protected $viewFactory;
 
     /**
-     * @var ResponseInterface
+     * @var ResponseFactoryInterface
      */
-    protected $responsePrototype;
-
-    /**
-     * @var StreamFactoryInterface
-     */
-    protected $streamFactory;
-
+    protected $responseFactory;
 
     /**
      * ControllerManager constructor.
      * @param callable $viewFactory
      * @param Generator $urlGenerator
-     * @param ResponseInterface $responsePrototype
-     * @param StreamFactoryInterface $streamFactory
+     * @param ResponseFactoryInterface $responseFactory
      */
     public function __construct(
         callable $viewFactory,
         Generator $urlGenerator,
-        ResponseInterface $responsePrototype,
-        StreamFactoryInterface $streamFactory
+        ResponseFactoryInterface $responseFactory
     )
     {
         $this->urlGenerator = $urlGenerator;
         $this->viewFactory = $viewFactory;
-        $this->responsePrototype = $responsePrototype;
-        $this->streamFactory = $streamFactory;
+        $this->responseFactory = $responseFactory;
     }
 
     /**
@@ -59,15 +49,6 @@ class PresentationHelper
         assert($view instanceof View);
 
         return $view;
-    }
-
-    /**
-     * @param string $content
-     * @return StreamInterface
-     */
-    public function createStream($content = "")
-    {
-        return $this->streamFactory->createStream($content);
     }
 
     /**
@@ -86,7 +67,7 @@ class PresentationHelper
     }
 
     /**
-     * @param string|StreamInterface $content
+     * @param string $content
      * @param string $contentType
      * @param int $status
      * @param array $headers
@@ -94,19 +75,16 @@ class PresentationHelper
      */
     public function contentResponse($content, $contentType, $status = 200, array $headers = [])
     {
-        $response = $this->responsePrototype
-            ->withStatus($status)
+        $response = $this->responseFactory->createResponse($status)
             ->withHeader('Content-Type', $contentType);
 
         foreach ($headers as $name => $header) {
             $response = $response->withHeader($name, $header);
         }
 
-        if (!($content instanceof StreamInterface)) {
-            $content = $this->createStream($content);
-        }
+        $response->getBody()->write($content);
 
-        return $response->withBody($content);
+        return $response;
     }
 
     /**
@@ -149,7 +127,7 @@ class PresentationHelper
      */
     public function redirectResponse($url)
     {
-        return $this->responsePrototype->withStatus(302)->withHeader('Location', $url);
+        return $this->responseFactory->withStatus(302)->withHeader('Location', $url);
     }
 
     /**

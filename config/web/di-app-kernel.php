@@ -138,7 +138,6 @@ $di->set(WebAppBootstrap::class, $di->lazyNew(WebAppBootstrap::class, [
 
 $di->set(RoutingHandler::class, $di->lazyNew(RoutingHandler::class, [
     'router' => $di->lazyGet(Router::class),
-    'responsePrototype' => $di->lazyGetCall(ResponseFactoryInterface::class, 'createResponse'),
 ]));
 
 /////////////////////////////////////////////////////////////////////
@@ -160,7 +159,7 @@ $di->set(RouterContainer::class, $dix->lazyNew(RouterContainer::class, [
 
 $di->set(ActionDispatcher::class, $di->lazyNew(ActionDispatcher::class, [
     'controllerProvider' => $di->lazyGet(ControllerProvider::class),
-    'streamFactory' => $di->lazyGet(StreamFactoryInterface::class),
+    'responseFactory' => $di->lazyGet(ResponseFactoryInterface::class),
 ]));
 
 $di->set(RouterUrlGenerator::class, $di->lazyGetCall(RouterContainer::class, 'getGenerator'));
@@ -171,8 +170,7 @@ $di->set(RouterUrlGenerator::class, $di->lazyGetCall(RouterContainer::class, 'ge
 $di->set(PresentationHelper::class, $di->lazyNew(PresentationHelper::class, [
     'viewFactory' => $di->lazyGet('viewFactory'),
     'urlGenerator' => $di->lazyGet(RouterUrlGenerator::class),
-    'responsePrototype' => $di->lazyGetCall(ResponseFactoryInterface::class, 'createResponse'),
-    'streamFactory' => $di->lazyGet(StreamFactoryInterface::class),
+    'responseFactory' => $di->lazyGet(ResponseFactoryInterface::class),
 ]));
 
 $di->setters[PresentationHelperAwareInterface::class] = [
@@ -219,7 +217,8 @@ if ($params['env'] == 'dev') {
         'delegateGenerator' => $di->lazyNew(ErrorResponseGenerator::class, [
             'dispatcher' => $di->lazyGet(ActionDispatcher::class),
             'controller' => 'error',
-        ])
+        ]),
+        'responseFactory' => $di->lazyGet(ResponseFactoryInterface::class),
     ]));
 
     $di->set('debugbar', $dix->lazyNew(StandardDebugBar::class)
