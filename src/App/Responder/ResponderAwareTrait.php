@@ -1,23 +1,23 @@
 <?php
-namespace Acme\App\Presentation;
+namespace Acme\App\Responder;
 
 use Acme\App\View\View;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 
-trait PresentationHelperAwareTrait
+trait ResponderAwareTrait
 {
     /**
-     * @var PresentationHelper
+     * @var Responder
      */
-    protected $presentationHelper;
+    protected $responder;
 
     /**
-     * @param PresentationHelper $responseAgent
+     * @param Responder $responder
      */
-    public function setPresentationHelper(PresentationHelper $responseAgent)
+    public function setResponder(Responder $responder)
     {
-        $this->presentationHelper = $responseAgent;
+        $this->responder = $responder;
     }
 
     ///
@@ -27,7 +27,7 @@ trait PresentationHelperAwareTrait
      */
     protected function createViewPrototype()
     {
-        return $this->presentationHelper->createViewPrototype();
+        return $this->responder->createViewPrototype();
     }
 
     /**
@@ -38,7 +38,7 @@ trait PresentationHelperAwareTrait
      */
     protected function routeUrlTo($route, $data = [], $raw = false)
     {
-        return $this->presentationHelper->routeUrlTo($route, $data, $raw);
+        return $this->responder->routeUrlTo($route, $data, $raw);
     }
 
     /**
@@ -50,7 +50,7 @@ trait PresentationHelperAwareTrait
      */
     protected function contentResponse($content, $contentType, $status = 200, array $headers = [])
     {
-        return $this->presentationHelper->contentResponse($content, $contentType, $status, $headers);
+        return $this->responder->contentResponse($content, $contentType, $status, $headers);
     }
 
     /**
@@ -61,7 +61,7 @@ trait PresentationHelperAwareTrait
      */
     protected function htmlResponse($html, $status = 200, array $headers = [])
     {
-        return $this->presentationHelper->htmlResponse($html, $status, $headers);
+        return $this->responder->htmlResponse($html, $status, $headers);
     }
 
     /**
@@ -72,7 +72,7 @@ trait PresentationHelperAwareTrait
      */
     protected function textResponse($text, $status = 200, array $headers = [])
     {
-        return $this->presentationHelper->textResponse($text, $status, $headers);
+        return $this->responder->textResponse($text, $status, $headers);
     }
 
     /**
@@ -83,7 +83,7 @@ trait PresentationHelperAwareTrait
      */
     protected function jsonResponse($json, $status = 200, array $headers = [])
     {
-        return $this->presentationHelper->jsonResponse($json, $status, $headers);
+        return $this->responder->jsonResponse($json, $status, $headers);
     }
 
     /**
@@ -92,7 +92,7 @@ trait PresentationHelperAwareTrait
      */
     protected function redirectResponse($url)
     {
-        return $this->presentationHelper->redirectResponse($url);
+        return $this->responder->redirectResponse($url);
     }
 
     /**
@@ -102,6 +102,6 @@ trait PresentationHelperAwareTrait
      */
     protected function redirectResponseToRoute($route, $data = [])
     {
-        return $this->presentationHelper->redirectResponseToRoute($route, $data);
+        return $this->responder->redirectResponseToRoute($route, $data);
     }
 }

@@ -1,7 +1,8 @@
 <?php
 namespace Acme\App\View;
 
-use Aura\Router\RouterContainer;
+use Acme\App\Router\Router;
+use Http\Factory\Diactoros\ResponseFactory;
 use Lapaz\Amechan\AssetManager;
 use League\Plates\Engine;
 use PHPUnit\Framework\TestCase;
@@ -14,9 +15,9 @@ class ViewTest extends TestCase
     protected $templateEngineFactory;
 
     /**
-     * @var RouterContainer
+     * @var Router
      */
-    protected $routes;
+    protected $router;
 
     /**
      * @var AssetManager
@@ -25,7 +26,7 @@ class ViewTest extends TestCase
 
     public function testRender()
     {
-        $view = new View($this->templateEngineFactory, $this->routes->getGenerator(), $this->assetManager);
+        $view = new View($this->templateEngineFactory, $this->router, $this->assetManager);
         $content = $view->render('/foo.php', [
             'param' => '>test',
         ]);
@@ -35,7 +36,7 @@ class ViewTest extends TestCase
 
     public function testAttributes()
     {
-        $view = new View($this->templateEngineFactory, $this->routes->getGenerator(), $this->assetManager);
+        $view = new View($this->templateEngineFactory, $this->router, $this->assetManager);
         $view->setAttribute('foo', 'Foo');
 
         $this->assertTrue($view->hasAttribute('foo'));
@@ -47,7 +48,7 @@ class ViewTest extends TestCase
 
     public function testRenderWithFolder()
     {
-        $view = new View($this->templateEngineFactory, $this->routes->getGenerator(), $this->assetManager);
+        $view = new View($this->templateEngineFactory, $this->router, $this->assetManager);
         $view->setFolder('current', 'folder0');
 
         $this->assertTrue($view->hasFolder('current'));
@@ -70,7 +71,7 @@ class ViewTest extends TestCase
 
     public function testRenderWithSelfReference()
     {
-        $view = new View($this->templateEngineFactory, $this->routes->getGenerator(), $this->assetManager);
+        $view = new View($this->templateEngineFactory, $this->router, $this->assetManager);
         $view->setAttribute('alpha', 'Beta');
         $content = $view->render('/attr.php');
 
@@ -84,7 +85,7 @@ class ViewTest extends TestCase
             return $engine;
         };
 
-        $this->routes = new RouterContainer();
+        $this->router = new Router([], new ResponseFactory());
 
         $this->assetManager = new AssetManager();
     }

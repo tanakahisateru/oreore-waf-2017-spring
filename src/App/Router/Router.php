@@ -1,20 +1,27 @@
 <?php
 namespace Acme\App\Router;
 
+use Aura\Router\Exception\RouteNotFound as AuraRouteNotFound;
 use Aura\Router\Route;
 use Aura\Router\RouterContainer;
 use Aura\Router\Rule\Accepts;
 use Aura\Router\Rule\Allows;
+use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
 use Sumeko\Http\Exception as HttpException;
 use Sumeko\Http\Exception\MethodNotAllowedException;
 use Sumeko\Http\Exception\NotAcceptableException;
 use Sumeko\Http\Exception\NotFoundException;
 
-class Router implements RequestHandlerInterface
+class Router implements RequestHandlerInterface, LoggerAwareInterface
 {
+    use LoggerAwareTrait;
+
     /**
      * @var RouterContainer
      */
@@ -27,13 +34,37 @@ class Router implements RequestHandlerInterface
 
     /**
      * Router constructor.
-     * @param RouterContainer $routes
-     * @param ActionDispatcher $dispatcher
+     *
+     * @param callable[] $controllerFactories
+     * @param ResponseFactoryInterface $responseFactory
+     * @param null $pathPrefix
      */
-    public function __construct(RouterContainer $routes, ActionDispatcher $dispatcher)
+    public function __construct(
+        array $controllerFactories,
+        ResponseFactoryInterface $responseFactory,
+        $pathPrefix = null
+    )
     {
-        $this->routes = $routes;
-        $this->dispatcher = $dispatcher;
+        $this->routes = new RouterContainer($pathPrefix);
+
+        $controllerProvider = new ControllerProvider($controllerFactories);
+        $this->dispatcher = new ActionDispatcher($controllerProvider, $responseFactory);
+    }
+
+    /**
+     * @return RouterContainer
+     */
+    public function getRoutes(): RouterContainer
+    {
+        return $this->routes;
+    }
+
+    /**
+     * @return ActionDispatcher
+     */
+    public function getDispatcher(): ActionDispatcher
+    {
+        return $this->dispatcher;
     }
 
     /**
@@ -42,6 +73,11 @@ class Router implements RequestHandlerInterface
      */
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
+        assert($this->logger instanceof LoggerInterface);
+        $this->routes->setLoggerFactory(function () {
+            return $this->logger;
+        });
+
         $matcher = $this->routes->getMatcher();
         $route = $matcher->match($request);
 
@@ -55,6 +91,31 @@ class Router implements RequestHandlerInterface
         $params['request'] = $request;
 
         return $this->dispatcher->dispatch($params);
+    }
+
+    /**
+     * @param string $name
+     * @param array $data
+     * @param bool $raw
+     * @return string
+     * @throws NoSuchRouteException
+     */
+    public function uriTo($name, $data=[], $raw = false)
+    {
+        $generator = $this->routes->getGenerator();
+        try {
+            if ($raw) {
+                $path = $generator->generateRaw($name, $data);
+            } else {
+                $path = $generator->generate($name, $data);
+            }
+            if ($path === false) {
+                throw new NoSuchRouteException($name . " not found");
+            }
+            return $path;
+        } catch (AuraRouteNotFound $e) {
+            throw new NoSuchRouteException($name . " not found");
+        }
     }
 
     /**

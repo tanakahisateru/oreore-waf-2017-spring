@@ -1,27 +1,27 @@
 <?php
-use Acme\App\View\View;
+
+use Acme\App\Router\Router;
+use Acme\App\View\ViewFactory;
 use Aura\Di\Container;
 use Aura\Router\Map;
-use Aura\Router\RouterContainer;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response\HtmlResponse;
 use Zend\Diactoros\Response\JsonResponse;
 
-/** @var RouterContainer $this */
+/** @var Router $this */
 /** @var Container $di */
 /** @var array $params */
 
-$map = $this->getMap();
+$map = $this->getRoutes()->getMap();
 
 $map->attach('site.', '', function (Map $map) use ($di) {
     $map->route('index', '/');
     $map->route('contact', '/contact');
 
     $map->get('privacy', '/privacy')->handler(function () use ($di) {
-        $viewFactory = $di->get('viewFactory');
-        /** @var callable $viewFactory */
-        $view = $viewFactory();
-        assert($view instanceof View);
+        $viewFactory = $di->get(ViewFactory::class);
+        assert($viewFactory instanceof ViewFactory);
+        $view = $viewFactory->createView($di->get(Router::class));
         $view->setFolder('current', 'site');
         return new HtmlResponse($view->render('current::privacy.php'));
     });

@@ -1,8 +1,9 @@
 <?php
 namespace Acme\App\View;
 
+use Acme\App\Router\NoSuchRouteException;
+use Acme\App\Router\Router;
 use Acme\App\View\Template\ViewAccessExtension;
-use Aura\Router\Generator;
 use Lapaz\Amechan\AssetCollection;
 use Lapaz\Amechan\AssetManager;
 use Lapaz\Odango\AdviceComposite;
@@ -34,9 +35,9 @@ class View implements EventManagerAwareInterface, LoggerAwareInterface
     protected $templateEngineFactory;
 
     /**
-     * @var Generator
+     * @var Router
      */
-    protected $urlGenerator;
+    protected $router;
 
     /**
      * @var AssetManager
@@ -62,14 +63,14 @@ class View implements EventManagerAwareInterface, LoggerAwareInterface
      * View constructor.
      *
      * @param callable $templateEngineFactory
-     * @param Generator $urlGenerator
+     * @param Router $router
      * @param AssetManager $assetManager
      * @internal param Router $router
      */
-    public function __construct(callable $templateEngineFactory, Generator $urlGenerator, AssetManager $assetManager)
+    public function __construct(callable $templateEngineFactory, Router $router, AssetManager $assetManager)
     {
         $this->templateEngineFactory = $templateEngineFactory;
-        $this->urlGenerator = $urlGenerator;
+        $this->router = $router;
         $this->assetManager = $assetManager;
 
         $this->folderMap = [];
@@ -161,12 +162,8 @@ class View implements EventManagerAwareInterface, LoggerAwareInterface
     public function routeUrlTo($name, $data=[], $raw = false)
     {
         try {
-            if ($raw) {
-                return $this->urlGenerator->generateRaw($name, $data);
-            } else {
-                return $this->urlGenerator->generate($name, $data);
-            }
-        } catch (\Exception $e) {
+            return $this->router->uriTo($name, $data, $raw);
+        } catch (NoSuchRouteException $e) {
             $this->logger->warning('Route not found: '. $e->getMessage());
             return '#';
         }

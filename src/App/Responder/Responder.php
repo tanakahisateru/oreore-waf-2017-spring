@@ -1,20 +1,22 @@
 <?php
-namespace Acme\App\Presentation;
+namespace Acme\App\Responder;
 
+use Acme\App\Router\NoSuchRouteException;
+use Acme\App\Router\Router;
 use Acme\App\View\View;
-use Aura\Router\Generator;
+use Acme\App\View\ViewFactory;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 
-class PresentationHelper
+class Responder
 {
     /**
-     * @var Generator
+     * @var Router
      */
-    protected $urlGenerator;
+    protected $router;
 
     /**
-     * @var callable
+     * @var ViewFactory
      */
     protected $viewFactory;
 
@@ -25,17 +27,17 @@ class PresentationHelper
 
     /**
      * ControllerManager constructor.
-     * @param callable $viewFactory
-     * @param Generator $urlGenerator
+     * @param ViewFactory $viewFactory
+     * @param Router $router
      * @param ResponseFactoryInterface $responseFactory
      */
     public function __construct(
-        callable $viewFactory,
-        Generator $urlGenerator,
+        ViewFactory $viewFactory,
+        Router $router,
         ResponseFactoryInterface $responseFactory
     )
     {
-        $this->urlGenerator = $urlGenerator;
+        $this->router = $router;
         $this->viewFactory = $viewFactory;
         $this->responseFactory = $responseFactory;
     }
@@ -45,10 +47,7 @@ class PresentationHelper
      */
     public function createViewPrototype()
     {
-        $view = call_user_func($this->viewFactory);
-        assert($view instanceof View);
-
-        return $view;
+        return $this->viewFactory->createView($this->router);
     }
 
     /**
@@ -56,14 +55,11 @@ class PresentationHelper
      * @param array $data
      * @param bool $raw
      * @return string
+     * @throws NoSuchRouteException
      */
     public function routeUrlTo($route, $data = [], $raw = false)
     {
-        if ($raw) {
-            return $this->urlGenerator->generateRaw($route, $data);
-        } else {
-            return $this->urlGenerator->generate($route, $data);
-        }
+        return $this->router->uriTo($route, $data, $raw);
     }
 
     /**
@@ -127,7 +123,7 @@ class PresentationHelper
      */
     public function redirectResponse($url)
     {
-        return $this->responseFactory->withStatus(302)->withHeader('Location', $url);
+        return $this->responseFactory->createResponse(302)->withHeader('Location', $url);
     }
 
     /**

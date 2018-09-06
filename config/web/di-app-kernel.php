@@ -5,16 +5,12 @@ use Acme\App\Debug\Middleware\Generator\WhoopsErrorResponseGenerator;
 use Acme\App\Middleware\Generator\ErrorResponseGenerator;
 use Acme\App\Middleware\RoutingHandler;
 use Acme\App\Middleware\WebAppBootstrap;
-use Acme\App\Presentation\PresentationHelper;
-use Acme\App\Presentation\PresentationHelperAwareInterface;
-use Acme\App\Router\ActionDispatcher;
-use Acme\App\Router\ControllerProvider;
+use Acme\App\Responder\Responder;
+use Acme\App\Responder\ResponderAwareInterface;
 use Acme\App\Router\Router;
 use Acme\App\View\Template\EscaperExtension;
-use Acme\App\View\View;
+use Acme\App\View\ViewFactory;
 use Aura\Di\Container;
-use Aura\Router\Generator as RouterUrlGenerator;
-use Aura\Router\RouterContainer;
 use DebugBar\Bridge\MonologCollector;
 use DebugBar\DebugBar;
 use DebugBar\StandardDebugBar;
@@ -121,7 +117,7 @@ $di->set(ErrorHandler::class, $dix->lazyNew(ErrorHandler::class, [
 
 // Maybe overridden
 $di->set('errorResponseGenerator', $di->lazyNew(ErrorResponseGenerator::class, [
-    'dispatcher' => $di->lazyGet(ActionDispatcher::class),
+    'dispatcher' => $di->lazyGetCall(Router::class, 'getDispatcher'),
     'controller' => 'error',
 ]));
 
@@ -143,38 +139,26 @@ $di->set(RoutingHandler::class, $di->lazyNew(RoutingHandler::class, [
 /////////////////////////////////////////////////////////////////////
 // routing - dispatching
 
-$di->set(Router::class, $di->lazyNew(Router::class, [
-    'routes' => $di->lazyGet(RouterContainer::class),
-    'dispatcher' => $di->lazyGet(ActionDispatcher::class),
-]));
-
-$di->set(RouterContainer::class, $dix->lazyNew(RouterContainer::class, [
-    'basepath' => null,
-], [
-    'setLoggerFactory' => $dix->newLocator('logger'),
+$di->set(Router::class, $dix->lazyNew(Router::class, [
+    'controllerFactories' => require __DIR__ . '/controllers.php',
+    'responseFactory' => $di->lazyGet(ResponseFactoryInterface::class),
+    'pathPrefix' => null,
 ])->modifiedByScript(__DIR__ . '/routing.php', [
     'di' => $di,
     'params' => $params,
 ]));
 
-$di->set(ActionDispatcher::class, $di->lazyNew(ActionDispatcher::class, [
-    'controllerProvider' => $di->lazyGet(ControllerProvider::class),
-    'responseFactory' => $di->lazyGet(ResponseFactoryInterface::class),
-]));
-
-$di->set(RouterUrlGenerator::class, $di->lazyGetCall(RouterContainer::class, 'getGenerator'));
-
 /////////////////////////////////////////////////////////////////////
 // Controller helpers
 
-$di->set(PresentationHelper::class, $di->lazyNew(PresentationHelper::class, [
-    'viewFactory' => $di->lazyGet('viewFactory'),
-    'urlGenerator' => $di->lazyGet(RouterUrlGenerator::class),
+$di->set(Responder::class, $di->lazyNew(Responder::class, [
+    'viewFactory' => $di->lazyGet(ViewFactory::class),
+    'router' => $di->lazyGet(Router::class),
     'responseFactory' => $di->lazyGet(ResponseFactoryInterface::class),
 ]));
 
-$di->setters[PresentationHelperAwareInterface::class] = [
-    'setPresentationHelper' => $di->lazyGet(PresentationHelper::class),
+$di->setters[ResponderAwareInterface::class] = [
+    'setResponder' => $di->lazyGet(Responder::class),
 ];
 
 /////////////////////////////////////////////////////////////////////
@@ -201,9 +185,8 @@ $di->set(AssetManager::class, $dix->lazyNew(AssetManager::class)
     ])
 );
 
-$di->set('viewFactory', $di->newFactory(View::class, [
+$di->set(ViewFactory::class, $di->lazyNew(ViewFactory::class, [
     'templateEngineFactory' => $di->lazyGet('templateEngineFactory'),
-    'urlGenerator' => $di->lazyGet(RouterUrlGenerator::class),
     'assetManager' => $di->lazyGet(AssetManager::class),
 ]));
 
@@ -215,7 +198,7 @@ if ($params['env'] == 'dev') {
     // override error screen
     $di->set('errorResponseGenerator', $di->lazyNew(WhoopsErrorResponseGenerator::class, [
         'delegateGenerator' => $di->lazyNew(ErrorResponseGenerator::class, [
-            'dispatcher' => $di->lazyGet(ActionDispatcher::class),
+            'dispatcher' => $di->lazyGetCall(Router::class, 'getDispatcher'),
             'controller' => 'error',
         ]),
         'responseFactory' => $di->lazyGet(ResponseFactoryInterface::class),

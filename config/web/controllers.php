@@ -1,13 +1,12 @@
 <?php
 
-use Acme\App\Router\ControllerProvider;
 use Acme\Controller\ErrorController;
 use Acme\Controller\SiteController;
 use Aura\Di\Container;
 
 /** @var Container $di */
 
-$di->set(ControllerProvider::class, $di->lazyNew(ControllerProvider::class, ['factories' => [
+return [
 
     'error' => $di->newFactory(ErrorController::class, [
         'statusToTemplate' => [
@@ -29,4 +28,4 @@ $di->set(ControllerProvider::class, $di->lazyNew(ControllerProvider::class, ['fa
     //         'setAuditTrailStamper' => $di->get('auditTrailStamper'),
     //     ]),  // --- Matches to route: admin.news.*
     // ],
-]]));
+];

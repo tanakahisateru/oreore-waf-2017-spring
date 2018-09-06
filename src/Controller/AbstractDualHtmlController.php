@@ -1,8 +1,8 @@
 <?php
 namespace Acme\Controller;
 
-use Acme\App\Presentation\PresentationHelperAwareInterface;
-use Acme\App\Presentation\PresentationHelperAwareTrait;
+use Acme\App\Responder\ResponderAwareInterface;
+use Acme\App\Responder\ResponderAwareTrait;
 use Acme\App\View\View;
 use Acme\Util\Mobile;
 use Psr\Http\Message\ServerRequestInterface;
@@ -12,11 +12,11 @@ use Zend\EventManager\EventManagerAwareInterface;
 use Zend\EventManager\EventManagerAwareTrait;
 
 abstract class AbstractDualHtmlController implements
-    PresentationHelperAwareInterface,
+    ResponderAwareInterface,
     EventManagerAwareInterface,
     LoggerAwareInterface
 {
-    use PresentationHelperAwareTrait;
+    use ResponderAwareTrait;
     use EventManagerAwareTrait;
     use LoggerAwareTrait;
 
